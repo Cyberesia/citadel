@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.citadel.firewall.helper</string>
+    <key>MachServices</key>
+    <dict>
+        <key>com.citadel.firewall.helper</key>
+        <true/>
+    </dict>
+    <key>BundleProgram</key>
+    <string>Contents/MacOS/CitadelHelper</string>
+    <key>AssociatedBundleIdentifiers</key>
+    <array>
+        <string>com.citadel.firewall</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ProcessType</key>
+    <string>Interactive</string>
+</dict>
+</plist>
