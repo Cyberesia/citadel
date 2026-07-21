@@ -31,6 +31,10 @@ public struct Rule: Identifiable, Codable, Hashable, Sendable {
     public var processBundleId: String?
     public var processPath: String?
     public var processName: String?
+    /// Apple Developer Team ID — preferred identity when present.
+    public var codeTeamID: String?
+    /// When true, connection must present a valid signature to match.
+    public var requiresSignature: Bool
     public var remoteHost: String?
     public var remoteIP: String?
     public var remotePort: Int?
@@ -53,6 +57,8 @@ public struct Rule: Identifiable, Codable, Hashable, Sendable {
         processBundleId: String? = nil,
         processPath: String? = nil,
         processName: String? = nil,
+        codeTeamID: String? = nil,
+        requiresSignature: Bool = false,
         remoteHost: String? = nil,
         remoteIP: String? = nil,
         remotePort: Int? = nil,
@@ -74,6 +80,8 @@ public struct Rule: Identifiable, Codable, Hashable, Sendable {
         self.processBundleId = processBundleId
         self.processPath = processPath
         self.processName = processName
+        self.codeTeamID = codeTeamID
+        self.requiresSignature = requiresSignature
         self.remoteHost = remoteHost
         self.remoteIP = remoteIP
         self.remotePort = remotePort
@@ -107,6 +115,8 @@ public struct Connection: Identifiable, Codable, Hashable, Sendable {
     public var processName: String
     public var processPath: String
     public var processBundleId: String?
+    public var codeTeamID: String?
+    public var signingStatus: ProcessSigningStatus
     public var localPort: Int
     public var remoteHost: String
     public var remoteIP: String
@@ -131,6 +141,8 @@ public struct Connection: Identifiable, Codable, Hashable, Sendable {
         processName: String,
         processPath: String,
         processBundleId: String? = nil,
+        codeTeamID: String? = nil,
+        signingStatus: ProcessSigningStatus = .unknown,
         localPort: Int = 0,
         remoteHost: String = "",
         remoteIP: String = "",
@@ -154,6 +166,8 @@ public struct Connection: Identifiable, Codable, Hashable, Sendable {
         self.processName = processName
         self.processPath = processPath
         self.processBundleId = processBundleId
+        self.codeTeamID = codeTeamID
+        self.signingStatus = signingStatus
         self.localPort = localPort
         self.remoteHost = remoteHost
         self.remoteIP = remoteIP

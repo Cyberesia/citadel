@@ -229,6 +229,65 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
         reply(true, nil)
     }
 
+    func listBlocklists(reply: @escaping (Data) -> Void) {
+        let lists = store.allBlocklists()
+        reply((try? JSONEncoder().encode(lists)) ?? Data())
+    }
+
+    func listProfiles(reply: @escaping (Data) -> Void) {
+        let profiles = store.allProfiles()
+        reply((try? JSONEncoder().encode(profiles)) ?? Data())
+    }
+
+    func setActiveProfile(name: String, reply: @escaping (Bool, String?) -> Void) {
+        do {
+            try store.setActiveProfile(name: name)
+            if let profile = store.allProfiles().first(where: { $0.name == name }) {
+                mode = profile.mode
+                dnsProxy.mode = profile.mode
+                try? store.setSetting("mode", profile.mode.rawValue)
+            }
+            refreshEnforcement()
+            reply(true, nil)
+        } catch {
+            reply(false, "\(error)")
+        }
+    }
+
+    func purgeExpiredRules(reply: @escaping (Bool, String?) -> Void) {
+        do {
+            try store.purgeExpiredRules()
+            refreshEnforcement()
+            reply(true, nil)
+        } catch {
+            reply(false, "\(error)")
+        }
+    }
+
+    func purgeSessionRules(reply: @escaping (Bool, String?) -> Void) {
+        do {
+            try store.purgeSessionRules()
+            refreshEnforcement()
+            reply(true, nil)
+        } catch {
+            reply(false, "\(error)")
+        }
+    }
+
+    func setDNSFilterEnabled(enabled: Bool, reply: @escaping (Bool, String?) -> Void) {
+        do {
+            try store.setSetting("dns_filter_enabled", enabled ? "1" : "0")
+            if enabled {
+                try dnsProxy.start(port: AppConstants.dnsProxyPort)
+            } else {
+                dnsProxy.stop()
+            }
+            reply(true, nil)
+        } catch {
+            reply(false, "\(error)")
+        }
+    }
+
     func installPF(reply: @escaping (Bool, String?) -> Void) {
         do { try packetFilter.install(); reply(true, nil) } catch { reply(false, "\(error)") }
     }

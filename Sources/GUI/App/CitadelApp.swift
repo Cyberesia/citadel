@@ -17,7 +17,7 @@ struct CitadelApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let state = AppState()
     let cowork = CoworkState()
-    let sentinel = SentinelViewModel()
+    let fortress = FortressViewModel()
     let shellRouter = CitadelShellRouter()
     var menubar: MenubarController!
     var windowManager: WindowManager!
@@ -27,8 +27,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        sentinel.bind(appState: state)
-        windowManager = WindowManager(state: state, cowork: cowork, sentinel: sentinel, router: shellRouter)
+        fortress.bind(appState: state)
+        windowManager = WindowManager(state: state, cowork: cowork, fortress: fortress, router: shellRouter)
         menubar = MenubarController(state: state, windows: windowManager, cowork: cowork)
         menubar.install()
         state.helper.registerDaemon()
@@ -37,12 +37,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         systemExtension = SystemExtensionManager(state: state)
         if ProcessInfo.processInfo.environment["CITADEL_DEMO"] == "1"
-            || ProcessInfo.processInfo.environment["CITADEL_SENTINEL_DEMO"] == "1" {
-            sentinel.loadDemo()
+            || ProcessInfo.processInfo.environment["CITADEL_FORTRESS_DEMO"] == "1" {
+            fortress.loadDemo()
             state.loadDemoData()
         } else {
             systemExtension.activate()
-            sentinel.startEngine()
+            fortress.startEngine()
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -52,6 +52,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             CitadelDeskCompanionController.shared.presentIfNeeded()
         }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        state.purgeSessionRulesOnQuit()
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

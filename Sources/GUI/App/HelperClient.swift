@@ -100,9 +100,43 @@ final class HelperClient: NSObject, ObservableObject {
     func refreshBlocklists() { remote?.refreshBlocklists { _, _ in } }
     func installPF() { remote?.installPF { _, _ in } }
     func uninstallPF() { remote?.uninstallPF { _, _ in } }
+
+    func listBlocklists(completion: @MainActor @escaping ([BlocklistInfo]) -> Void) {
+        remote?.listBlocklists { data in
+            let lists = (try? JSONDecoder().decode([BlocklistInfo].self, from: data)) ?? []
+            Task { @MainActor in completion(lists) }
+        }
+    }
+
+    func listProfiles(completion: @MainActor @escaping ([Profile]) -> Void) {
+        remote?.listProfiles { data in
+            let profiles = (try? JSONDecoder().decode([Profile].self, from: data)) ?? []
+            Task { @MainActor in completion(profiles) }
+        }
+    }
+
+    func setActiveProfile(_ name: String) {
+        remote?.setActiveProfile(name: name) { _, _ in }
+    }
+
+    func purgeExpiredRules() {
+        remote?.purgeExpiredRules { _, _ in }
+    }
+
+    func purgeSessionRules() {
+        remote?.purgeSessionRules { _, _ in }
+    }
+
+    func installDNS() {
+        remote?.setDNSFilterEnabled(enabled: true) { _, _ in }
+    }
+
+    func uninstallDNS() {
+        remote?.setDNSFilterEnabled(enabled: false) { _, _ in }
+    }
 }
 
-/// Receives helper push notifications. GUI rates come from Sentinel; connections
+/// Receives helper push notifications. GUI rates come from Fortress; connections
 /// still update denied counts for the menubar.
 final class HelperEventReceiver: NSObject, HelperClientProtocol {
     weak var state: AppState?

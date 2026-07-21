@@ -77,7 +77,7 @@ targets:
       - path: Sources/GUI
       - path: Sources/CitadelDesign
       - path: Sources/Shared
-      - path: Sources/Sentinel
+      - path: Sources/Fortress
       - path: Sources/CoworkMLX
       - path: Resources/Assets.xcassets
       - path: Resources/Textures
@@ -144,6 +144,24 @@ targets:
             echo "Embedded CoworkCore into app bundle"
           else
             echo "warning: Resources/coworkcore-bundled not found — run Scripts/prepare-coworkcore.sh"
+          fi
+      - name: Embed NetExt
+        runOnlyWhenInstalling: false
+        basedOnDependencyAnalysis: false
+        inputFiles:
+          - $(BUILT_PRODUCTS_DIR)/CitadelNetExt.systemextension
+        script: |
+          set -e
+          APP="${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
+          EXT_SRC="${BUILT_PRODUCTS_DIR}/CitadelNetExt.systemextension"
+          DEST_DIR="${APP}/Contents/Library/SystemExtensions"
+          if [ -d "$EXT_SRC" ]; then
+            mkdir -p "$DEST_DIR"
+            rm -rf "${DEST_DIR}/CitadelNetExt.systemextension"
+            cp -R "$EXT_SRC" "$DEST_DIR/"
+            echo "Embedded CitadelNetExt into app bundle"
+          else
+            echo "warning: CitadelNetExt.systemextension not found — build CitadelNetExt first"
           fi
     dependencies:
       - target: CitadelHelper

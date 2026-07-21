@@ -1,25 +1,37 @@
 # Citadel
 
-A macOS application firewall with Sentinel activity monitoring and Prism UI.
+A macOS application firewall (**Fortress**) with Keep agents and Prism UI.
 
-**Citadel** ships a Citadel-native firewall engine (rules, helper, DNS/pf, network extension) plus Sentinel Activity and Keep (local AI agents), with Prism UI.
+**Citadel** ships a Citadel-native firewall engine (rules, helper, DNS/pf, network extension) plus Fortress Activity / Suspects / History and Keep (local + cloud AI agents), with Prism UI.
 
 ## Features
 
-- **Sentinel Activity** — process families, Sites breakdown, 2D/3D map, firewall actions
-- **Connection alerts** — allow/deny prompts with remember / temporary rules
-- **Rules** — domains, IPs, process rules, blocklists, temporary expiry
+### Fortress
+- **Activity** — process families, Sites breakdown, 2D/3D map, firewall actions
+- **Suspects** — hard, explainable signals (unsigned apps, first-seen destinations, sensitive ports…)
+- **History** — persisted connections with filters and CSV export
+- **Connection alerts** — allow/deny with real scope + duration (app / host / IP+port; forever / session / 1h / 24h)
+- **Rules** — domains, IPs, process + Team ID identity, blocklists, temporary expiry
 - **DNS over HTTPS** — local DNS proxy with blocklist integration
 - **Packet filtering** — `pfctl` anchor for IP/CIDR/port rules
-- **Menubar status** — live traffic, mode picker, quick access
-- **Keep** — local AI agents for files, code, and chores (the inner stronghold; formerly labeled Cowork)
-- **Prism UI** — dark glass shell, animated ambient canvas
+- **Per-app filter** — embedded Network System Extension (approve in System Settings)
+- **Menubar** — live traffic, mode picker, protection status
+- **Guide** — in-app Fortress help (English / French), same pattern as Keep
+
+### Keep
+- Local AI agents for files, code, and chores (Ollama / LM Studio / MLX)
+- Cloud models via BYOK (your API keys)
+- Guarded by Fortress network policy
+
+### Prism UI
+- Dark glass shell, animated ambient canvas, desk companion
 
 ## Requirements
 
 - macOS 13.0+ (map view requires macOS 14+)
 - Xcode 15+
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
+- For full per-app filtering: Apple Developer signing + `xcodebuild -scheme CitadelFull` (builds/embeds `CitadelNetExt`). Debug `Citadel` scheme runs Fortress without the extension until you ship a signed Full build.
 
 ## Build
 
@@ -39,17 +51,26 @@ open build/Build/Products/Debug/Citadel.app
 Demo UI:
 
 ```bash
-CITADEL_SENTINEL_DEMO=1 open build/Build/Products/Debug/Citadel.app
+CITADEL_FORTRESS_DEMO=1 open build/Build/Products/Debug/Citadel.app
 ```
+
+## What works when
+
+| Component | Without approval | With helper + NetExt approved |
+|-----------|------------------|-------------------------------|
+| Activity / map / Suspects | Yes (local observation) | Yes |
+| Allow/deny remembered | May be limited | Enforced per-app via NetExt |
+| DNS blocklists | Needs helper | Yes |
+| Connection history | Yes (on-device) | Yes |
 
 ## Architecture
 
 ```
-Citadel.app (Sentinel + Keep + Settings)
+Citadel.app (Fortress + Keep + Settings)
     ↕ XPC
 CitadelHelper (DNS proxy, pfctl, privileged NetMonitor)
     ↕ app group JSON
-CitadelNetExt (optional per-process filter)
+CitadelNetExt (per-process filter — embedded in app bundle)
 ```
 
 ## Project layout
@@ -57,9 +78,9 @@ CitadelNetExt (optional per-process filter)
 ```
 Sources/
 ├── CitadelDesign/   # Prism UI + map
-├── Sentinel/        # Activity telemetry + UI
-├── GUI/             # Shell, menubar, alerts, settings
-├── Shared/          # Models + Firewall/ evaluator + RuleStore
+├── Fortress/        # Activity, Suspects, History, telemetry
+├── GUI/             # Shell, menubar, alerts, settings, help
+├── Shared/          # Models + Firewall evaluator + RuleStore + help catalogs
 ├── Helper/          # Privileged daemon
 └── NetExt/          # Network system extension
 ```

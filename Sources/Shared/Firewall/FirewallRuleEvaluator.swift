@@ -59,6 +59,12 @@ public struct FirewallRuleEvaluator: Sendable {
     // MARK: - Process
 
     private func processMatches(rule: Rule, connection: Connection) -> Bool {
+        if rule.requiresSignature {
+            guard connection.signingStatus == .signedValid else { return false }
+        }
+        if let team = rule.codeTeamID, !team.isEmpty {
+            guard connection.codeTeamID == team else { return false }
+        }
         if let bundleID = rule.processBundleId, !bundleID.isEmpty {
             return (connection.processBundleId ?? "") == bundleID
         }
@@ -68,6 +74,10 @@ public struct FirewallRuleEvaluator: Sendable {
         if let name = rule.processName, !name.isEmpty {
             // Name-only rules (e.g. Cowork agent policy) must not match everything.
             return connection.processName.caseInsensitiveCompare(name) == .orderedSame
+        }
+        // Team-only rule (no bundle/path/name) already checked above.
+        if let team = rule.codeTeamID, !team.isEmpty {
+            return true
         }
         return true
     }

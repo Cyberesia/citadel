@@ -2,6 +2,9 @@ import SwiftUI
 
 struct CoworkMcpSettingsView: View {
     @EnvironmentObject var cowork: CoworkState
+    @Environment(\.dismiss) private var dismiss
+    /// When presented as a sheet (e.g. from the assistant picker). False for the Tools tab.
+    var isModal: Bool = false
     @State private var importJSON = ""
     @State private var importError: String?
     @State private var isImporting = false
@@ -29,6 +32,14 @@ struct CoworkMcpSettingsView: View {
                 }
                 .buttonStyle(PrismHandButtonStyle())
                 .font(.ps(11))
+                if isModal {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark")
+                            .font(.ps(11, weight: .semibold))
+                    }
+                    .buttonStyle(PrismHandButtonStyle())
+                    .help(L10n.close)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 16)
@@ -36,6 +47,11 @@ struct CoworkMcpSettingsView: View {
             Text(L10n.mcpSubtitle)
                 .font(.ps(11))
                 .foregroundStyle(PrismTheme.textSecondary)
+                .padding(.horizontal, 16)
+
+            Text(L10n.mcpUsageHelp)
+                .font(.ps(10))
+                .foregroundStyle(PrismTheme.textTertiary)
                 .padding(.horizontal, 16)
 
             ScrollView {
@@ -46,6 +62,16 @@ struct CoworkMcpSettingsView: View {
                     manualImportSection
                 }
                 .padding(16)
+            }
+
+            if isModal {
+                HStack {
+                    Spacer()
+                    Button(L10n.close) { dismiss() }
+                        .buttonStyle(PrismHandButtonStyle())
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
         }
         .onAppear {

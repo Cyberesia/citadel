@@ -10,7 +10,7 @@ public final class RuleStore: @unchecked Sendable {
     private let queue = DispatchQueue(label: "com.citadel.firewall.rulestore")
     public let path: String
 
-    private static let currentSchemaVersion = 1
+    private static let currentSchemaVersion = 2
 
     public init(path: String) throws {
         self.path = path
@@ -52,6 +52,10 @@ public final class RuleStore: @unchecked Sendable {
         if applied < 1 {
             try applyV1BaseSchema()
             try recordMigration(1)
+        }
+        if applied < 2 {
+            try applyV2IdentityAndSightings()
+            try recordMigration(2)
         }
     }
 
@@ -140,6 +144,23 @@ public final class RuleStore: @unchecked Sendable {
         """)
     }
 
+    private func applyV2IdentityAndSightings() throws {
+        try exec("""
+        ALTER TABLE rules ADD COLUMN code_team_id TEXT;
+        ALTER TABLE rules ADD COLUMN requires_signature INTEGER DEFAULT 0;
+        ALTER TABLE connections ADD COLUMN code_team_id TEXT;
+        ALTER TABLE connections ADD COLUMN signing_status TEXT;
+        CREATE TABLE IF NOT EXISTS sightings (
+            kind TEXT NOT NULL,
+            key TEXT NOT NULL,
+            first_seen REAL NOT NULL,
+            last_seen REAL NOT NULL,
+            PRIMARY KEY (kind, key)
+        );
+        CREATE INDEX IF NOT EXISTS idx_sightings_last ON sightings(last_seen DESC);
+        """)
+    }
+
     // MARK: - Seed
 
     private func seedProfiles() throws {
@@ -222,8 +243,9 @@ public final class RuleStore: @unchecked Sendable {
         INSERT OR REPLACE INTO rules(
             id, process_bundle_id, process_path, process_name, remote_host, remote_ip,
             remote_port, direction, action, scope, priority, profile, group_name, notes,
-            enabled, temporary, created_at, expires_at, last_used_at, hit_count
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+            enabled, temporary, created_at, expires_at, last_used_at, hit_count,
+            code_team_id, requires_signature
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
         """
         try execute(sql) { stmt in
             sqlite3_bind_text(stmt, 1, r.id.uuidString, -1, SQLITE_TRANSIENT)
@@ -246,7 +268,20 @@ public final class RuleStore: @unchecked Sendable {
             if let e = r.expiresAt { sqlite3_bind_double(stmt, 18, e.timeIntervalSince1970) } else { sqlite3_bind_null(stmt, 18) }
             if let l = r.lastUsedAt { sqlite3_bind_double(stmt, 19, l.timeIntervalSince1970) } else { sqlite3_bind_null(stmt, 19) }
             sqlite3_bind_int(stmt, 20, Int32(r.hitCount))
+            bindOpt(stmt, 21, r.codeTeamID)
+            sqlite3_bind_int(stmt, 22, r.requiresSignature ? 1 : 0)
         }
+    }
+
+    public func purgeExpiredRules(now: Date = Date()) throws {
+        try execute("DELETE FROM rules WHERE expires_at IS NOT NULL AND expires_at < ?;") { stmt in
+            sqlite3_bind_double(stmt, 1, now.timeIntervalSince1970)
+        }
+    }
+
+    public func purgeSessionRules() throws {
+        try exec("DELETE FROM rules WHERE temporary=1 AND notes LIKE '%Until quit%';")
+        try exec("DELETE FROM rules WHERE temporary=1 AND notes LIKE '%session%';")
     }
 
     public func deleteRule(id: UUID) throws {
@@ -260,9 +295,21 @@ public final class RuleStore: @unchecked Sendable {
             var rules: [Rule] = []
             let sql: String
             if profile != nil {
-                sql = "SELECT * FROM rules WHERE profile=? ORDER BY priority DESC, created_at DESC;"
+                sql = """
+                SELECT id, process_bundle_id, process_path, process_name, remote_host, remote_ip,
+                       remote_port, direction, action, scope, priority, profile, group_name, notes,
+                       enabled, temporary, created_at, expires_at, last_used_at, hit_count,
+                       code_team_id, requires_signature
+                FROM rules WHERE profile=? ORDER BY priority DESC, created_at DESC;
+                """
             } else {
-                sql = "SELECT * FROM rules ORDER BY priority DESC, created_at DESC;"
+                sql = """
+                SELECT id, process_bundle_id, process_path, process_name, remote_host, remote_ip,
+                       remote_port, direction, action, scope, priority, profile, group_name, notes,
+                       enabled, temporary, created_at, expires_at, last_used_at, hit_count,
+                       code_team_id, requires_signature
+                FROM rules ORDER BY priority DESC, created_at DESC;
+                """
             }
             var stmt: OpaquePointer?
             defer { if stmt != nil { sqlite3_finalize(stmt) } }
@@ -335,8 +382,8 @@ public final class RuleStore: @unchecked Sendable {
         INSERT OR REPLACE INTO connections(
             id,pid,process_name,process_path,process_bundle_id,local_port,remote_host,remote_ip,
             remote_port,direction,status,protocol_name,bytes_in,bytes_out,country,country_code,
-            latitude,longitude,first_seen,last_seen
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+            latitude,longitude,first_seen,last_seen,code_team_id,signing_status
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
         """
         try execute(sql) { stmt in
             sqlite3_bind_text(stmt, 1, c.id.uuidString, -1, SQLITE_TRANSIENT)
@@ -359,23 +406,128 @@ public final class RuleStore: @unchecked Sendable {
             if let v = c.longitude { sqlite3_bind_double(stmt, 18, v) } else { sqlite3_bind_null(stmt, 18) }
             sqlite3_bind_double(stmt, 19, c.firstSeen.timeIntervalSince1970)
             sqlite3_bind_double(stmt, 20, c.lastSeen.timeIntervalSince1970)
+            bindOpt(stmt, 21, c.codeTeamID)
+            sqlite3_bind_text(stmt, 22, c.signingStatus.rawValue, -1, SQLITE_TRANSIENT)
         }
     }
 
-    public func recentConnections(limit: Int = 200, status: Connection.Status? = nil) -> [Connection] {
+    public func recentConnections(
+        limit: Int = 200,
+        status: Connection.Status? = nil,
+        since: Date? = nil,
+        processName: String? = nil,
+        hostQuery: String? = nil
+    ) -> [Connection] {
         queue.sync {
             var out: [Connection] = []
-            let sql: String
-            if let s = status {
-                sql = "SELECT * FROM connections WHERE status='\(s.rawValue)' ORDER BY last_seen DESC LIMIT \(limit);"
-            } else {
-                sql = "SELECT * FROM connections ORDER BY last_seen DESC LIMIT \(limit);"
-            }
+            var clauses: [String] = []
+            if status != nil { clauses.append("status = ?") }
+            if since != nil { clauses.append("last_seen >= ?") }
+            if processName != nil { clauses.append("process_name LIKE ?") }
+            if hostQuery != nil { clauses.append("(remote_host LIKE ? OR remote_ip LIKE ?)") }
+            let whereSQL = clauses.isEmpty ? "" : "WHERE " + clauses.joined(separator: " AND ")
+            let sql = """
+            SELECT id,pid,process_name,process_path,process_bundle_id,local_port,remote_host,remote_ip,
+                   remote_port,direction,status,protocol_name,bytes_in,bytes_out,country,country_code,
+                   latitude,longitude,first_seen,last_seen,code_team_id,signing_status
+            FROM connections \(whereSQL)
+            ORDER BY last_seen DESC LIMIT \(max(1, limit));
+            """
             var stmt: OpaquePointer?
             defer { if stmt != nil { sqlite3_finalize(stmt) } }
             guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else { return [] }
+            var idx: Int32 = 1
+            if let s = status {
+                sqlite3_bind_text(stmt, idx, s.rawValue, -1, SQLITE_TRANSIENT)
+                idx += 1
+            }
+            if let since {
+                sqlite3_bind_double(stmt, idx, since.timeIntervalSince1970)
+                idx += 1
+            }
+            if let processName {
+                sqlite3_bind_text(stmt, idx, "%\(processName)%", -1, SQLITE_TRANSIENT)
+                idx += 1
+            }
+            if let hostQuery {
+                let q = "%\(hostQuery)%"
+                sqlite3_bind_text(stmt, idx, q, -1, SQLITE_TRANSIENT)
+                idx += 1
+                sqlite3_bind_text(stmt, idx, q, -1, SQLITE_TRANSIENT)
+            }
             while sqlite3_step(stmt) == SQLITE_ROW {
                 if let c = readConn(stmt) { out.append(c) }
+            }
+            return out
+        }
+    }
+
+    public func purgeConnections(olderThan date: Date) throws {
+        try execute("DELETE FROM connections WHERE last_seen < ?;") { stmt in
+            sqlite3_bind_double(stmt, 1, date.timeIntervalSince1970)
+        }
+    }
+
+    /// Record first/last sighting. Returns true if this key was never seen before.
+    @discardableResult
+    public func recordSighting(kind: String, key: String, at date: Date = Date()) -> Bool {
+        queue.sync {
+            var stmt: OpaquePointer?
+            defer { if stmt != nil { sqlite3_finalize(stmt) } }
+            let select = "SELECT first_seen FROM sightings WHERE kind=? AND key=?;"
+            guard sqlite3_prepare_v2(db, select, -1, &stmt, nil) == SQLITE_OK else { return true }
+            sqlite3_bind_text(stmt, 1, kind, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, key, -1, SQLITE_TRANSIENT)
+            if sqlite3_step(stmt) == SQLITE_ROW {
+                sqlite3_finalize(stmt)
+                stmt = nil
+                let update = "UPDATE sightings SET last_seen=? WHERE kind=? AND key=?;"
+                guard sqlite3_prepare_v2(db, update, -1, &stmt, nil) == SQLITE_OK else { return false }
+                sqlite3_bind_double(stmt, 1, date.timeIntervalSince1970)
+                sqlite3_bind_text(stmt, 2, kind, -1, SQLITE_TRANSIENT)
+                sqlite3_bind_text(stmt, 3, key, -1, SQLITE_TRANSIENT)
+                _ = sqlite3_step(stmt)
+                return false
+            }
+            sqlite3_finalize(stmt)
+            stmt = nil
+            let insert = "INSERT INTO sightings(kind,key,first_seen,last_seen) VALUES(?,?,?,?);"
+            guard sqlite3_prepare_v2(db, insert, -1, &stmt, nil) == SQLITE_OK else { return true }
+            sqlite3_bind_text(stmt, 1, kind, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, key, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_double(stmt, 3, date.timeIntervalSince1970)
+            sqlite3_bind_double(stmt, 4, date.timeIntervalSince1970)
+            _ = sqlite3_step(stmt)
+            return true
+        }
+    }
+
+    public func hasSighting(kind: String, key: String) -> Bool {
+        queue.sync {
+            var stmt: OpaquePointer?
+            defer { if stmt != nil { sqlite3_finalize(stmt) } }
+            guard sqlite3_prepare_v2(db, "SELECT 1 FROM sightings WHERE kind=? AND key=? LIMIT 1;", -1, &stmt, nil) == SQLITE_OK else {
+                return false
+            }
+            sqlite3_bind_text(stmt, 1, kind, -1, SQLITE_TRANSIENT)
+            sqlite3_bind_text(stmt, 2, key, -1, SQLITE_TRANSIENT)
+            return sqlite3_step(stmt) == SQLITE_ROW
+        }
+    }
+
+    public func knownTeamIDs() -> Set<String> {
+        queue.sync {
+            var out = Set<String>()
+            var stmt: OpaquePointer?
+            defer { if stmt != nil { sqlite3_finalize(stmt) } }
+            guard sqlite3_prepare_v2(
+                db,
+                "SELECT DISTINCT code_team_id FROM rules WHERE code_team_id IS NOT NULL AND action='allow';",
+                -1, &stmt, nil
+            ) == SQLITE_OK else { return [] }
+            while sqlite3_step(stmt) == SQLITE_ROW {
+                let t = text(stmt, 0)
+                if !t.isEmpty { out.insert(t) }
             }
             return out
         }
@@ -436,8 +588,11 @@ public final class RuleStore: @unchecked Sendable {
         let exp: Date? = sqlite3_column_type(stmt, 17) == SQLITE_NULL ? nil : Date(timeIntervalSince1970: sqlite3_column_double(stmt, 17))
         let last: Date? = sqlite3_column_type(stmt, 18) == SQLITE_NULL ? nil : Date(timeIntervalSince1970: sqlite3_column_double(stmt, 18))
         let hits = Int(sqlite3_column_int(stmt, 19))
+        let team = textOpt(stmt, 20)
+        let requiresSig = sqlite3_column_type(stmt, 21) == SQLITE_NULL ? false : sqlite3_column_int(stmt, 21) == 1
         return Rule(
             id: id, processBundleId: bundleId, processPath: path, processName: name,
+            codeTeamID: team, requiresSignature: requiresSig,
             remoteHost: host, remoteIP: ip, remotePort: port, direction: dir, action: action,
             scope: scope, priority: priority, profile: profile, groupName: group, notes: notes,
             enabled: enabled, temporary: temp, createdAt: created, expiresAt: exp,
@@ -466,8 +621,11 @@ public final class RuleStore: @unchecked Sendable {
         let lon: Double? = sqlite3_column_type(stmt, 17) == SQLITE_NULL ? nil : sqlite3_column_double(stmt, 17)
         let fs = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 18))
         let ls = Date(timeIntervalSince1970: sqlite3_column_double(stmt, 19))
+        let team = textOpt(stmt, 20)
+        let signing = ProcessSigningStatus(rawValue: text(stmt, 21)) ?? .unknown
         return Connection(
             id: id, pid: pid, processName: pname, processPath: ppath, processBundleId: bid,
+            codeTeamID: team, signingStatus: signing,
             localPort: lp, remoteHost: host, remoteIP: ip, remotePort: rp, direction: dir,
             status: status, protocolName: proto, bytesIn: bin, bytesOut: bout, country: cn,
             countryCode: cc, latitude: lat, longitude: lon, firstSeen: fs, lastSeen: ls

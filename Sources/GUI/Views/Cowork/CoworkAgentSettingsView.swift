@@ -53,8 +53,9 @@ struct CoworkAgentSettingsView: View {
                     cowork.keepHelpTopicID = "agents-what"
                     cowork.showKeepHelp = true
                 } label: {
-                    Image(systemName: "questionmark.circle")
-                        .font(.ps(13))
+                    Label(L10n.keepHelpShort, systemImage: "book.closed.fill")
+                        .font(.ps(11, weight: .medium))
+                        .labelStyle(.iconOnly)
                 }
                 .buttonStyle(PrismHandButtonStyle())
                 .help(L10n.keepHelpTitle)

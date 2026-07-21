@@ -50,8 +50,8 @@ enum L10n {
     }
     static var keepWelcomeBody: String {
         t(
-            "Sentinel watches the network. The Keep is where local AI agents help with files, code, and chores — privately on your Mac.",
-            "Sentinel surveille le réseau. Le Keep est l’endroit où des agents IA locaux aident pour fichiers, code et tâches — en privé sur votre Mac."
+            "Fortress watches the network. The Keep is where local AI agents help with files, code, and chores — privately on your Mac.",
+            "Fortress surveille le réseau. Le Keep est l’endroit où des agents IA locaux aident pour fichiers, code et tâches — en privé sur votre Mac."
         )
     }
     static var keepStep1: String { t("1. Connect a model", "1. Connectez un modèle") }
@@ -167,6 +167,10 @@ enum L10n {
     static var reload: String { t("Reload", "Recharger") }
     static var saved: String { t("Saved", "Enregistré") }
     static var saveRule: String { t("Save rule", "Enregistrer la règle") }
+    static var saveRuleKeepsOpen: String {
+        t("Saves the rule without closing this window.",
+          "Enregistre la règle sans fermer la fenêtre.")
+    }
     static var availableSkills: String { t("Available skills", "Compétences disponibles") }
     static var loading: String { t("Loading…", "Chargement…") }
     static var assistantEditor: String { t("Assistant editor", "Éditeur d'assistant") }
@@ -223,6 +227,7 @@ enum L10n {
         t("Not checked yet — tap Health check", "Pas encore vérifié — appuyez sur Vérifier l’état")
     }
     static var keepHelpTitle: String { t("Keep guide", "Guide Keep") }
+    static var keepHelpShort: String { t("Guide", "Guide") }
     static var keepHelpSearch: String { t("Search help…", "Rechercher dans l’aide…") }
     static var keepHelpPick: String { t("Choose a topic on the left.", "Choisissez un sujet à gauche.") }
     static var keepHelpNoResults: String { t("No matching articles.", "Aucun article correspondant.") }
@@ -453,6 +458,10 @@ enum L10n {
     static var mcpSubtitle: String {
         t("Model Context Protocol servers — image generation, web search, filesystem tools, and more.",
           "Serveurs MCP — génération d'images, recherche web, fichiers, et plus.")
+    }
+    static var mcpUsageHelp: String {
+        t("Enable a server to expose its tools to agents. Skills below are documentation you can edit; Save rule writes the markdown and keeps this window open.",
+          "Activez un serveur pour exposer ses outils aux agents. Les compétences ci-dessous sont de la documentation éditable ; Enregistrer la règle sauve le markdown sans fermer la fenêtre.")
     }
     static var installedServers: String { t("Installed servers", "Serveurs installés") }
     static var detectedAgents: String { t("Detected from agents", "Détectés depuis les agents") }
@@ -869,35 +878,137 @@ enum L10n {
           "Suggestion : passez à qwen3.6 ou désactivez les serveurs MCP, puis réessayez.")
     }
 
-    // MARK: - Sentinel (network)
+    // MARK: - Fortress (network)
 
     /// Product name — kept as brand in both languages.
-    static var sentinel: String { t("Sentinel", "Sentinel") }
-    static var sentinelActivity: String { t("Activity", "Activité") }
-    static var sentinelRules: String { t("Rules", "Règles") }
-    static var sentinelSettings: String { t("Settings", "Réglages") }
-    static var sentinelNetworkActivity: String {
-        t("Sentinel · Network activity", "Sentinel · Activité réseau")
+    static var fortress: String { t("Fortress", "Fortress") }
+    static var fortressActivity: String { t("Activity", "Activité") }
+    static var fortressSuspects: String { t("Suspects", "Suspects") }
+    static var fortressHistory: String { t("History", "Historique") }
+    static var fortressRules: String { t("Rules", "Règles") }
+    static var fortressSettings: String { t("Settings", "Réglages") }
+    static var fortressNetworkActivity: String {
+        t("Fortress · Network activity", "Fortress · Activité réseau")
     }
-    static var sentinelRulesTitle: String { t("Sentinel · Rules", "Sentinel · Règles") }
-    static var sentinelSettingsTitle: String { t("Sentinel · Settings", "Sentinel · Réglages") }
+    static var fortressSuspectsTitle: String { t("Fortress · Suspects", "Fortress · Suspects") }
+    static var fortressHistoryTitle: String { t("Fortress · History", "Fortress · Historique") }
+    static var fortressRulesTitle: String { t("Fortress · Rules", "Fortress · Règles") }
+    static var fortressSettingsTitle: String { t("Fortress · Settings", "Fortress · Réglages") }
 
-    static var localSentinel: String { t("Local Sentinel", "Sentinel local") }
-    static var sentinelDemo: String { t("Sentinel demo", "Démo Sentinel") }
-    static var sentinelIdle: String { t("Sentinel idle", "Sentinel inactif") }
-    static var helperActive: String { t("Helper active", "Helper actif") }
+    static var fortressHelpTitle: String { t("Fortress guide", "Guide Fortress") }
+    static var fortressHelpShort: String { t("Guide", "Guide") }
+    static var fortressHelpSearch: String { t("Search help…", "Rechercher dans l’aide…") }
+    static var fortressHelpPick: String { t("Choose a topic on the left.", "Choisissez un sujet à gauche.") }
+    static var fortressHelpNoResults: String { t("No matching articles.", "Aucun article correspondant.") }
+    static func fortressHelpForPage(_ page: String) -> String {
+        t("Suggested for \(page)", "Suggéré pour \(page)")
+    }
+
+    static var localFortress: String { t("Watching locally", "Surveillance locale") }
+    static var fortressDemo: String { t("Fortress demo", "Démo Fortress") }
+    static var fortressIdle: String { t("Fortress idle", "Fortress inactif") }
+    static var helperActive: String { t("Privileged helper on", "Assistant privilégié actif") }
     static var helperOfflineBanner: String {
-        t("Helper offline — rules and real site names (CDN) need the helper DNS.",
-          "Helper hors ligne — les règles et les vrais noms de sites (CDN) nécessitent le DNS du helper.")
+        t("Background helper offline — some rules and real website names need it.",
+          "Assistant d’arrière-plan hors ligne — certaines règles et vrais noms de sites en ont besoin.")
     }
     static var helperActiveSubtitle: String {
-        t("Sentinel telemetry + firewall actions available.",
-          "Télémétrie Sentinel et actions pare-feu disponibles.")
+        t("Live network view and firewall actions are available.",
+          "Vue réseau en direct et actions pare-feu disponibles.")
     }
-    static var sentinelDemoSubtitle: String {
+    static var fortressDemoSubtitle: String {
         t("Sample traffic with grouped Cursor helpers.",
           "Trafic d’exemple avec les helpers Cursor regroupés.")
     }
+
+    static var protectionStatus: String { t("Protection", "Protection") }
+    static var protectionActive: String { t("Protection active", "Protection active") }
+    static var protectionFilterOnly: String {
+        t("Filter on — helper reconnecting", "Filtre actif — reconnexion de l’assistant")
+    }
+    static var protectionNeedsApproval: String {
+        t("Waiting for macOS approval", "En attente d’approbation macOS")
+    }
+    static var protectionActivating: String { t("Starting protection…", "Démarrage de la protection…") }
+    static var protectionLocalMode: String {
+        t("Local mode (no per-app filter yet)", "Mode local (pas encore de filtre par app)")
+    }
+    static var protectionLimited: String { t("Limited protection", "Protection limitée") }
+    static var protectionHelp: String {
+        t("Full protection needs macOS approval for Citadel’s network filter. Until then, Fortress can still show activity.",
+          "La protection complète nécessite l’approbation macOS pour le filtre réseau de Citadel. En attendant, Fortress peut toujours montrer l’activité.")
+    }
+    static var askTimeoutDeny: String {
+        t("If you don’t answer an alert in time, block the connection",
+          "Si vous ne répondez pas à temps à une alerte, bloquer la connexion")
+    }
+
+    static var alertScopeAny: String { t("Any connection from this app", "Toute connexion de cette app") }
+    static var alertScopeHost: String { t("This website / host only", "Ce site / hôte seulement") }
+    static var alertScopeIPPort: String { t("This IP and port only", "Cette IP et ce port seulement") }
+    static var alertDurationForever: String { t("Forever", "Pour toujours") }
+    static var alertDurationSession: String { t("Until I quit Citadel", "Jusqu’à la fermeture de Citadel") }
+    static var alertDuration1h: String { t("1 hour", "1 heure") }
+    static var alertDuration24h: String { t("24 hours", "24 heures") }
+    static var wantsToConnect: String { t("wants to connect to", "veut se connecter à") }
+    static var unknownProcess: String { t("Unknown app", "App inconnue") }
+    static func signedByTeam(_ team: String) -> String {
+        t("Signed · Team \(team)", "Signée · Team \(team)")
+    }
+    static var signedValid: String { t("Signed and valid", "Signée et valide") }
+    static var signedInvalid: String { t("Invalid signature", "Signature invalide") }
+    static var unsignedBinary: String { t("Not code-signed", "Non signée") }
+    static var signingUnknown: String { t("Signature unknown", "Signature inconnue") }
+    static var signing: String { t("Signing", "Signature") }
+    static var teamID: String { t("Team ID", "Team ID") }
+
+    static var suspectsTitle: String { t("Suspicious communications", "Communications suspectes") }
+    static var suspectsSubtitle: String {
+        t("Clear reasons only — unsigned apps, first-time destinations, sensitive ports, and more.",
+          "Raisons claires seulement — apps non signées, destinations inédites, ports sensibles, etc.")
+    }
+    static var suspectsEmptyTitle: String { t("Nothing suspicious right now", "Rien de suspect pour l’instant") }
+    static var suspectsEmptyBody: String {
+        t("Fortress lists only hard, checkable signals. When something looks off, it appears here with a plain-language why.",
+          "Fortress ne liste que des signaux durs et vérifiables. Quand quelque chose cloche, ça apparaît ici avec un pourquoi en langage clair.")
+    }
+    static var suspectsWhy: String { t("Why is this listed?", "Pourquoi c’est listé ?") }
+    static var suspectsShowInActivity: String { t("Show in Activity", "Voir dans Activité") }
+    static var suspectSeverityAlert: String { t("Alert", "Alerte") }
+    static var suspectSeverityWatch: String { t("Watch", "Vigilance") }
+    static var suspectSeverityInfo: String { t("Info", "Info") }
+
+    static var historyTitle: String { t("Connection history", "Historique des connexions") }
+    static var historySubtitle: String {
+        t("Recent connections kept on this Mac (default 7 days).",
+          "Connexions récentes conservées sur ce Mac (7 jours par défaut).")
+    }
+    static var historyEmpty: String { t("No history yet.", "Pas encore d’historique.") }
+    static var historyPeriod: String { t("Period", "Période") }
+    static var history1d: String { t("Last day", "Dernier jour") }
+    static var history7d: String { t("Last 7 days", "7 derniers jours") }
+    static var history30d: String { t("Last 30 days", "30 derniers jours") }
+    static var historyFilterApp: String { t("Filter app…", "Filtrer l’app…") }
+    static var historyFilterHost: String { t("Filter host…", "Filtrer l’hôte…") }
+    static var exportCSV: String { t("Export CSV", "Exporter CSV") }
+
+    static var dnsFilterExplain: String {
+        t("When on, Citadel filters domain names (ads, trackers, blocklists) before apps connect.",
+          "Quand c’est activé, Citadel filtre les noms de domaine (pubs, trackers, blocklists) avant que les apps se connectent.")
+    }
+    static var blocklistsExplain: String {
+        t("Enable lists to block known bad or noisy domains at DNS.",
+          "Activez des listes pour bloquer des domaines connus (mauvais ou bruyants) au DNS.")
+    }
+    static var blocklistsEmpty: String {
+        t("No blocklists loaded yet. They appear after the helper starts.",
+          "Aucune blocklist chargée. Elles apparaissent après le démarrage de l’assistant.")
+    }
+    static var profilesExplain: String {
+        t("A profile switches how strict Fortress is (ask, allow quietly, or deny quietly).",
+          "Un profil change la sévérité de Fortress (demander, autoriser en silence, ou refuser en silence).")
+    }
+
     static var startingTelemetry: String { t("Starting telemetry…", "Démarrage de la télémétrie…") }
     static var loadDemo: String { t("Load demo", "Charger la démo") }
     static var exitDemo: String { t("Exit demo", "Quitter la démo") }
@@ -969,15 +1080,15 @@ enum L10n {
     }
     static var noRulesYet: String { t("No rules yet", "Aucune règle pour l’instant") }
     static var noRulesHint: String {
-        t("Create a rule, or accept a suggestion from live Sentinel activity.",
-          "Créez une règle, ou acceptez une suggestion depuis l’activité Sentinel.")
+        t("Create a rule, or accept a suggestion from live Fortress activity.",
+          "Créez une règle, ou acceptez une suggestion depuis l’activité Fortress.")
     }
     static var createFirstRule: String { t("Create your first rule", "Créer votre première règle") }
     static var inspector: String { t("Inspector", "Inspecteur") }
     static var ruleDetail: String { t("Rule detail", "Détail de la règle") }
     static var inspectorEmptyHint: String {
-        t("Select a rule to inspect or fine-tune it. Suggestions appear from apps and destinations currently active in Sentinel.",
-          "Sélectionnez une règle pour l’inspecter ou l’affiner. Les suggestions viennent des apps et destinations actives dans Sentinel.")
+        t("Select a rule to inspect or fine-tune it. Suggestions appear from apps and destinations currently active in Fortress.",
+          "Sélectionnez une règle pour l’inspecter ou l’affiner. Les suggestions viennent des apps et destinations actives dans Fortress.")
     }
     static var disable: String { t("Disable", "Désactiver") }
     static var enable: String { t("Enable", "Activer") }
@@ -1010,11 +1121,11 @@ enum L10n {
     static func destinationStreams(_ count: Int) -> String {
         t("\(count) streams", "\(count) flux")
     }
-    static var suggestedFromSentinel: String {
-        t("Suggested from Sentinel activity", "Suggestion depuis l’activité Sentinel")
+    static var suggestedFromFortress: String {
+        t("Suggested from Fortress activity", "Suggestion depuis l’activité Fortress")
     }
-    static var createdInSentinelRules: String {
-        t("Created in Sentinel Rules", "Créée dans Règles Sentinel")
+    static var createdInFortressRules: String {
+        t("Created in Fortress Rules", "Créée dans Règles Fortress")
     }
     static var processNameExample: String { t("e.g. Cursor", "ex. Cursor") }
     static var remoteHostExample: String { t("e.g. api.example.com", "ex. api.example.com") }
@@ -1157,8 +1268,8 @@ enum L10n {
     static var active: String { t("Active", "Actif") }
     static var activate: String { t("Activate", "Activer") }
     static var aboutTagline: String {
-        t("Application firewall and Keep — local AI agents for macOS.",
-          "Pare-feu applicatif et Keep — agents IA locaux pour macOS.")
+        t("Fortress watches the network. Keep runs your agents — local or cloud — inside the walls.",
+          "Fortress surveille le réseau. Keep fait tourner vos agents — locaux ou cloud — à l’intérieur des murs.")
     }
     static var aboutAttributions: String {
         t("Open-source attributions are listed in ATTRIBUTIONS.md and NOTICES.md.",

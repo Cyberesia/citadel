@@ -369,8 +369,8 @@ enum CoworkUserFacing {
     private static func sanitizeBrandName(_ raw: String) -> String {
         localizeRegionalServices(
             raw
+                .replacingOccurrences(of: "aionui-", with: "keep-", options: .caseInsensitive)
                 .replacingOccurrences(of: "AionUi", with: "Citadel Keep", options: .caseInsensitive)
-                .replacingOccurrences(of: "AionUI", with: "Citadel Keep", options: .caseInsensitive)
                 .replacingOccurrences(of: "Aion", with: "Keep", options: .caseInsensitive)
                 .replacingOccurrences(of: "CoworkCore", with: "Keep engine", options: .caseInsensitive)
                 .replacingOccurrences(of: "Cowork", with: "Keep", options: .caseInsensitive)
@@ -479,15 +479,15 @@ enum CoworkUserFacing {
     }
 
     static func sanitizeFreeText(_ text: String) -> String {
-        localizeRegionalServices(
-            text
-                .replacingOccurrences(of: "AionUi", with: "Keep", options: .caseInsensitive)
-                .replacingOccurrences(of: "AionUI", with: "Keep", options: .caseInsensitive)
-                .replacingOccurrences(of: "AIonUI", with: "Keep", options: .caseInsensitive)
-                .replacingOccurrences(of: "Aion", with: "Keep", options: .caseInsensitive)
-                .replacingOccurrences(of: "CoworkCore", with: "Keep engine", options: .caseInsensitive)
-                .replacingOccurrences(of: "Cowork", with: "Keep", options: .caseInsensitive)
-        )
+        var result = text
+        // Skill / slug ids first so "aionui-config" → "keep-config" (not "Citadel Keep-config").
+        result = result.replacingOccurrences(of: "aionui-", with: "keep-", options: .caseInsensitive)
+        result = result.replacingOccurrences(of: "aion-", with: "keep-", options: .caseInsensitive)
+        result = result.replacingOccurrences(of: "AionUi", with: "Citadel Keep", options: .caseInsensitive)
+        result = result.replacingOccurrences(of: "Aion", with: "Keep", options: .caseInsensitive)
+        result = result.replacingOccurrences(of: "CoworkCore", with: "Keep engine", options: .caseInsensitive)
+        result = result.replacingOccurrences(of: "Cowork", with: "Keep", options: .caseInsensitive)
+        return localizeRegionalServices(result)
     }
 }
 

@@ -164,7 +164,7 @@ struct CoworkAssistantEditorView: View {
             id: assistantID,
             rawDescription: localizedDescription
         )
-        rules = detail.rules.resolvedContent
+        rules = CoworkUserFacing.sanitizeFreeText(detail.rules.resolvedContent)
         if rules.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             rules = await cowork.loadAssistantRule(assistantID: assistantID)
         }
@@ -226,6 +226,9 @@ struct CoworkSkillsHubView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L10n.skillsHub).font(.ps(14, weight: .bold))
+            Text(L10n.skillsHubHelp)
+                .font(.ps(10))
+                .foregroundStyle(PrismTheme.textTertiary)
             Picker(L10n.assistantLabel, selection: $selectedAssistantID) {
                 ForEach(cowork.assistants) { assistant in
                     Text(assistant.displayName).tag(assistant.id)
@@ -249,12 +252,14 @@ struct CoworkSkillsHubView: View {
                 Button(L10n.saveRule) {
                     Task {
                         await cowork.saveAssistantRule(assistantID: selectedAssistantID, content: ruleText)
+                        ruleText = CoworkUserFacing.sanitizeFreeText(ruleText)
                         ruleSaved = true
                         try? await Task.sleep(nanoseconds: 2_000_000_000)
                         ruleSaved = false
                     }
                 }
                 .buttonStyle(PrismHandButtonStyle())
+                .help(L10n.saveRuleKeepsOpen)
             }
 
             Divider().opacity(0.2)

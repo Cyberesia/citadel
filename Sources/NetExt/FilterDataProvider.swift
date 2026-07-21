@@ -68,12 +68,13 @@ final class FilterDataProvider: NEFilterDataProvider {
             finish(allow ? .allow() : .drop())
         }
         if !delivered {
-            // Fail open when GUI is offline.
+            // Fail open only when GUI is offline (cannot ask).
             finish(.allow())
             return
         }
+        let denyOnTimeout = SharedAskPolicyBridge.read().timeoutDeny
         workQueue.asyncAfter(deadline: .now() + askTimeout) {
-            finish(.allow())
+            finish(denyOnTimeout ? .drop() : .allow())
         }
     }
 
@@ -86,11 +87,14 @@ final class FilterDataProvider: NEFilterDataProvider {
         let pid = flow.sourceAppAuditToken.flatMap(pidFromAuditToken) ?? 0
         let path = pid > 0 ? executablePath(for: pid) : ""
         let name = path.isEmpty ? "Unknown" : (path as NSString).lastPathComponent
+        let signing = ProcessSigningIdentity.resolve(path: path)
         return Connection(
             pid: Int32(pid),
             processName: name,
             processPath: path,
             processBundleId: bundleIdentifier(forExecutable: path),
+            codeTeamID: signing.teamID,
+            signingStatus: signing.status,
             remoteHost: host,
             remoteIP: host,
             remotePort: port,

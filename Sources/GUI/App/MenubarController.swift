@@ -164,9 +164,9 @@ final class MenubarController: NSObject {
 
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(makeItem("\(L10n.sentinelActivity)…", #selector(openMonitor), keyEq: "n"))
-        menu.addItem(makeItem("\(L10n.sentinelRules)…", #selector(openRules), keyEq: "r"))
-        menu.addItem(makeItem("\(L10n.sentinelSettings)…", #selector(openSettings), keyEq: ","))
+        menu.addItem(makeItem("\(L10n.fortressActivity)…", #selector(openMonitor), keyEq: "n"))
+        menu.addItem(makeItem("\(L10n.fortressRules)…", #selector(openRules), keyEq: "r"))
+        menu.addItem(makeItem("\(L10n.fortressSettings)…", #selector(openSettings), keyEq: ","))
         menu.addItem(.separator())
         if let cowork {
             let agentTitle: String

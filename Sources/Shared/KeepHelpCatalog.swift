@@ -90,14 +90,14 @@ enum KeepHelpCatalog {
             ],
             body: [
                 "en": """
-Keep is Citadel’s AI workspace. Sentinel watches the network; Keep is where you ask agents to read files, write, organize folders, and more — with you in control.
+Keep is Citadel’s AI workspace. Fortress watches the network; Keep is where you ask agents to read files, write, organize folders, and more — with you in control.
 
 Keep itself is an orchestrator: it talks to models (cloud or on-device) and to external agent CLIs over ACP (Agent Client Protocol). It does not replace Claude Code, Codex, Goose, Hermes, or OpenClaw — those tools run the work when you pick them (or when an assistant is wired to them).
 
 Start on Ask: pick a model, optionally a workspace folder, then send a request. Sessions keep history. Assistants store reusable setups. Plus → Agents is where you see which CLIs are installed on this Mac.
 """,
                 "fr": """
-Keep est l’espace de travail IA de Citadel. Sentinel surveille le réseau ; Keep est l’endroit où vous demandez à des agents de lire des fichiers, rédiger, classer des dossiers, etc. — en gardant le contrôle.
+Keep est l’espace de travail IA de Citadel. Fortress surveille le réseau ; Keep est l’endroit où vous demandez à des agents de lire des fichiers, rédiger, classer des dossiers, etc. — en gardant le contrôle.
 
 Keep est un orchestrateur : il parle aux modèles (cloud ou local) et aux CLI d’agents externes via ACP (Agent Client Protocol). Il ne remplace pas Claude Code, Codex, Goose, Hermes ou OpenClaw — ce sont ces outils qui exécutent le travail lorsque vous les choisissez (ou qu’un assistant y est relié).
 
@@ -190,7 +190,7 @@ Remote access restarts the Keep backend so it listens on your LAN (0.0.0.0) with
 4. Use the pairing token if the remote UI asks for device pairing.
 5. Toggle OFF to return to local-only mode (backend restarts again).
 
-Firewall tip: Sentinel’s “Agent firewall” on the same page controls whether the coworkcore process may use the network (allow / ask / deny). It does not replace installing agent CLIs.
+Firewall tip: Fortress’s “Agent firewall” on the same page controls whether the coworkcore process may use the network (allow / ask / deny). It does not replace installing agent CLIs.
 """,
                 "fr": """
 L’accès distant redémarre le backend Keep pour écouter sur le LAN (0.0.0.0) avec authentification HTTP au lieu du seul localhost.
@@ -349,10 +349,10 @@ Si rien ne se passe, ouvrez Fournisseurs / Modèles depuis le compositeur. Les C
                 "fr": "Pare-feu de l’agent"
             ],
             body: [
-                "en": "This Sentinel rule applies to the Keep backend process (coworkcore), not to every CLI like Hermes individually. Choose No rule, Always allow, Ask every time, or Block for that process’s network access.",
-                "fr": "Cette règle Sentinel s’applique au processus backend Keep (coworkcore), pas à chaque CLI comme Hermes individuellement. Choisissez Aucune règle, Toujours autoriser, Demander à chaque fois, ou Bloquer."
+                "en": "This Fortress rule applies to the Keep backend process (coworkcore), not to every CLI like Hermes individually. Choose No rule, Always allow, Ask every time, or Block for that process’s network access.",
+                "fr": "Cette règle Fortress s’applique au processus backend Keep (coworkcore), pas à chaque CLI comme Hermes individuellement. Choisissez Aucune règle, Toujours autoriser, Demander à chaque fois, ou Bloquer."
             ],
-            keywords: ["firewall", "pare-feu", "sentinel", "coworkcore"]
+            keywords: ["firewall", "pare-feu", "fortress", "coworkcore"]
         )
     ]
 }

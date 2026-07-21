@@ -269,11 +269,12 @@ extension CoworkState {
         locale: String,
         client: CoworkCoreClient
     ) async throws {
-        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleaned = CoworkUserFacing.sanitizeFreeText(content)
+        let trimmed = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             try await client.deleteAssistantRule(assistantID: assistantID)
         } else {
-            try await client.writeAssistantRule(assistantID: assistantID, content: content, locale: locale)
+            try await client.writeAssistantRule(assistantID: assistantID, content: cleaned, locale: locale)
         }
     }
 
@@ -300,15 +301,28 @@ extension CoworkState {
     func loadAssistantRule(assistantID: String) async -> String {
         guard let client else { return "" }
         let locale = CitadelLocale.current.rawValue
-        do { return try await client.readAssistantRule(assistantID: assistantID, locale: locale) }
-        catch { return "" }
+        do {
+            let raw = try await client.readAssistantRule(assistantID: assistantID, locale: locale)
+            let cleaned = CoworkUserFacing.sanitizeFreeText(raw)
+            // Persist debranded copy so upstream AionUi wording does not reappear.
+            if cleaned != raw {
+                try? await persistAssistantRules(
+                    assistantID: assistantID,
+                    content: cleaned,
+                    locale: locale,
+                    client: client
+                )
+            }
+            return cleaned
+        } catch { return "" }
     }
 
     func saveAssistantRule(assistantID: String, content: String) async {
         guard let client else { return }
         let locale = CitadelLocale.current.rawValue
+        let cleaned = CoworkUserFacing.sanitizeFreeText(content)
         do {
-            try await persistAssistantRules(assistantID: assistantID, content: content, locale: locale, client: client)
+            try await persistAssistantRules(assistantID: assistantID, content: cleaned, locale: locale, client: client)
             statusMessage = nil
         } catch { statusMessage = L10n.localizeError(error.localizedDescription) }
     }

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Generates Citadel / Sentinel AppIcon sizes from Resources/AppIcon-master.png
+# Generates Citadel / Fortress AppIcon sizes from Resources/AppIcon-master.png
 # into Resources/Assets.xcassets/AppIcon.appiconset/
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

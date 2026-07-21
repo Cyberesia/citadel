@@ -18,6 +18,12 @@ import Foundation
     func enableBlocklist(idString: String, enabled: Bool, reply: @escaping (Bool, String?) -> Void)
     func refreshBlocklists(reply: @escaping (Bool, String?) -> Void)
     func setDoHUpstream(url: String, reply: @escaping (Bool, String?) -> Void)
+    func listBlocklists(reply: @escaping (Data) -> Void)
+    func listProfiles(reply: @escaping (Data) -> Void)
+    func setActiveProfile(name: String, reply: @escaping (Bool, String?) -> Void)
+    func purgeExpiredRules(reply: @escaping (Bool, String?) -> Void)
+    func purgeSessionRules(reply: @escaping (Bool, String?) -> Void)
+    func setDNSFilterEnabled(enabled: Bool, reply: @escaping (Bool, String?) -> Void)
 
     func installPF(reply: @escaping (Bool, String?) -> Void)
     func uninstallPF(reply: @escaping (Bool, String?) -> Void)

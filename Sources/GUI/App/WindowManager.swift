@@ -6,16 +6,16 @@ import Combine
 final class WindowManager {
     private let state: AppState
     private let cowork: CoworkState
-    private let sentinel: SentinelViewModel
+    private let fortress: FortressViewModel
     let router: CitadelShellRouter
     private weak var mainWindow: NSWindow?
     private var alertWindow: NSWindow?
     private var alertCancellable: AnyCancellable?
 
-    init(state: AppState, cowork: CoworkState, sentinel: SentinelViewModel, router: CitadelShellRouter) {
+    init(state: AppState, cowork: CoworkState, fortress: FortressViewModel, router: CitadelShellRouter) {
         self.state = state
         self.cowork = cowork
-        self.sentinel = sentinel
+        self.fortress = fortress
         self.router = router
         observeAlerts()
     }
@@ -36,7 +36,7 @@ final class WindowManager {
             content: CitadelShellView()
                 .environmentObject(state)
                 .environmentObject(cowork)
-                .environmentObject(sentinel)
+                .environmentObject(fortress)
                 .environmentObject(router)
         )
     }

@@ -1,15 +1,14 @@
 import SwiftUI
 
+/// Settings for Fortress — general, DNS, blocklists, profiles, about.
 struct SettingsView: View {
     @EnvironmentObject var state: AppState
     @State private var doh = AppConstants.defaultDoHUpstream
-    @State private var startAtLogin = true
-    @State private var showAlertsOnAllSpaces = true
-    @State private var isEditingFont = false
-    @State private var draftScale: Double = 1.0
     @ObservedObject private var companion = CitadelDeskCompanionController.shared
     @State private var selectedLocale = CitadelLocale.current
     @State private var tab: SettingsTab = .general
+    @State private var isEditingFont = false
+    @State private var draftScale: Double = 1.0
 
     private enum SettingsTab: String, CaseIterable, Identifiable {
         case general, dns, blocklists, profiles, about
@@ -55,11 +54,15 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .prismGlobalInteraction()
         .id(selectedLocale)
+        .onAppear {
+            state.refreshProfilesAndBlocklists()
+            doh = UserDefaults.standard.string(forKey: "citadel.doh") ?? AppConstants.defaultDoHUpstream
+        }
     }
 
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(L10n.sentinelSettings)
+            Text(L10n.fortressSettings)
                 .font(.ps(13, weight: .semibold))
                 .foregroundStyle(PrismTheme.textPrimary)
                 .padding(.horizontal, 14)
@@ -111,11 +114,32 @@ struct SettingsView: View {
 
     private var generalTab: some View {
         VStack(alignment: .leading, spacing: 20) {
+            settingsSection(L10n.protectionStatus) {
+                Text(state.protectionStatusLabel)
+                    .font(.ps(13, weight: .semibold))
+                    .foregroundStyle(PrismTheme.textPrimary)
+                Text(L10n.protectionHelp)
+                    .font(.ps(11))
+                    .foregroundStyle(PrismTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Toggle(L10n.askTimeoutDeny, isOn: Binding(
+                    get: { state.askTimeoutDeny },
+                    set: { state.setAskTimeoutDeny($0) }
+                ))
+                .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
+            }
+
             settingsSection(L10n.settingsGeneral) {
-                Toggle(L10n.launchAtLogin, isOn: $startAtLogin)
-                    .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
-                Toggle(L10n.showAlertsAllSpaces, isOn: $showAlertsOnAllSpaces)
-                    .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
+                Toggle(L10n.launchAtLogin, isOn: Binding(
+                    get: { state.launchAtLogin },
+                    set: { state.setLaunchAtLogin($0) }
+                ))
+                .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
+                Toggle(L10n.showAlertsAllSpaces, isOn: Binding(
+                    get: { state.showAlertsOnAllSpaces },
+                    set: { state.setShowAlertsOnAllSpaces($0) }
+                ))
+                .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
             }
 
             settingsSection(L10n.mode) {
@@ -144,17 +168,6 @@ struct SettingsView: View {
                 Toggle(L10n.companionDnd, isOn: companionQuiet)
                     .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
                     .disabled(!companion.isEnabled)
-            }
-
-            settingsSection(L10n.menuBar) {
-                Text(L10n.crestMenuBarHint)
-                    .font(.ps(11))
-                    .foregroundStyle(PrismTheme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(L10n.crestPinnedAppsHint)
-                    .font(.ps(10))
-                    .foregroundStyle(PrismTheme.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -203,9 +216,6 @@ struct SettingsView: View {
                 .prismClickable()
                 Text("A").font(.system(size: 20, weight: .semibold))
             }
-            Text(L10n.fontScaleHint)
-                .font(.ps(11))
-                .foregroundStyle(PrismTheme.textSecondary)
         }
     }
 
@@ -214,20 +224,24 @@ struct SettingsView: View {
             settingsSection(L10n.dohUpstream) {
                 TextField(L10n.dohURL, text: $doh)
                     .textFieldStyle(.roundedBorder)
-                    .onSubmit { state.helper.remote?.setDoHUpstream(url: doh) { _, _ in } }
-                Text(L10n.examples)
-                    .font(.ps(11))
-                    .foregroundStyle(PrismTheme.textSecondary)
-                Text("https://cloudflare-dns.com/dns-query").font(.ps(11, design: .monospaced))
-                Text("https://dns.quad9.net/dns-query").font(.ps(11, design: .monospaced))
-                Text("https://dns.google/dns-query").font(.ps(11, design: .monospaced))
-            }
-            settingsSection(L10n.localDNSProxy) {
-                Toggle(L10n.useSystemDNS, isOn: .constant(true))
-                    .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
+                    .onSubmit {
+                        UserDefaults.standard.set(doh, forKey: "citadel.doh")
+                        state.helper.remote?.setDoHUpstream(url: doh) { _, _ in }
+                    }
                 Text(L10n.localDNSHint)
                     .font(.ps(11))
                     .foregroundStyle(PrismTheme.textSecondary)
+            }
+            settingsSection(L10n.localDNSProxy) {
+                Toggle(L10n.useSystemDNS, isOn: Binding(
+                    get: { state.useSystemDNS },
+                    set: { state.setUseSystemDNS($0) }
+                ))
+                .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
+                Text(L10n.dnsFilterExplain)
+                    .font(.ps(11))
+                    .foregroundStyle(PrismTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -237,15 +251,33 @@ struct SettingsView: View {
             HStack {
                 Text(L10n.settingsBlocklists).font(.ps(15, weight: .semibold))
                 Spacer()
-                Button(L10n.refreshAll) { state.helper.refreshBlocklists() }
-                    .buttonStyle(PrismHandButtonStyle())
+                Button(L10n.refreshAll) {
+                    state.helper.refreshBlocklists()
+                    state.refreshProfilesAndBlocklists()
+                }
+                .buttonStyle(PrismHandButtonStyle())
             }
+            Text(L10n.blocklistsExplain)
+                .font(.ps(11))
+                .foregroundStyle(PrismTheme.textSecondary)
+
+            if state.blocklists.isEmpty {
+                Text(L10n.blocklistsEmpty)
+                    .font(.ps(12))
+                    .foregroundStyle(PrismTheme.textTertiary)
+            }
+
             ForEach(state.blocklists) { b in
                 HStack {
                     Toggle("", isOn: Binding(
                         get: { b.enabled },
                         set: { newValue in
                             state.helper.remote?.enableBlocklist(idString: b.id.uuidString, enabled: newValue) { _, _ in }
+                            if var updated = state.blocklists.first(where: { $0.id == b.id }) {
+                                updated.enabled = newValue
+                                try? state.store?.updateBlocklist(updated)
+                            }
+                            state.refreshProfilesAndBlocklists()
                         }
                     ))
                     .labelsHidden()
@@ -266,22 +298,38 @@ struct SettingsView: View {
     private var profilesTab: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(L10n.settingsProfiles).font(.ps(15, weight: .semibold))
+            Text(L10n.profilesExplain)
+                .font(.ps(11))
+                .foregroundStyle(PrismTheme.textSecondary)
             ForEach(state.profiles) { p in
                 HStack {
                     Image(systemName: p.icon)
-                    Text(p.name)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(p.name)
+                        Text(modeLabel(p.mode))
+                            .font(.ps(10))
+                            .foregroundStyle(PrismTheme.textTertiary)
+                    }
                     Spacer()
-                    if p.isActive {
+                    if p.isActive || state.activeProfile == p.name {
                         StatusChip(L10n.active, color: PrismTheme.signalAllow)
                     } else {
                         Button(L10n.activate) {
-                            state.activeProfile = p.name
+                            state.activateProfile(p.name)
                         }
                         .buttonStyle(PrismHandButtonStyle())
                     }
                 }
                 .padding(.vertical, 4)
             }
+        }
+    }
+
+    private func modeLabel(_ mode: AppMode) -> String {
+        switch mode {
+        case .alert: return L10n.alertMode
+        case .silentAllow: return L10n.silentAllow
+        case .silentDeny: return L10n.silentDeny
         }
     }
 
@@ -295,6 +343,7 @@ struct SettingsView: View {
             Text(L10n.aboutTagline)
                 .font(.ps(11))
                 .foregroundStyle(PrismTheme.textSecondary)
+                .multilineTextAlignment(.center)
             Divider().padding(.vertical, 8)
             Text(L10n.aboutAttributions)
                 .font(.ps(10))

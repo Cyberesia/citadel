@@ -78,7 +78,7 @@ struct CoworkResetConversationRequest: Encodable {
 }
 
 // MARK: - Assistants CRUD
-// Mirrors AionUI `assistantTypes.ts` / CoworkCore `AssistantDetail`.
+// Mirrors upstream assistant detail shapes / Keep engine `AssistantDetail`.
 
 struct CoworkAssistantProfile: Decodable, Hashable {
     let name: String

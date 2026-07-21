@@ -1,11 +1,11 @@
 import SwiftUI
 
-/// Unified main window — Sentinel (network) + Cowork. Classic Monitor UI is retired;
+/// Unified main window — Fortress (network) + Cowork. Classic Monitor UI is retired;
 /// `AppState` remains the firewall control plane for helper / NE / alerts / Settings.
 struct CitadelShellView: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var cowork: CoworkState
-    @EnvironmentObject var sentinel: SentinelViewModel
+    @EnvironmentObject var fortress: FortressViewModel
     @EnvironmentObject var router: CitadelShellRouter
     @AppStorage("citadel.locale") private var localeRaw = CitadelLocale.current.rawValue
     @State private var palette: ExtractedPalette = .defaultPalette
@@ -26,8 +26,9 @@ struct CitadelShellView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
 
-                if router.section == .sentinel && router.sentinelMode == .activity {
-                    SentinelSummaryBar(vm: sentinel)
+                if router.section == .fortress && router.fortressMode == .activity {
+                    FortressSummaryBar(vm: fortress)
+                        .environmentObject(state)
                         .zIndex(100)
                 }
             }
@@ -35,7 +36,7 @@ struct CitadelShellView: View {
                 updatePalette()
             }
             .onChange(of: router.section) { _ in updatePalette() }
-            .onChange(of: router.sentinelMode) { _ in updatePalette() }
+            .onChange(of: router.fortressMode) { _ in updatePalette() }
             .onChange(of: router.coworkMode) { mode in
                 cowork.closeConversation()
                 if mode != .teams {
@@ -62,23 +63,29 @@ struct CitadelShellView: View {
                     .foregroundStyle(PrismTheme.textTertiary)
             }
             Spacer()
-            if router.section == .cowork {
-                Button {
-                    cowork.keepHelpTopicID = contextualHelpTopic
-                    cowork.showKeepHelp = true
-                } label: {
-                    Image(systemName: "questionmark.circle")
-                        .font(.ps(14, weight: .semibold))
-                }
-                .buttonStyle(PrismHandButtonStyle())
-                .help(L10n.keepHelpTitle)
-                .padding(.trailing, 6)
-            }
             CitadelShellNavBar(
                 expandedSection: $router.section,
-                sentinelMode: $router.sentinelMode,
-                coworkMode: $router.coworkMode
+                fortressMode: $router.fortressMode,
+                coworkMode: $router.coworkMode,
+                onKeepHelp: router.section == .cowork ? {
+                    cowork.keepHelpTopicID = contextualHelpTopic
+                    cowork.showKeepHelp = true
+                } : nil,
+                onFortressHelp: router.section == .fortress ? {
+                    state.fortressHelpTopicID = fortressHelpTopic
+                    state.showFortressHelp = true
+                } : nil
             )
+        }
+    }
+
+    private var fortressHelpTopic: String {
+        switch router.fortressMode {
+        case .activity: return "fortress-what-is"
+        case .suspects: return "fortress-suspects"
+        case .history: return "fortress-history"
+        case .rules: return "fortress-rules"
+        case .settings: return "fortress-protection"
         }
     }
 
@@ -96,11 +103,13 @@ struct CitadelShellView: View {
 
     private var headerSubtitle: String {
         switch router.section {
-        case .sentinel:
-            switch router.sentinelMode {
-            case .activity: return L10n.sentinelNetworkActivity
-            case .rules: return L10n.sentinelRulesTitle
-            case .settings: return L10n.sentinelSettingsTitle
+        case .fortress:
+            switch router.fortressMode {
+            case .activity: return L10n.fortressNetworkActivity
+            case .suspects: return L10n.fortressSuspectsTitle
+            case .history: return L10n.fortressHistoryTitle
+            case .rules: return L10n.fortressRulesTitle
+            case .settings: return L10n.fortressSettingsTitle
             }
         case .cowork:
             switch router.coworkMode {
@@ -119,8 +128,8 @@ struct CitadelShellView: View {
     private var mainPanel: some View {
         Group {
             switch router.section {
-            case .sentinel:
-                sentinelPanel
+            case .fortress:
+                fortressPanel
             case .cowork:
                 coworkPanel
             }
@@ -132,20 +141,33 @@ struct CitadelShellView: View {
     }
 
     @ViewBuilder
-    private var sentinelPanel: some View {
+    private var fortressPanel: some View {
         Group {
-            switch router.sentinelMode {
+            switch router.fortressMode {
             case .activity:
-                SentinelShellView()
-                    .environmentObject(sentinel)
+                FortressShellView()
+                    .environmentObject(fortress)
+            case .suspects:
+                FortressSuspectsView()
+                    .environmentObject(fortress)
+                    .environmentObject(state)
+                    .environmentObject(router)
+            case .history:
+                FortressHistoryView()
+                    .environmentObject(state)
             case .rules:
-                SentinelRulesView()
-                    .environmentObject(sentinel)
+                FortressRulesView()
+                    .environmentObject(fortress)
             case .settings:
                 SettingsView()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .sheet(isPresented: $state.showFortressHelp) {
+            FortressHelpView()
+                .environmentObject(state)
+                .environmentObject(router)
+        }
     }
 
     @ViewBuilder
@@ -182,7 +204,7 @@ struct CitadelShellView: View {
                 .environmentObject(cowork)
         }
         .sheet(isPresented: $cowork.showMcpSheet) {
-            CoworkMcpSettingsView()
+            CoworkMcpSettingsView(isModal: true)
                 .environmentObject(cowork)
                 .frame(minWidth: 520, minHeight: 480)
         }
@@ -194,7 +216,7 @@ struct CitadelShellView: View {
     }
 
     private func updatePalette() {
-        // Do not wrap in withAnimation — that also animates the sentinel/Keep
+        // Do not wrap in withAnimation — that also animates the fortress/Keep
         // panel swap and can leave Activity stuck at a half-height glass frame.
         switch router.section {
         case .cowork:
@@ -203,14 +225,26 @@ struct CitadelShellView: View {
                 secondary: PrismTheme.dominantMid,
                 accent: Color(red: 0.55, green: 0.38, blue: 1.0)
             ).tempered(blend: 0.26)
-        case .sentinel:
-            switch router.sentinelMode {
+        case .fortress:
+            switch router.fortressMode {
             case .activity:
                 palette = ExtractedPalette(
                     primary: Color(red: 0.14, green: 0.10, blue: 0.08),
                     secondary: PrismTheme.dominantMid,
                     accent: PrismTheme.accent
                 ).tempered(blend: 0.24)
+            case .suspects:
+                palette = ExtractedPalette(
+                    primary: Color(red: 0.16, green: 0.08, blue: 0.08),
+                    secondary: PrismTheme.dominantMid,
+                    accent: PrismTheme.signalDeny
+                ).tempered(blend: 0.22)
+            case .history:
+                palette = ExtractedPalette(
+                    primary: Color(red: 0.10, green: 0.11, blue: 0.14),
+                    secondary: PrismTheme.dominantMid,
+                    accent: PrismTheme.accentSecondary
+                ).tempered(blend: 0.22)
             case .rules:
                 palette = ExtractedPalette(
                     primary: Color(red: 0.18, green: 0.10, blue: 0.14),

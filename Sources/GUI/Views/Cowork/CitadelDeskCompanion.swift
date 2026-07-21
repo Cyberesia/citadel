@@ -49,8 +49,10 @@ final class CitadelDeskCompanionController: ObservableObject {
         }
         if panel == nil {
             let content = NSHostingView(rootView: CitadelDeskCompanionView().environmentObject(self))
-            let size: CGFloat = 88
+            let size: CGFloat = 112
             content.frame = CGRect(x: 0, y: 0, width: size, height: size)
+            content.wantsLayer = true
+            content.layer?.backgroundColor = NSColor.clear.cgColor
 
             let panel = NSPanel(
                 contentRect: CGRect(x: 120, y: 120, width: size, height: size),
@@ -95,42 +97,18 @@ struct CitadelDeskCompanionView: View {
     @EnvironmentObject var controller: CitadelDeskCompanionController
     @State private var bob = false
 
-    /// Diagonal pair, centroid centered in the 88pt badge.
-    private static let marks: [(size: CGFloat, x: CGFloat, y: CGFloat)] = [
-        (30, -10, 10),  // large — lower-left
-        (20, 14, -14),  // medium — upper-right
-    ]
-
-    private let markGradient = LinearGradient(
-        colors: [
-            Color(red: 0.65, green: 0.45, blue: 1.0),
-            Color(red: 0.35, green: 0.72, blue: 0.95)
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    /// Prism accent — coral/orange from the Citadel mark (not violet).
+    private let accent = Color(red: 1.0, green: 0.44, blue: 0.26)
 
     var body: some View {
-        ZStack {
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color(red: 0.55, green: 0.38, blue: 1.0).opacity(glowOpacity),
-                            .clear
-                        ],
-                        center: .center,
-                        startRadius: 6,
-                        endRadius: 40
-                    )
-                )
-
-            ZStack {
-                ForEach(Array(Self.marks.enumerated()), id: \.offset) { _, mark in
-                    aisanceMark(size: mark.size)
-                        .offset(x: mark.x, y: mark.y)
-                }
-            }
+        // Soft glow via shadow only — no filled circle (avoids opaque haze / square clip).
+        Image("CitadelMark")
+            .resizable()
+            .interpolation(.high)
+            .aspectRatio(contentMode: .fit)
+            .frame(width: 96, height: 96)
+            .shadow(color: accent.opacity(glowOpacity), radius: 16, y: 0)
+            .shadow(color: accent.opacity(glowOpacity * 0.55), radius: 28, y: 0)
             .offset(y: bob ? -2 : 2)
             .animation(
                 controller.mood == .thinking
@@ -140,30 +118,19 @@ struct CitadelDeskCompanionView: View {
             )
             .scaleEffect(controller.mood == .confirm ? 1.06 : 1.0)
             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: controller.mood)
-        }
-        .frame(width: 88, height: 88)
-        .contentShape(Circle())
-        .onTapGesture { controller.activateMainWindow() }
-        .onAppear { bob = true }
-        .help(L10n.deskCompanion)
-    }
-
-    private func aisanceMark(size: CGFloat) -> some View {
-        Image("AisanceMark")
-            .resizable()
-            .renderingMode(.template)
-            .interpolation(.high)
-            .aspectRatio(contentMode: .fit)
-            .frame(width: size, height: size)
-            .foregroundStyle(markGradient)
+            .frame(width: 112, height: 112)
+            .contentShape(Rectangle())
+            .onTapGesture { controller.activateMainWindow() }
+            .onAppear { bob = true }
+            .help(L10n.deskCompanion)
     }
 
     private var glowOpacity: Double {
         switch controller.mood {
-        case .idle: return 0.32
-        case .thinking: return 0.48
-        case .happy: return 0.40
-        case .confirm: return 0.55
+        case .idle: return 0.35
+        case .thinking: return 0.55
+        case .happy: return 0.45
+        case .confirm: return 0.65
         }
     }
 }

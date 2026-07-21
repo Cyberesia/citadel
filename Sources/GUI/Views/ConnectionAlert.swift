@@ -5,22 +5,52 @@ struct ConnectionAlertView: View {
     @EnvironmentObject var state: AppState
     let alert: AppState.PendingAlert
     @State private var remember = true
-    @State private var scope: AlertScope = .anyConnection
+    @State private var scope: AlertScope = .thisHost
     @State private var duration: AlertDuration = .forever
 
     enum AlertScope: String, CaseIterable, Identifiable {
-        case anyConnection = "any connection"
-        case thisHost = "this host"
-        case thisIPandPort = "this IP and port"
+        case anyConnection
+        case thisHost
+        case thisIPandPort
         var id: String { rawValue }
+
+        var label: String {
+            switch self {
+            case .anyConnection: return L10n.alertScopeAny
+            case .thisHost: return L10n.alertScopeHost
+            case .thisIPandPort: return L10n.alertScopeIPPort
+            }
+        }
     }
 
     enum AlertDuration: String, CaseIterable, Identifiable {
-        case forever = "Forever"
-        case session = "Until quit"
-        case oneHour = "1 hour"
-        case oneDay = "24 hours"
+        case forever
+        case session
+        case oneHour
+        case oneDay
         var id: String { rawValue }
+
+        var label: String {
+            switch self {
+            case .forever: return L10n.alertDurationForever
+            case .session: return L10n.alertDurationSession
+            case .oneHour: return L10n.alertDuration1h
+            case .oneDay: return L10n.alertDuration24h
+            }
+        }
+
+        var expiresAt: Date? {
+            switch self {
+            case .forever: return nil
+            case .session: return nil // marked via notes + temporary; purged on quit
+            case .oneHour: return Date().addingTimeInterval(60 * 60)
+            case .oneDay: return Date().addingTimeInterval(60 * 60 * 24)
+            }
+        }
+
+        var isTemporary: Bool {
+            self != .forever
+        }
     }
 
     var body: some View {
@@ -30,12 +60,15 @@ struct ConnectionAlertView: View {
                     .font(.ps(34))
                     .foregroundStyle(PrismTheme.accentGradient)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(alert.connection.processName.isEmpty ? "Unknown" : alert.connection.processName)
+                    Text(alert.connection.processName.isEmpty ? L10n.unknownProcess : alert.connection.processName)
                         .font(.ps(17, weight: .bold))
                         .foregroundStyle(PrismTheme.textPrimary)
-                    Text("wants to connect to")
+                    Text(L10n.wantsToConnect)
                         .font(.ps(11))
                         .foregroundStyle(PrismTheme.textSecondary)
+                    Text(signingLine)
+                        .font(.ps(10))
+                        .foregroundStyle(signingColor)
                 }
                 Spacer()
             }
@@ -62,56 +95,72 @@ struct ConnectionAlertView: View {
                     .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
                     .foregroundStyle(PrismTheme.textPrimary)
                 Picker(L10n.scope, selection: $scope) {
-                    ForEach(AlertScope.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(AlertScope.allCases) { Text($0.label).tag($0) }
                 }
                 .disabled(!remember)
                 Picker(L10n.duration, selection: $duration) {
-                    ForEach(AlertDuration.allCases) { Text($0.rawValue).tag($0) }
+                    ForEach(AlertDuration.allCases) { Text($0.label).tag($0) }
                 }
                 .disabled(!remember)
             }
 
             HStack {
-                Button(L10n.deny) { state.resolveAlert(alert, allow: false, remember: remember) }
+                Button(L10n.deny) {
+                    state.resolveAlert(alert, allow: false, remember: remember, scope: scope, duration: duration)
+                }
                     .keyboardShortcut(.cancelAction)
                     .buttonStyle(.borderedProminent)
                     .tint(.red)
                 Spacer()
-                Button(L10n.allow) { state.resolveAlert(alert, allow: true, remember: remember) }
+                Button(L10n.allow) {
+                    state.resolveAlert(alert, allow: true, remember: remember, scope: scope, duration: duration)
+                }
                     .keyboardShortcut(.defaultAction)
                     .buttonStyle(.borderedProminent)
-                    .tint(.green)
             }
         }
         .padding(20)
-        .frame(width: 440)
-        .prismGlass(cornerRadius: 24, padding: 0)
-        .preferredColorScheme(.dark)
+        .frame(width: 380)
+        .prismGlass(cornerRadius: 18, padding: 0)
     }
-}
 
-struct AlertOverlayContainer: View {
-    @EnvironmentObject var state: AppState
-    var body: some View {
-        ZStack {
-            if let alert = state.pendingAlerts.first {
-                Color.black.opacity(0.45).ignoresSafeArea()
-                ConnectionAlertView(alert: alert).environmentObject(state)
+    private var signingLine: String {
+        switch alert.connection.signingStatus {
+        case .signedValid:
+            if let team = alert.connection.codeTeamID, !team.isEmpty {
+                return L10n.signedByTeam(team)
             }
+            return L10n.signedValid
+        case .signedInvalid:
+            return L10n.signedInvalid
+        case .unsigned:
+            return L10n.unsignedBinary
+        case .unknown:
+            return L10n.signingUnknown
+        }
+    }
+
+    private var signingColor: Color {
+        switch alert.connection.signingStatus {
+        case .signedValid: return PrismTheme.signalAllow
+        case .signedInvalid, .unsigned: return PrismTheme.signalDeny
+        case .unknown: return PrismTheme.textTertiary
         }
     }
 }
 
 struct AlertWindowContent: View {
     @EnvironmentObject var state: AppState
+
     var body: some View {
         Group {
             if let alert = state.pendingAlerts.first {
-                ConnectionAlertView(alert: alert).environmentObject(state)
+                ConnectionAlertView(alert: alert)
+                    .environmentObject(state)
             } else {
-                Color.clear.frame(width: 440, height: 1)
+                EmptyView()
             }
         }
-        .id(state.fontScale)
+        .padding(8)
     }
 }

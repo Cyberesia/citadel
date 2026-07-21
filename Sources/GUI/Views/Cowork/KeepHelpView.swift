@@ -137,7 +137,7 @@ struct KeepHelpView: View {
             }
         } else {
             VStack(spacing: 8) {
-                Image(systemName: "questionmark.circle")
+                Image(systemName: "book.closed.fill")
                     .font(.system(size: 36))
                     .foregroundStyle(PrismTheme.textTertiary)
                 Text(L10n.keepHelpPick)

@@ -39,17 +39,17 @@ struct CrestPanelView: View {
                 crestButton(L10n.tray, systemImage: "menubar.arrow.up.rectangle") {
                     onOpenMenubar()
                 }
-                crestButton(L10n.sentinelActivity, systemImage: "globe.americas.fill") {
+                crestButton(L10n.fortressActivity, systemImage: "globe.americas.fill") {
                     onOpenCitadel()
                     windows.showNetworkMonitor()
                     onDismiss()
                 }
-                crestButton(L10n.sentinelRules, systemImage: "list.bullet.rectangle") {
+                crestButton(L10n.fortressRules, systemImage: "list.bullet.rectangle") {
                     onOpenCitadel()
                     windows.showRulesManager()
                     onDismiss()
                 }
-                crestButton(L10n.sentinelSettings, systemImage: "gearshape") {
+                crestButton(L10n.fortressSettings, systemImage: "gearshape") {
                     onOpenCitadel()
                     windows.showSettings()
                     onDismiss()
