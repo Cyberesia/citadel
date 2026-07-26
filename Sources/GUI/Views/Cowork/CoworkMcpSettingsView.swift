@@ -9,8 +9,12 @@ struct CoworkMcpSettingsView: View {
     @State private var importError: String?
     @State private var isImporting = false
 
+    private var externalAgentConfigGroups: [CoworkMcpAgentConfigGroup] {
+        cowork.mcpAgentConfigs.filter { !CoworkUserFacing.isSelfMcpAgentSource($0.source) }
+    }
+
     private var detectedServers: [CoworkMcpDetectedServer] {
-        cowork.mcpAgentConfigs.flatMap(\.servers)
+        externalAgentConfigGroups.flatMap(\.servers)
     }
 
     private var importableDetected: [CoworkMcpDetectedServer] {
@@ -18,10 +22,66 @@ struct CoworkMcpSettingsView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            headerBar
+
+            if isModal {
+                HStack(alignment: .top, spacing: 0) {
+                    ScrollView {
+                        skillsColumn
+                            .padding(20)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    Divider().opacity(0.2)
+
+                    ScrollView {
+                        mcpColumn
+                            .padding(20)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        skillsColumn
+                        mcpColumn
+                    }
+                    .padding(20)
+                }
+            }
+
+            if isModal {
+                Divider().opacity(0.2)
+                HStack {
+                    Spacer()
+                    Button(L10n.close) { dismiss() }
+                        .buttonStyle(PrismHandButtonStyle())
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 14)
+            }
+        }
+        .prismSheetChrome(
+            minWidth: isModal ? 860 : nil,
+            minHeight: isModal ? 580 : nil
+        )
+        .onAppear {
+            cowork.startCoreIfNeeded()
+            Task {
+                await cowork.refreshMcpServers()
+                await cowork.refreshMcpAgentConfigs()
+                await cowork.refreshSkills()
+                await cowork.refreshMcpOAuth()
+            }
+        }
+    }
+
+    private var headerBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(L10n.mcpTools)
-                    .font(.ps(16, weight: .semibold))
+                    .font(.ps(18, weight: .bold))
                     .foregroundStyle(PrismTheme.textPrimary)
                 Spacer()
                 Button(L10n.refresh) {
@@ -41,47 +101,36 @@ struct CoworkMcpSettingsView: View {
                     .help(L10n.close)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 16)
 
             Text(L10n.mcpSubtitle)
                 .font(.ps(11))
                 .foregroundStyle(PrismTheme.textSecondary)
-                .padding(.horizontal, 16)
-
             Text(L10n.mcpUsageHelp)
                 .font(.ps(10))
                 .foregroundStyle(PrismTheme.textTertiary)
-                .padding(.horizontal, 16)
-
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    CoworkSkillsHubView()
-                    installedSection
-                    detectedSection
-                    manualImportSection
-                }
-                .padding(16)
-            }
-
-            if isModal {
-                HStack {
-                    Spacer()
-                    Button(L10n.close) { dismiss() }
-                        .buttonStyle(PrismHandButtonStyle())
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 16)
-            }
         }
-        .onAppear {
-            cowork.startCoreIfNeeded()
-            Task {
-                await cowork.refreshMcpServers()
-                await cowork.refreshMcpAgentConfigs()
-                await cowork.refreshSkills()
-                await cowork.refreshMcpOAuth()
-            }
+        .padding(.horizontal, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
+    }
+
+    private var skillsColumn: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(L10n.skillsHub)
+                .font(.ps(13, weight: .bold))
+                .foregroundStyle(PrismTheme.textPrimary)
+            Text(L10n.mcpSkillsHubSectionHelp)
+                .font(.ps(10))
+                .foregroundStyle(PrismTheme.textTertiary)
+            CoworkSkillsHubView()
+        }
+    }
+
+    private var mcpColumn: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            installedSection
+            detectedSection
+            manualImportSection
         }
     }
 
@@ -104,9 +153,9 @@ struct CoworkMcpSettingsView: View {
             if detectedServers.isEmpty {
                 emptyHint(L10n.mcpDetectedEmpty)
             } else {
-                ForEach(cowork.mcpAgentConfigs, id: \.source) { group in
+                ForEach(externalAgentConfigGroups, id: \.source) { group in
                     if !group.servers.isEmpty {
-                        Text(group.source.uppercased())
+                        Text(CoworkUserFacing.mcpAgentSourceDisplay(group.source).uppercased())
                             .font(.ps(9, weight: .bold))
                             .foregroundStyle(PrismTheme.textTertiary)
                             .padding(.top, 4)
@@ -206,7 +255,7 @@ struct CoworkMcpSettingsView: View {
             Spacer()
             Toggle("", isOn: Binding(
                 get: { server.enabled },
-                set: { _ in Task { await cowork.toggleMcpServer(server.id) } }
+                set: { enabled in Task { await cowork.setMcpServerEnabled(server.id, enabled: enabled) } }
             ))
             .toggleStyle(PrismHandToggleStyle(kind: .switch))
             .labelsHidden()
@@ -222,7 +271,11 @@ struct CoworkMcpSettingsView: View {
             }
         }
         .padding(12)
-        .background(PrismTheme.surfaceMuted.opacity(0.4))
+        .background(PrismTheme.surfaceMuted.opacity(0.45))
+        .overlay {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(PrismTheme.borderSubtle, lineWidth: 1)
+        }
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 

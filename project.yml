@@ -27,6 +27,7 @@ settings:
       CODE_SIGN_IDENTITY: "-"
     Release:
       ONLY_ACTIVE_ARCH: NO
+      CODE_SIGN_IDENTITY: "-"
 
 schemes:
   Citadel:
@@ -113,7 +114,8 @@ targets:
           CODE_SIGN_IDENTITY: "-"
           ENABLE_TESTABILITY: YES
         Release:
-          CODE_SIGN_ENTITLEMENTS: Sources/GUI/Citadel.entitlements
+          CODE_SIGN_ENTITLEMENTS: Packaging/Entitlements/CitadelBuild.entitlements
+          CODE_SIGN_IDENTITY: "-"
           ENABLE_TESTABILITY: YES
     postBuildScripts:
       - name: Embed Helper
@@ -167,6 +169,9 @@ targets:
       - target: CitadelHelper
         embed: false
         link: false
+      - target: CitadelNetExt
+        embed: false
+        link: false
       - package: mlx-swift
         product: MLX
       - package: mlx-swift
@@ -206,12 +211,6 @@ targets:
             com.apple.networkextension.filter-data: CitadelNetExt.FilterDataProvider
     entitlements:
       path: Sources/NetExt/NetExt.entitlements
-      properties:
-        com.apple.security.app-sandbox: true
-        com.apple.security.application-groups:
-          - group.com.citadel.firewall
-        com.apple.developer.networking.networkextension:
-          - content-filter-provider-systemextension
     settings:
       base:
         PRODUCT_NAME: CitadelNetExt
@@ -220,6 +219,10 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Sources/NetExt/NetExt.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         SKIP_INSTALL: YES
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Packaging/Entitlements/CitadelNetExtBuild.entitlements
+          CODE_SIGN_IDENTITY: "-"
 
   CitadelHelper:
     type: tool
@@ -237,6 +240,10 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Sources/Helper/Helper.entitlements
         ENABLE_HARDENED_RUNTIME: YES
         OTHER_LDFLAGS: "-sectcreate __TEXT __info_plist $(SRCROOT)/Sources/Helper/Info.plist -sectcreate __TEXT __launchd_plist $(SRCROOT)/Sources/Helper/Launchd.plist"
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Packaging/Entitlements/CitadelHelperBuild.entitlements
+          CODE_SIGN_IDENTITY: "-"
 
   CitadelFirewallTests:
     type: bundle.unit-test

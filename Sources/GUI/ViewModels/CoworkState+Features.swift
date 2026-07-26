@@ -303,9 +303,10 @@ extension CoworkState {
         let locale = CitadelLocale.current.rawValue
         do {
             let raw = try await client.readAssistantRule(assistantID: assistantID, locale: locale)
-            let cleaned = CoworkUserFacing.sanitizeFreeText(raw)
+            let cleaned = CoworkUserFacing.sanitizeAssistantRuleContent(raw)
+            let isBuiltin = assistants.first(where: { $0.id == assistantID })?.isBuiltin ?? false
             // Persist debranded copy so upstream AionUi wording does not reappear.
-            if cleaned != raw {
+            if cleaned != raw, !isBuiltin {
                 try? await persistAssistantRules(
                     assistantID: assistantID,
                     content: cleaned,
@@ -319,6 +320,10 @@ extension CoworkState {
 
     func saveAssistantRule(assistantID: String, content: String) async {
         guard let client else { return }
+        if assistants.first(where: { $0.id == assistantID })?.isBuiltin == true {
+            statusMessage = L10n.assistantBuiltinRulesReadOnly
+            return
+        }
         let locale = CitadelLocale.current.rawValue
         let cleaned = CoworkUserFacing.sanitizeFreeText(content)
         do {

@@ -67,6 +67,22 @@ final class MenubarController: NSObject {
         ) { [weak self] _ in
             Task { @MainActor in self?.reconsiderTrayAfterScreenChange() }
         }
+
+        NotificationCenter.default.addObserver(
+            forName: .citadelLocaleDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.refreshPopoverRoot() }
+        }
+    }
+
+    private func refreshPopoverRoot() {
+        let popoverView = MenubarPopoverView(close: { [weak self] in self?.popover.performClose(nil) })
+            .environmentObject(state)
+            .environmentObject(windows)
+            .frame(width: 380, height: 540)
+        popover.contentViewController = NSHostingController(rootView: popoverView)
     }
 
     /// One-shot re-show after display changes; Crest will collapse again if still crowded.

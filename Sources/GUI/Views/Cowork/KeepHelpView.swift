@@ -16,7 +16,7 @@ struct KeepHelpView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 720, minHeight: 480)
-        .background(PrismTheme.surfaceMuted.opacity(0.92))
+        .prismSheetChrome(minWidth: 720, minHeight: 480)
         .prismGlobalInteraction()
         .onAppear {
             if selectedID == nil {

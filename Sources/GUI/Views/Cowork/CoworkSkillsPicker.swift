@@ -2,44 +2,60 @@ import SwiftUI
 
 struct CoworkSkillsPicker: View {
     @EnvironmentObject var cowork: CoworkState
+    @State private var showPopover = false
+
+    /// One row per visible title — avoids duplicate Infomaniak hiring aliases from upstream.
+    private var pickerSkills: [CoworkSkill] {
+        var seen = Set<String>()
+        return cowork.availableSkills.filter { skill in
+            let key = skill.displayTitle.lowercased()
+            return seen.insert(key).inserted
+        }
+    }
 
     var body: some View {
         if cowork.availableSkills.isEmpty { EmptyView() }
         else {
-            Menu {
-                if !cowork.activeModelSupportsTools {
-                    Text(L10n.toolsDisabledSkillsHelp)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text(L10n.skillsExtend)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+            CoworkConfigChipTrigger(
+                icon: "puzzlepiece.extension",
+                title: skillsLabel,
+                tint: skillsTint,
+                isPresented: $showPopover
+            ) {
+                popoverContent
+                    .prismPopoverChrome(width: 400, maxHeight: 440)
+            }
+            .help(cowork.activeModelSupportsTools ? L10n.skillsHelp : L10n.toolsDisabledSkillsHelp)
+        }
+    }
 
-                    Divider()
+    @ViewBuilder
+    private var popoverContent: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !cowork.activeModelSupportsTools {
+                Text(L10n.toolsDisabledSkillsHelp)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.textSecondary)
+            } else {
+                Text(L10n.sessionSkillsPickerHelp)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                    ForEach(cowork.availableSkills) { skill in
-                        Toggle(isOn: binding(for: skill.name)) {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(skill.displayTitle)
-                                if let detail = skill.displayDetail {
-                                    Text(detail)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(pickerSkills) { skill in
+                            PrismSelectableRow(
+                                title: skill.displayTitle,
+                                subtitle: skill.displayDetail,
+                                isSelected: cowork.selectedSkillIDs.contains(skill.name)
+                            ) {
+                                toggleSkill(skill.name)
                             }
                         }
                     }
                 }
-            } label: {
-                CoworkConfigChip(
-                    icon: "puzzlepiece.extension",
-                    title: skillsLabel,
-                    tint: skillsTint
-                )
             }
-            .menuStyle(.borderlessButton)
-            .help(cowork.activeModelSupportsTools ? L10n.skillsHelp : L10n.toolsDisabledSkillsHelp)
         }
     }
 
@@ -53,71 +69,53 @@ struct CoworkSkillsPicker: View {
         return L10n.skillsCount(cowork.selectedSkillIDs.count)
     }
 
-    private func binding(for name: String) -> Binding<Bool> {
-        Binding(
-            get: { cowork.selectedSkillIDs.contains(name) },
-            set: { enabled in
-                guard cowork.activeModelSupportsTools else { return }
-                if enabled { cowork.selectedSkillIDs.insert(name) }
-                else { cowork.selectedSkillIDs.remove(name) }
-                Task { await cowork.applySkillsToActiveConversation() }
-            }
-        )
+    private func toggleSkill(_ name: String) {
+        guard cowork.activeModelSupportsTools else { return }
+        if cowork.selectedSkillIDs.contains(name) {
+            cowork.selectedSkillIDs.remove(name)
+        } else {
+            cowork.selectedSkillIDs.insert(name)
+        }
+        Task { await cowork.applySkillsToActiveConversation() }
     }
 }
 
 struct CoworkAgentModePicker: View {
     @EnvironmentObject var cowork: CoworkState
+    @State private var showPopover = false
 
     private var mode: CoworkUserFacing.PermissionMode {
         CoworkUserFacing.PermissionMode.from(stored: cowork.agentPermissionMode)
     }
 
     var body: some View {
-        Menu {
-            ForEach(CoworkUserFacing.PermissionMode.allCases) { item in
-                Button {
-                    cowork.agentPermissionMode = item.rawValue
-                    Task { await cowork.applyPermissionModeToActiveConversation() }
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(item.title)
-                        Text(item.detail)
-                            .font(.caption)
+        CoworkConfigChipTrigger(
+            icon: "shield.lefthalf.filled",
+            title: L10n.permissionsChip(mode.title),
+            tint: PrismTheme.textSecondary,
+            isPresented: $showPopover
+        ) {
+            popoverContent
+                .prismPopoverChrome(width: 340, maxHeight: 320)
+        }
+        .help(mode.detail)
+    }
+
+    private var popoverContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(CoworkUserFacing.PermissionMode.allCases) { item in
+                    PrismSelectableRow(
+                        title: item.title,
+                        subtitle: item.detail,
+                        isSelected: mode == item
+                    ) {
+                        cowork.agentPermissionMode = item.rawValue
+                        Task { await cowork.applyPermissionModeToActiveConversation() }
+                        showPopover = false
                     }
                 }
             }
-        } label: {
-            CoworkConfigChip(
-                icon: "shield.lefthalf.filled",
-                title: L10n.permissionsChip(mode.title),
-                tint: PrismTheme.textSecondary
-            )
         }
-        .menuStyle(.borderlessButton)
-        .help(mode.detail)
-    }
-}
-
-/// Small capsule used for session configuration menus.
-struct CoworkConfigChip: View {
-    let icon: String
-    let title: String
-    let tint: Color
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-            Text(title)
-                .lineLimit(1)
-            Image(systemName: "chevron.down")
-                .font(.ps(8, weight: .bold))
-        }
-        .font(.ps(10, weight: .semibold))
-        .foregroundStyle(tint)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(PrismTheme.surfaceMuted.opacity(0.5))
-        .clipShape(Capsule())
     }
 }

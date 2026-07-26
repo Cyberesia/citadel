@@ -652,6 +652,7 @@ final class CoworkState: ObservableObject {
         guard let extra else { return }
         if let mcp = extra.selectedMcpServerIDs {
             selectedMcpIDs = Set(mcp)
+            pruneMcpSelection()
         }
         if let skills = extra.skillIDs {
             selectedSkillIDs = Set(skills)
@@ -765,7 +766,12 @@ final class CoworkState: ObservableObject {
     func refreshSkills() async {
         guard let client else { return }
         do {
-            availableSkills = try await client.listSkills()
+            let raw = try await client.listSkills()
+            var seen = Set<String>()
+            availableSkills = raw.filter { skill in
+                let key = skill.name.lowercased()
+                return seen.insert(key).inserted
+            }
         } catch {
             availableSkills = []
         }
@@ -1257,10 +1263,26 @@ final class CoworkState: ObservableObject {
             mcpServers = try await client.listMcpServers()
             if selectedMcpIDs.isEmpty {
                 selectedMcpIDs = Set(mcpServers.filter { $0.enabled }.map(\.id))
+            } else {
+                pruneMcpSelection()
             }
         } catch {
             statusMessage = error.localizedDescription
         }
+    }
+
+    /// Drops disabled or removed MCP servers from the active session selection.
+    func pruneMcpSelection() {
+        let enabledIDs = Set(mcpServers.filter(\.enabled).map(\.id))
+        selectedMcpIDs = selectedMcpIDs.intersection(enabledIDs)
+    }
+
+    var enabledMcpServers: [CoworkMcpServer] {
+        mcpServers.filter(\.enabled)
+    }
+
+    var selectedEnabledMcpCount: Int {
+        selectedMcpIDs.intersection(Set(enabledMcpServers.map(\.id))).count
     }
 
     func refreshMcpAgentConfigs() async {
@@ -1315,6 +1337,12 @@ final class CoworkState: ObservableObject {
         }
     }
 
+    func setMcpServerEnabled(_ id: String, enabled: Bool) async {
+        guard let current = mcpServers.first(where: { $0.id == id }) else { return }
+        guard current.enabled != enabled else { return }
+        await toggleMcpServer(id)
+    }
+
     func toggleMcpServer(_ id: String) async {
         guard let client else { return }
         do {
@@ -1323,6 +1351,7 @@ final class CoworkState: ObservableObject {
             if let server = mcpServers.first(where: { $0.id == id }) {
                 if server.enabled { selectedMcpIDs.insert(id) } else { selectedMcpIDs.remove(id) }
             }
+            pruneMcpSelection()
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -1334,6 +1363,7 @@ final class CoworkState: ObservableObject {
             try await client.deleteMcpServer(id: id)
             selectedMcpIDs.remove(id)
             await refreshMcpServers()
+            pruneMcpSelection()
         } catch {
             statusMessage = error.localizedDescription
         }

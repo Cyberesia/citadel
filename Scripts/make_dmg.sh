@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Prefer Scripts/package-direct.sh (builds branded DMG after signing).
+# This script remains as a DMG-only helper.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

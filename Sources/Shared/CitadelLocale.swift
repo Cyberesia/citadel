@@ -23,8 +23,16 @@ enum CitadelLocale: String, CaseIterable, Identifiable, Sendable {
     }
 
     static func setCurrent(_ locale: CitadelLocale) {
-        UserDefaults.standard.set(locale.rawValue, forKey: "citadel.locale")
+        let key = "citadel.locale"
+        if UserDefaults.standard.string(forKey: key) != locale.rawValue {
+            UserDefaults.standard.set(locale.rawValue, forKey: key)
+        }
+        NotificationCenter.default.post(name: .citadelLocaleDidChange, object: locale)
     }
+}
+
+extension Notification.Name {
+    static let citadelLocaleDidChange = Notification.Name("citadel.locale.didChange")
 }
 
 enum L10n {
@@ -415,8 +423,16 @@ enum L10n {
     static var enabled: String { t("Enabled", "Activé") }
     static var assistantBuiltinBadge: String { t("Built-in", "Intégré") }
     static var assistantRulesReadOnlyHelp: String {
-        t("Built-in assistants use bundled rules. Customize them under Tools → Skills hub.",
-          "Les assistants intégrés utilisent des règles embarquées. Personnalisez-les dans Outils → Centre de compétences.")
+        t("Built-in assistants use bundled rules and cannot be edited here. Duplicate the assistant to customize rules.",
+          "Les assistants intégrés ont des règles embarquées non modifiables ici. Dupliquez l'assistant pour personnaliser les règles.")
+    }
+    static var assistantBuiltinRulesReadOnly: String {
+        t("Built-in assistant rules are read-only.",
+          "Les règles des assistants intégrés sont en lecture seule.")
+    }
+    static var mcpPickerMultiSelectHelp: String {
+        t("Select one or more enabled MCP servers for this session.",
+          "Sélectionnez un ou plusieurs serveurs MCP activés pour cette session.")
     }
     static var assistantBuiltinEnabledHelp: String {
         t("You can enable or disable this built-in assistant. Other fields are read-only.",
@@ -484,8 +500,8 @@ enum L10n {
     }
     static var skillsHub: String { t("Skills hub", "Centre de compétences") }
     static var skillsHubHelp: String {
-        t("Edit assistant rules and built-in skill files.",
-          "Modifier les règles d'assistant et les compétences intégrées.")
+        t("View assistant rules and skill documentation. Built-in assistant rules are read-only — duplicate an assistant to customize.",
+          "Consulter les règles d'assistant et la documentation des compétences. Les règles intégrées sont en lecture seule — dupliquez un assistant pour les modifier.")
     }
 
     // MARK: - Skills / permissions
@@ -501,6 +517,14 @@ enum L10n {
     static var skillsExtend: String {
         t("Skills extend what the agent can do for this chat.",
           "Les compétences étendent les capacités de l'agent pour ce chat.")
+    }
+    static var sessionSkillsPickerHelp: String {
+        t("Toggle skill packages for this chat session. To read or edit skill docs and assistant rules, open Tools → MCP.",
+          "Activez des compétences pour ce chat. Pour lire ou modifier la doc et les règles, ouvrez Outils → MCP.")
+    }
+    static var mcpSkillsHubSectionHelp: String {
+        t("Documentation & rules — not session toggles. Use the Skills chip in a chat to enable skills per session.",
+          "Documentation et règles — pas les toggles de session. Utilisez la puce Compétences dans un chat.")
     }
     static var skillDetailNewsletterHiring: String {
         t("Publish Infomaniak hiring posts with copy guidelines, visuals, and automation.",

@@ -39,8 +39,7 @@ struct CoworkModelPicker: View {
             .buttonStyle(PrismHandButtonStyle())
             .popover(isPresented: $showPopover, arrowEdge: .bottom) {
                 pickerContent
-                    .frame(width: 340)
-                    .padding(8)
+                    .prismPopoverChrome(width: 340, maxHeight: 360)
             }
             .onAppear {
                 tabRaw = cowork.inferredModelPickerTab.rawValue

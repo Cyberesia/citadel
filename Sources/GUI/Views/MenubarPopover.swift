@@ -4,6 +4,7 @@ import SwiftUI
 struct MenubarPopoverView: View {
     @EnvironmentObject var state: AppState
     @EnvironmentObject var windows: WindowManager
+    @AppStorage("citadel.locale") private var localeRaw = CitadelLocale.current.rawValue
     let close: () -> Void
     @State private var showModePicker = false
 
@@ -81,7 +82,7 @@ struct MenubarPopoverView: View {
         .background(PrismTheme.dominantGradient)
         .preferredColorScheme(.dark)
         .prismGlobalInteraction()
-        .id(state.fontScale)
+        .id("\(localeRaw)-\(state.fontScale)")
     }
 
     private var headerBar: some View {

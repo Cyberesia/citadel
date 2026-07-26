@@ -33,6 +33,15 @@ A macOS application firewall (**Fortress**) with Keep agents and Prism UI.
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
 - For full per-app filtering: Apple Developer signing + `xcodebuild -scheme CitadelFull` (builds/embeds `CitadelNetExt`). Debug `Citadel` scheme runs Fortress without the extension until you ship a signed Full build.
 
+## Release / packaging
+
+Developer ID sign + DMG + optional notarize (same flow as Murmure):
+
+```bash
+# See RELEASE.md for notary profile setup
+./Scripts/package-direct.sh
+```
+
 ## Build
 
 ```bash

@@ -51,7 +51,7 @@ final class FilterDataProvider: NEFilterDataProvider {
 
     private func askUser(flow: NEFilterFlow, connection: Connection) {
         guard let data = try? JSONEncoder().encode(connection) else {
-            resumeFlow(flow, with: .allow())
+            resumeFlow(flow, with: NEFilterNewFlowVerdict.allow())
             return
         }
 

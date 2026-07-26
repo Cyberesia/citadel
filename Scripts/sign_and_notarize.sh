@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Prefer Scripts/package-direct.sh (Murmure-style: Release + sign + DMG + notary).
+# This script remains as a zip-based notary path.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

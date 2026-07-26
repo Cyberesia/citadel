@@ -139,6 +139,29 @@ enum CoworkUserFacing {
         return localizeRegionalServices(sanitizeFreeText(trimmed))
     }
 
+    /// Upstream agent-config scanner labels (e.g. `AIONUI`, `claude`) — never shown raw in UI.
+    static func mcpAgentSourceDisplay(_ raw: String) -> String {
+        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch lower {
+        case "aionui", "aioncore", "citadel", "keep", "cowork", "coworkcore":
+            return "Citadel Keep"
+        case "claude", "claude-code", "claude code", "claude.ai":
+            return "Claude Code"
+        case "cursor", "cursor-agent":
+            return "Cursor"
+        case "codex":
+            return "Codex"
+        default:
+            return sanitizeFreeText(raw)
+        }
+    }
+
+    /// Config groups emitted for Keep's own data dir — hide from "detected from agents".
+    static func isSelfMcpAgentSource(_ raw: String) -> Bool {
+        let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return ["aionui", "aioncore", "citadel", "keep", "cowork", "coworkcore"].contains(lower)
+    }
+
     static func mcpServerDisplayDescription(_ raw: String?) -> String? {
         let description = raw?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !description.isEmpty else { return nil }
@@ -478,6 +501,20 @@ enum CoworkUserFacing {
         return result
     }
 
+    static func sanitizeAssistantRuleContent(_ text: String) -> String {
+        let sanitized = sanitizeFreeText(text)
+        let lines = sanitized.split(separator: "\n", omittingEmptySubsequences: false)
+        let filtered = lines.filter { line in
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            // Upstream bundled rules sometimes ship an empty skills table row like "| 1. | | |".
+            if trimmed.range(of: #"^\|\s*\d+\.\s*\|\s*(\|\s*)+$"#, options: .regularExpression) != nil {
+                return false
+            }
+            return true
+        }
+        return filtered.joined(separator: "\n")
+    }
+
     static func sanitizeFreeText(_ text: String) -> String {
         var result = text
         // Skill / slug ids first so "aionui-config" → "keep-config" (not "Citadel Keep-config").
@@ -499,6 +536,14 @@ extension CoworkSkill {
 extension CoworkMcpServer {
     var displayName: String { CoworkUserFacing.mcpServerDisplayName(name) }
     var displayDescription: String? { CoworkUserFacing.mcpServerDisplayDescription(description) }
+
+    /// Label for session menus — never blank.
+    var pickerLabel: String {
+        let trimmed = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty { return trimmed }
+        let fallback = id.trimmingCharacters(in: .whitespacesAndNewlines)
+        return fallback.isEmpty ? "MCP server" : fallback
+    }
 }
 
 extension CoworkMcpDetectedServer {

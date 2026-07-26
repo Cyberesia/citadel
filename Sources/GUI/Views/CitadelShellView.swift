@@ -49,7 +49,12 @@ struct CitadelShellView: View {
         .prismGlobalInteraction()
         .preferredColorScheme(.dark)
         .tint(PrismTheme.accent)
-        .id(state.fontScale)
+        .id("\(localeRaw)-\(state.fontScale)")
+        .onChange(of: localeRaw) { _, raw in
+            if let locale = CitadelLocale(rawValue: raw) {
+                CitadelLocale.setCurrent(locale)
+            }
+        }
     }
 
     private var header: some View {
@@ -206,12 +211,12 @@ struct CitadelShellView: View {
         .sheet(isPresented: $cowork.showMcpSheet) {
             CoworkMcpSettingsView(isModal: true)
                 .environmentObject(cowork)
-                .frame(minWidth: 520, minHeight: 480)
         }
         .sheet(isPresented: $cowork.showKeepHelp) {
             KeepHelpView()
                 .environmentObject(cowork)
                 .environmentObject(router)
+                .prismSheetChrome(minWidth: 760, minHeight: 520)
         }
     }
 

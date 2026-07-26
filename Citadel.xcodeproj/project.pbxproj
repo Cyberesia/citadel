@@ -316,6 +316,13 @@
 			remoteGlobalIDString = BDA3FE147BB258CF3F680DFE;
 			remoteInfo = CitadelHelper;
 		};
+		F160AA35C41FA10F7E0CFD56 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 76A1071AE61EC3ECC73AC2AB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 264C79D036F1AD0D7C077D09;
+			remoteInfo = CitadelNetExt;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -487,6 +494,7 @@
 		078ECF8EDB7E4808099247ED /* ssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssl.h; sourceTree = "<group>"; };
 		079303BF5722784D359202B8 /* fa.ts */ = {isa = PBXFileReference; path = fa.ts; sourceTree = "<group>"; };
 		07ACA1976285D59AC6EF55B1 /* glob.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = glob.js.map; sourceTree = "<group>"; };
+		07AF17B6EBC92B073700CC23 /* acp.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = acp.js.map; sourceTree = "<group>"; };
 		07B294E923D00E88BE33249C /* params.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = params.js; sourceTree = "<group>"; };
 		07BA1DE82DF36A9F5613A29C /* array.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = array.js; sourceTree = "<group>"; };
 		07BB783FBA058D87BEC37018 /* v8-primitive.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "v8-primitive.h"; sourceTree = "<group>"; };
@@ -744,6 +752,7 @@
 		1309692751DE6F3A06CDE171 /* glob.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = glob.js; sourceTree = "<group>"; };
 		130B20B6AD43211CDF75C0FF /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		1325B86135CBA6BC36D71F29 /* pkcs7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs7.h; sourceTree = "<group>"; };
+		13292E220F85E0229E9943A5 /* guards.gen.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = guards.gen.js; sourceTree = "<group>"; };
 		132C688AC53B9C49F55863DB /* json-schema-processors.ts */ = {isa = PBXFileReference; path = "json-schema-processors.ts"; sourceTree = "<group>"; };
 		132DC5E5A2420B724E68AD40 /* pl.d.cts */ = {isa = PBXFileReference; path = pl.d.cts; sourceTree = "<group>"; };
 		133D8C46BC9520CA370349B6 /* th.ts */ = {isa = PBXFileReference; path = th.ts; sourceTree = "<group>"; };
@@ -799,6 +808,7 @@
 		1529322EECA5AAA7DEDCE57D /* conf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = conf.h; sourceTree = "<group>"; };
 		152D66E27B8B1EA56FE7829E /* tar.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tar.js; sourceTree = "<group>"; };
 		1531205FA2DF18FF396366A8 /* kh.cjs */ = {isa = PBXFileReference; path = kh.cjs; sourceTree = "<group>"; };
+		1545844B015B34A08326D0A3 /* zod.gen.d.ts */ = {isa = PBXFileReference; path = zod.gen.d.ts; sourceTree = "<group>"; };
 		1550BDE1A941D5C385563139 /* license */ = {isa = PBXFileReference; path = license; sourceTree = "<group>"; };
 		155341369C7FB4871CD34983 /* PrismTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismTheme.swift; sourceTree = "<group>"; };
 		1555777B6FA34453FD6EADBA /* der_rsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_rsa.h; sourceTree = "<group>"; };
@@ -1231,6 +1241,7 @@
 		270792CA5E31AC40FB3BE98B /* util.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = util.js; sourceTree = "<group>"; };
 		270C077AC9213D107D89FAEE /* parse.ts */ = {isa = PBXFileReference; path = parse.ts; sourceTree = "<group>"; };
 		271975BE50365A8AA5506CC8 /* der_ecx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ecx.h; sourceTree = "<group>"; };
+		271A60F575685E33A4F17DA0 /* types.gen.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = types.gen.js.map; sourceTree = "<group>"; };
 		2723C33E6155A164C161D1F6 /* pnpx */ = {isa = PBXFileReference; path = pnpx; sourceTree = "<group>"; };
 		272C43DBABA9A4B195DFEF38 /* hu.d.cts */ = {isa = PBXFileReference; path = hu.d.cts; sourceTree = "<group>"; };
 		27629CD25134C90B17D05AFC /* index.ts */ = {isa = PBXFileReference; path = index.ts; sourceTree = "<group>"; };
@@ -1251,6 +1262,7 @@
 		28366A760EAED560F758F18B /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		284C78499CE51C56DF24BFE2 /* der_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_dsa.h; sourceTree = "<group>"; };
 		284E4B5180B3E88D8A2FD587 /* processor.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = processor.js.map; sourceTree = "<group>"; };
+		2864BB7FFE17CB44C25DF94A /* dual-version-agent.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "dual-version-agent.js"; sourceTree = "<group>"; };
 		287B6C44B1294303DE1F2D47 /* asn1t.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1t.h; sourceTree = "<group>"; };
 		287EF017D2280A2E8F8557FD /* err.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = err.h; sourceTree = "<group>"; };
 		28932776903F89A2401F24E0 /* dsaerr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dsaerr.h; sourceTree = "<group>"; };
@@ -1553,6 +1565,7 @@
 		35386D020D75D07B83521A3F /* locales_ro.test.ts */ = {isa = PBXFileReference; path = locales_ro.test.ts; sourceTree = "<group>"; };
 		353AC80D2E664B00477E8F38 /* IPGeo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPGeo.swift; sourceTree = "<group>"; };
 		3543DCA87E7843DD21BEA241 /* asn1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
+		3551223115ABCD2496F8AAE0 /* create-dmg */ = {isa = PBXFileReference; path = "create-dmg"; sourceTree = "<group>"; };
 		355A3DD690CD2FC02A16B65E /* pkcs12.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs12.h; sourceTree = "<group>"; };
 		355A9684841B199C35D6F5E2 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		355D036467A55AD1345D3974 /* AUTHORS */ = {isa = PBXFileReference; path = AUTHORS; sourceTree = "<group>"; };
@@ -1788,6 +1801,7 @@
 		3D7AF3621E1D410B203549E5 /* acp.test.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = acp.test.js; sourceTree = "<group>"; };
 		3D7BBF6133F348CC509F2F72 /* der_ecx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ecx.h; sourceTree = "<group>"; };
 		3D7C80A45415B49AB48228A4 /* tag.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = tag.js; sourceTree = "<group>"; };
+		3D80434D753A18B8EE3E0C3C /* types.gen.d.ts */ = {isa = PBXFileReference; path = types.gen.d.ts; sourceTree = "<group>"; };
 		3D835B4B072A192A8D9788BB /* lhash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lhash.h; sourceTree = "<group>"; };
 		3D9229B6BA117F7D0F200F3F /* ml_kem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ml_kem.h; sourceTree = "<group>"; };
 		3DA0C5CE652C476F3D8A6143 /* diff.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = diff.js; sourceTree = "<group>"; };
@@ -1925,6 +1939,7 @@
 		42BC7048FBEB9FB3A743DB6A /* CoworkSkillsPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkSkillsPicker.swift; sourceTree = "<group>"; };
 		42C2141464758ACF3F0F2C8E /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
 		42CD0F802B934993934C91F8 /* __init__.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = __init__.py; sourceTree = "<group>"; };
+		42D21EAA1A7A9F23C245FBEC /* acp.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = acp.js; sourceTree = "<group>"; };
 		42DF1F40A303890BD8452A34 /* v8-debug.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "v8-debug.h"; sourceTree = "<group>"; };
 		4310FCFE7D08F2169AB211DC /* x509_vfy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509_vfy.h; sourceTree = "<group>"; };
 		431DBB785591B45204CFB540 /* walker.d.ts */ = {isa = PBXFileReference; path = walker.d.ts; sourceTree = "<group>"; };
@@ -1951,6 +1966,7 @@
 		43D26D5337699543ADAD42C0 /* der_digests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_digests.h; sourceTree = "<group>"; };
 		43D4EE6D7D975BAAD069A717 /* der_slh_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_slh_dsa.h; sourceTree = "<group>"; };
 		43DCB1737C3597E87696EA55 /* removal.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = removal.html; sourceTree = "<group>"; };
+		43E50AECAAAD2ACCD93A17E5 /* template.applescript */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.applescript; path = template.applescript; sourceTree = "<group>"; };
 		43E5E912E5998E1FF1F5093E /* readme.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = readme.md; sourceTree = "<group>"; };
 		43E812512BD972B10FC92B6F /* conditional-stack-allocated.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "conditional-stack-allocated.h"; sourceTree = "<group>"; };
 		43ED4846FBBF33D3D7368C27 /* core_names.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_names.h; sourceTree = "<group>"; };
@@ -2048,6 +2064,7 @@
 		4776A77A967291A651CFEA4F /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		4777BD64D35A494FC2F7C4B4 /* node-adapter.test.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "node-adapter.test.js"; sourceTree = "<group>"; };
 		4782D0BE64901850114FC019 /* server.d.ts */ = {isa = PBXFileReference; path = server.d.ts; sourceTree = "<group>"; };
+		47898B73A20F729A1212EC29 /* types.gen.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = types.gen.js; sourceTree = "<group>"; };
 		478C5D95FF639DDE510E9866 /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		478E64D4A063C5E71888E2DF /* es.d.ts */ = {isa = PBXFileReference; path = es.d.ts; sourceTree = "<group>"; };
 		4790C000B236D65263B40438 /* configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = configuration.h; sourceTree = "<group>"; };
@@ -2094,6 +2111,7 @@
 		48F2154E4982A529DB2FD7CA /* ui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui.h; sourceTree = "<group>"; };
 		48F31FA6053E327A80A13A38 /* npm-cache.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "npm-cache.md"; sourceTree = "<group>"; };
 		48FA8D9C9DC3A9F607011105 /* ignore.d.ts */ = {isa = PBXFileReference; path = ignore.d.ts; sourceTree = "<group>"; };
+		48FF80EFE773FA2D3A3DCEF0 /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		491C1098145CA94C7C71957C /* escape.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = escape.js; sourceTree = "<group>"; };
 		492BCB0A725DEF4045A80AFA /* visitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = visitor.h; sourceTree = "<group>"; };
 		4951188C31EAB23098E9D95F /* index.d.ts */ = {isa = PBXFileReference; path = index.d.ts; sourceTree = "<group>"; };
@@ -2225,6 +2243,7 @@
 		4EF271FFA0B548A456661104 /* configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = configuration.h; sourceTree = "<group>"; };
 		4EF5269AF2FBB59FCD04405D /* pkcs7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs7.h; sourceTree = "<group>"; };
 		4F0E066086CCDE6B84B906EC /* crmf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = crmf.h; sourceTree = "<group>"; };
+		4F19F1BD8E4430D99D3C5CEC /* .this-is-the-create-dmg-repo */ = {isa = PBXFileReference; path = ".this-is-the-create-dmg-repo"; sourceTree = "<group>"; };
 		4F1E7588F5BA5B62A9BD1D8F /* init.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = init.js; sourceTree = "<group>"; };
 		4F1FE64B2FCFBA512F070A36 /* cmp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cmp.h; sourceTree = "<group>"; };
 		4F25382C8534F9ABB39CD5B5 /* extract.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = extract.js; sourceTree = "<group>"; };
@@ -2262,6 +2281,7 @@
 		502DACED290412976BE81EF0 /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
 		504AFB02434C861DBD343154 /* ZodError.cjs */ = {isa = PBXFileReference; path = ZodError.cjs; sourceTree = "<group>"; };
 		505126F2FAD850AAFF866047 /* parse.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = parse.js; sourceTree = "<group>"; };
+		5060DD7371F24ADCD8B99A4C /* acp.test.d.ts */ = {isa = PBXFileReference; path = acp.test.d.ts; sourceTree = "<group>"; };
 		506B58252C9ACA447C31DF64 /* bio_asm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bio_asm.h; sourceTree = "<group>"; };
 		5075BD65699C89BF5BFD818C /* deprecated.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = deprecated.json; sourceTree = "<group>"; };
 		50767F7D141571022C4755B8 /* progs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = progs.h; sourceTree = "<group>"; };
@@ -2277,6 +2297,7 @@
 		50C67997A40D49F82983B01D /* codex-code-mode-host */ = {isa = PBXFileReference; path = "codex-code-mode-host"; sourceTree = "<group>"; };
 		50C6BDE4B15078AB3CC5DF9C /* der_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_dsa.h; sourceTree = "<group>"; };
 		50C70E62388D31E8E48CB23C /* update-workspaces.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "update-workspaces.js"; sourceTree = "<group>"; };
+		50C7333829294C10802E5D1B /* index.d.ts */ = {isa = PBXFileReference; path = index.d.ts; sourceTree = "<group>"; };
 		50D486AEF389D9756CA26FEB /* glob.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = glob.js; sourceTree = "<group>"; };
 		50D8881ABF2C69701FCBEFFF /* configuration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = configuration.h; sourceTree = "<group>"; };
 		50E76922D268F3DD7B9E57D4 /* cms.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cms.h; sourceTree = "<group>"; };
@@ -2496,6 +2517,7 @@
 		59D08C5698526483BA565952 /* npm-deprecate.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "npm-deprecate.html"; sourceTree = "<group>"; };
 		59D4D23C5E7FEF77B168C636 /* safestack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = safestack.h; sourceTree = "<group>"; };
 		59E5281AEBC8EA03086CED59 /* release-notes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "release-notes.md"; sourceTree = "<group>"; };
+		59EDA4C248B506BCE12A424E /* protocol-router.test.d.ts */ = {isa = PBXFileReference; path = "protocol-router.test.d.ts"; sourceTree = "<group>"; };
 		59F833EC7C3EAB9383131835 /* yarnpkg.ps1 */ = {isa = PBXFileReference; path = yarnpkg.ps1; sourceTree = "<group>"; };
 		59FD6AA1DACC619B9ABDB3B6 /* asn1t.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1t.h; sourceTree = "<group>"; };
 		59FE14A72596C32AD649DE5E /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
@@ -2661,6 +2683,7 @@
 		6039007805BCA6483F0054DD /* checks.ts */ = {isa = PBXFileReference; path = checks.ts; sourceTree = "<group>"; };
 		603ECC31804626D2AE63F70E /* is.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = is.js; sourceTree = "<group>"; };
 		60405317703D2B783E24065B /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
+		604930F947A45A45744E5DBD /* acp.test.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = acp.test.js.map; sourceTree = "<group>"; };
 		6056F61009B469EDBCDA4042 /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		60571528A91DF3A86DECA5ED /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		606ADEEE52402DDC185B9449 /* der_slh_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_slh_dsa.h; sourceTree = "<group>"; };
@@ -2935,6 +2958,7 @@
 		6B935829B6407D7FC65D95E7 /* ocsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ocsp.h; sourceTree = "<group>"; };
 		6B9F76CE4806CFC863F9BE20 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		6BAAA6C06CF191CC49E13AE7 /* npm-dedupe.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "npm-dedupe.html"; sourceTree = "<group>"; };
+		6BB87084D57C73E5BAA8EF84 /* README.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = README.txt; sourceTree = "<group>"; };
 		6BB9AB7C3E9DC83970B14E96 /* der_wrap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_wrap.h; sourceTree = "<group>"; };
 		6BC24C32517A24354261C52A /* corepack.cmd */ = {isa = PBXFileReference; path = corepack.cmd; sourceTree = "<group>"; };
 		6BC2E0383063B5A41816E9B2 /* x509_acert.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509_acert.h; sourceTree = "<group>"; };
@@ -2947,6 +2971,7 @@
 		6C1EEE2D2D8347A94CDBB92F /* ess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ess.h; sourceTree = "<group>"; };
 		6C31B9D105526A7FFCB35A96 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		6C7D251B4E13ACA05AA405D0 /* query.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = query.js; sourceTree = "<group>"; };
+		6C8158D240826F0D7E4F9BAC /* protocol-router.test.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "protocol-router.test.js"; sourceTree = "<group>"; };
 		6C8584CF5AD07B559C42C073 /* appdata.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = appdata.js; sourceTree = "<group>"; };
 		6C8DBBC6455848065F918D72 /* ess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ess.h; sourceTree = "<group>"; };
 		6C9EEFF5F770A63ECD9808F8 /* node.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = node.js; sourceTree = "<group>"; };
@@ -3319,6 +3344,7 @@
 		7AC903BD01864A5EF35824B4 /* ssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssl.h; sourceTree = "<group>"; };
 		7ACE1D82DF14B63F33A47966 /* bn_conf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bn_conf.h; sourceTree = "<group>"; };
 		7AE413BF8A006F64B222A26F /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
+		7AE41C8FCBC10E81DA8D72CE /* protocol-router.test.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "protocol-router.test.js.map"; sourceTree = "<group>"; };
 		7AE531CC185F8E97F294D55A /* workspaces.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = workspaces.html; sourceTree = "<group>"; };
 		7AEEC9070D51361DC76B5D25 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		7B1B97E5B7F6277AF741D342 /* brand.test.ts */ = {isa = PBXFileReference; path = brand.test.ts; sourceTree = "<group>"; };
@@ -3371,6 +3397,7 @@
 		7CF22E24164D0C1341A7DEFA /* corepack */ = {isa = PBXFileReference; path = corepack; sourceTree = "<group>"; };
 		7CFAD4C040BDDF5FF3CA878C /* MonitorViewOptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonitorViewOptions.swift; sourceTree = "<group>"; };
 		7CFCE940C966A67B15994B56 /* x509v3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509v3.h; sourceTree = "<group>"; };
+		7D095BE7C283884228645B11 /* LICENSE.create-dmg */ = {isa = PBXFileReference; path = "LICENSE.create-dmg"; sourceTree = "<group>"; };
 		7D1B67661600D15A278982B2 /* dso_conf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dso_conf.h; sourceTree = "<group>"; };
 		7D21E77BB29D1F6B690D4840 /* npm-team.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = "npm-team.1"; sourceTree = "<group>"; };
 		7D43BA649C40F5AEC67518E3 /* mocker.test.ts */ = {isa = PBXFileReference; path = mocker.test.ts; sourceTree = "<group>"; };
@@ -3392,6 +3419,7 @@
 		7E215C35177C32BA4D851DCE /* progs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = progs.h; sourceTree = "<group>"; };
 		7E22A76B617D92AC7140BA11 /* cmp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cmp.h; sourceTree = "<group>"; };
 		7E318AB84579BCC1B4066828 /* asn1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
+		7E396761ACC1E79424E357EE /* zod.gen.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = zod.gen.js.map; sourceTree = "<group>"; };
 		7E3A973539A65FF9DE6FCDB6 /* der_wrap.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_wrap.h; sourceTree = "<group>"; };
 		7E3D4089BEA2A292B957366C /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		7E4383ED3E2B8CBF2B9075EC /* cmp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cmp.h; sourceTree = "<group>"; };
@@ -3788,6 +3816,7 @@
 		8EC653611E5ABBC83A616758 /* cms.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cms.h; sourceTree = "<group>"; };
 		8ECC09E72FEA68EC6BCCC4C4 /* utils.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = utils.js; sourceTree = "<group>"; };
 		8ECF403AF1BEE14C2FD0DFA0 /* npm-find-dupes.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "npm-find-dupes.md"; sourceTree = "<group>"; };
+		8EDD7D16C741F5DFB50244FD /* dual-version-agent.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "dual-version-agent.js.map"; sourceTree = "<group>"; };
 		8EDE26D2312F0625C46FBEDE /* TrafficTelemetryHub.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrafficTelemetryHub.swift; sourceTree = "<group>"; };
 		8EE10F7CAA4C35EDD56C0EB8 /* pnpm.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = pnpm.js; sourceTree = "<group>"; };
 		8EF5D5AEB0FFABF97851E24E /* der_sm2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_sm2.h; sourceTree = "<group>"; };
@@ -3842,6 +3871,7 @@
 		90E15AB09F33F949CD7C8406 /* der_ecx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ecx.h; sourceTree = "<group>"; };
 		90EF36EBD6709EB87CE2B3DC /* fipskey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fipskey.h; sourceTree = "<group>"; };
 		90F3914DFA26697EC7DFEAB9 /* der_ec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ec.h; sourceTree = "<group>"; };
+		90F847A0C6A6339B06CFA073 /* index.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = index.js.map; sourceTree = "<group>"; };
 		90FDCCA6339967F50FFED4C1 /* pkcs12.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs12.h; sourceTree = "<group>"; };
 		9117098445F62BF12A9303B1 /* optional-set.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "optional-set.js"; sourceTree = "<group>"; };
 		91344AC590D5E6E636FB51DC /* fipskey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fipskey.h; sourceTree = "<group>"; };
@@ -3936,6 +3966,7 @@
 		94E3C923E6EC997F276C18EC /* pkcs12.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs12.h; sourceTree = "<group>"; };
 		94E62BBDB29C33C6EBAA78DC /* ess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ess.h; sourceTree = "<group>"; };
 		94F3811F56E9360845421BA8 /* crypto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = crypto.h; sourceTree = "<group>"; };
+		94F504C504F45C65620F3BAF /* zod.gen.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = zod.gen.js; sourceTree = "<group>"; };
 		95053C9697A3B1762A293A8E /* ocsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ocsp.h; sourceTree = "<group>"; };
 		950766E802A3573E7FE55CE1 /* v8-memory-span.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "v8-memory-span.h"; sourceTree = "<group>"; };
 		95187340D81C6E9023D89E99 /* der_ml_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ml_dsa.h; sourceTree = "<group>"; };
@@ -4120,6 +4151,7 @@
 		9CA06A23F1456A74DE4044FF /* bio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bio.h; sourceTree = "<group>"; };
 		9CC34413D9A36588A8A34A11 /* validations.test.ts */ = {isa = PBXFileReference; path = validations.test.ts; sourceTree = "<group>"; };
 		9CCA1CB0DCA61A06AD86E0D5 /* utils.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = utils.js; sourceTree = "<group>"; };
+		9CCAD496938C2A348825E244 /* render-dmg-background.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "render-dmg-background.swift"; sourceTree = "<group>"; };
 		9CCF5B1641AD8BDB4B5FA14A /* CoworkMLXModelCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkMLXModelCatalog.swift; sourceTree = "<group>"; };
 		9CCFA39911305434D7BCB4E6 /* codex-package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "codex-package.json"; sourceTree = "<group>"; };
 		9CDD49C315F78A1998A173EA /* comp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = comp.h; sourceTree = "<group>"; };
@@ -4375,6 +4407,7 @@
 		A65DF086823CF5F1E14798BE /* fipskey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = fipskey.h; sourceTree = "<group>"; };
 		A676CB32297E0643C68CAFEF /* core_names.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_names.h; sourceTree = "<group>"; };
 		A689F9D92DE1927FBB2B4289 /* gypsh.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = gypsh.py; sourceTree = "<group>"; };
+		A68AFE5EFC7C17B5513804D0 /* acp.test.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = acp.test.js; sourceTree = "<group>"; };
 		A68F8F6C4A01C9538072270B /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		A69A158B20339BAEED86CD98 /* progs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = progs.h; sourceTree = "<group>"; };
 		A69FC76308585034F915743A /* npm-dist-tag.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = "npm-dist-tag.md"; sourceTree = "<group>"; };
@@ -4624,6 +4657,7 @@
 		B0DA35994E75F8B800C0CD71 /* update.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = update.js; sourceTree = "<group>"; };
 		B0DFB7E78C9772BECA9BFBA0 /* json.d.ts.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = json.d.ts.map; sourceTree = "<group>"; };
 		B0E2858D261722BD0D8F3913 /* utf7.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = utf7.js; sourceTree = "<group>"; };
+		B0E8009F17564BEADED6419E /* schema.unstable.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = schema.unstable.json; sourceTree = "<group>"; };
 		B0EA862EA3ACE3A4E762D191 /* x509.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509.h; sourceTree = "<group>"; };
 		B0F5D60F7245865F9EB4D02D /* glob.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = glob.js; sourceTree = "<group>"; };
 		B0F6089A1E506FF0E63B24F0 /* core_names.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = core_names.h; sourceTree = "<group>"; };
@@ -4687,6 +4721,7 @@
 		B335BB2B34F7C0718979586A /* connection.test.d.ts */ = {isa = PBXFileReference; path = connection.test.d.ts; sourceTree = "<group>"; };
 		B335C29D273BDEF8A5687B06 /* number.test.ts */ = {isa = PBXFileReference; path = number.test.ts; sourceTree = "<group>"; };
 		B34E5153CA3252F1C84D0479 /* LICENSE */ = {isa = PBXFileReference; path = LICENSE; sourceTree = "<group>"; };
+		B355397A7F381B8D87EBE587 /* guards.gen.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = guards.gen.js.map; sourceTree = "<group>"; };
 		B35956A7C775088F143B1DE6 /* array.test.ts */ = {isa = PBXFileReference; path = array.test.ts; sourceTree = "<group>"; };
 		B3679BE41D24B5743CD34FBA /* zh-CN.d.ts */ = {isa = PBXFileReference; path = "zh-CN.d.ts"; sourceTree = "<group>"; };
 		B37D59FE20A1CE722DA977F2 /* lhash_asm.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lhash_asm.h; sourceTree = "<group>"; };
@@ -4732,6 +4767,7 @@
 		B4DAC16D6A7FE4117DC4F530 /* server-sse.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "server-sse.js"; sourceTree = "<group>"; };
 		B4EB46309E8F687FB8597E74 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		B4F382E9BE888A796E36F78F /* removal.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = removal.md; sourceTree = "<group>"; };
+		B5015CB0FD5B60ED71F51D64 /* resign-launch-safe.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "resign-launch-safe.sh"; sourceTree = "<group>"; };
 		B50502C23C288E4F190C677E /* cmp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cmp.h; sourceTree = "<group>"; };
 		B5150B7C69955F01BCFFCE9D /* libplatform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libplatform.h; sourceTree = "<group>"; };
 		B5194F106D0FF6283C3F46FD /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
@@ -5030,6 +5066,7 @@
 		C020677CA78246D5E78EABC9 /* dangerous.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = dangerous.js; sourceTree = "<group>"; };
 		C0209BD238F97F8E521BC39B /* _parser.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = _parser.py; sourceTree = "<group>"; };
 		C033BBF83D19D5E531775623 /* clean.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = clean.js; sourceTree = "<group>"; };
+		C03982C02B834275E938D222 /* dual-version-agent.d.ts */ = {isa = PBXFileReference; path = "dual-version-agent.d.ts"; sourceTree = "<group>"; };
 		C041382E82B4157DA0660874 /* pkcs12.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs12.h; sourceTree = "<group>"; };
 		C042996E3F1FAC29EBF21B9D /* opensslv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opensslv.h; sourceTree = "<group>"; };
 		C045D73512F480AF3B95D794 /* der_rsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_rsa.h; sourceTree = "<group>"; };
@@ -5078,6 +5115,7 @@
 		C206308B07D9045D168A414C /* npm-rebuild.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = "npm-rebuild.html"; sourceTree = "<group>"; };
 		C20813A4DF963D54646AB209 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
 		C21507D4C8DBF72490828C41 /* package.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = package.json; sourceTree = "<group>"; };
+		C21930F5FE39BD321E5ED856 /* guards.gen.d.ts */ = {isa = PBXFileReference; path = guards.gen.d.ts; sourceTree = "<group>"; };
 		C21FD51678133DED8CDB2247 /* bio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bio.h; sourceTree = "<group>"; };
 		C226FC77722645A40F1DE2FA /* enforce-clean.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "enforce-clean.js"; sourceTree = "<group>"; };
 		C22E35275030FB70926EC19A /* finalizer-trait.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "finalizer-trait.h"; sourceTree = "<group>"; };
@@ -5089,6 +5127,7 @@
 		C26D8A18CC6B94F9854FDBD4 /* safestack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = safestack.h; sourceTree = "<group>"; };
 		C26E06CD937403670B049969 /* CitadelApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CitadelApp.swift; sourceTree = "<group>"; };
 		C27410E3F102F2C89D3BAF49 /* asn1t.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1t.h; sourceTree = "<group>"; };
+		C27C76FD4E26A8A560E8477E /* acp.d.ts */ = {isa = PBXFileReference; path = acp.d.ts; sourceTree = "<group>"; };
 		C28376D1B366C4FB864B9421 /* der_sm2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_sm2.h; sourceTree = "<group>"; };
 		C28680122E6822CA5AF82B1E /* der_ml_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ml_dsa.h; sourceTree = "<group>"; };
 		C2BA6BA5C85C851DE5444318 /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
@@ -5342,6 +5381,7 @@
 		CD56DA0A1C5D6CB5A16AF2D2 /* ct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ct.h; sourceTree = "<group>"; };
 		CD6AB630A1B113F4B4F00531 /* charset.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = charset.js; sourceTree = "<group>"; };
 		CD886DE415FA2E79779D065C /* types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = types.h; sourceTree = "<group>"; };
+		CD9BE12EB9948DD7B4F70C0E /* protocol-router.js.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "protocol-router.js.map"; sourceTree = "<group>"; };
 		CD9C9E774EE8312F13960F8A /* dmp.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = dmp.js; sourceTree = "<group>"; };
 		CD9FBF4E1E48C512924DF559 /* connection.test.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = connection.test.js; sourceTree = "<group>"; };
 		CDBD9F8804FAA218637DB8B9 /* dso_conf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dso_conf.h; sourceTree = "<group>"; };
@@ -5881,6 +5921,7 @@
 		E45111FD6CE9FA0DDF2DBBF9 /* xcode_test.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = xcode_test.py; sourceTree = "<group>"; };
 		E463416260A6B9100F654C61 /* walker.d.ts */ = {isa = PBXFileReference; path = walker.d.ts; sourceTree = "<group>"; };
 		E474D4C6A41816D6D77E5C93 /* params.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = params.h; sourceTree = "<group>"; };
+		E47EC96B685D8C69F1E9F0A2 /* package-direct.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = "package-direct.sh"; sourceTree = "<group>"; };
 		E482FF3AE5280983AF091876 /* css.d.ts.map */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = css.d.ts.map; sourceTree = "<group>"; };
 		E492A02515CFA0A96B2001E3 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		E49A1C665B5EF225249AFA18 /* ocsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ocsp.h; sourceTree = "<group>"; };
@@ -6091,6 +6132,7 @@
 		ECF68E6687AF0E58373C3FBD /* ess.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ess.h; sourceTree = "<group>"; };
 		ECFA4F2FCDA89559816DFBC7 /* messageWriter.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = messageWriter.js; sourceTree = "<group>"; };
 		ED0406CA4155BCB41089516F /* lhash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lhash.h; sourceTree = "<group>"; };
+		ED054116F7CAED65A9F2E872 /* protocol-router.d.ts */ = {isa = PBXFileReference; path = "protocol-router.d.ts"; sourceTree = "<group>"; };
 		ED072F2C29DDDCA9A21BB85D /* unescape.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = unescape.js; sourceTree = "<group>"; };
 		ED0988F99DAEBA1B6611AC40 /* atomic-entry-flag.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "atomic-entry-flag.h"; sourceTree = "<group>"; };
 		ED0E0E63957952DC76174CA8 /* blank_user_npmrc */ = {isa = PBXFileReference; path = blank_user_npmrc; sourceTree = "<group>"; };
@@ -6385,6 +6427,7 @@
 		F87FCB400D42BACDC7B69E5F /* cterr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cterr.h; sourceTree = "<group>"; };
 		F885FD4F536BA2A6A7A9903D /* x509err.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509err.h; sourceTree = "<group>"; };
 		F8934F9B591C53F56EBBE263 /* mod.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mod.js; sourceTree = "<group>"; };
+		F8A09896D810328D3DF69295 /* protocol-router.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "protocol-router.js"; sourceTree = "<group>"; };
 		F8A2D83DB77AA343F7E54B68 /* der_dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_dsa.h; sourceTree = "<group>"; };
 		F8A65BB753D299AB7539D417 /* cms.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cms.h; sourceTree = "<group>"; };
 		F8B6AB7618D39D779A04BCB6 /* rc5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rc5.h; sourceTree = "<group>"; };
@@ -7573,6 +7616,18 @@
 				447B9F61A3D2BA4FDA15CE2B /* providers */,
 			);
 			path = "no-asm";
+			sourceTree = "<group>";
+		};
+		10385A0571B0574A57B94DDD /* create-dmg */ = {
+			isa = PBXGroup;
+			children = (
+				F256C2D07217F702C08D8BF9 /* support */,
+				4F19F1BD8E4430D99D3C5CEC /* .this-is-the-create-dmg-repo */,
+				3551223115ABCD2496F8AAE0 /* create-dmg */,
+				7D095BE7C283884228645B11 /* LICENSE.create-dmg */,
+				6BB87084D57C73E5BAA8EF84 /* README.txt */,
+			);
+			path = "create-dmg";
 			sourceTree = "<group>";
 		};
 		103DDC989EA8664F9994A9AE /* openssl */ = {
@@ -11257,6 +11312,20 @@
 			path = common;
 			sourceTree = "<group>";
 		};
+		475E59035580AB2E18A30930 /* v2 */ = {
+			isa = PBXGroup;
+			children = (
+				6FEB1CB4AA6C928842794E89 /* schema */,
+				C27C76FD4E26A8A560E8477E /* acp.d.ts */,
+				42D21EAA1A7A9F23C245FBEC /* acp.js */,
+				07AF17B6EBC92B073700CC23 /* acp.js.map */,
+				5060DD7371F24ADCD8B99A4C /* acp.test.d.ts */,
+				A68AFE5EFC7C17B5513804D0 /* acp.test.js */,
+				604930F947A45A45744E5DBD /* acp.test.js.map */,
+			);
+			path = v2;
+			sourceTree = "<group>";
+		};
 		47687C2093C7CA4796C86D61 /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -11688,11 +11757,15 @@
 		4CD50591DCBB43A71A65C07D /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				E75FE82FFDFC2B11323F3403 /* vendor */,
 				0B9A4491D93DA8E5DCAF8A32 /* build-debug.sh */,
 				0FF5B2996D3BB57B03C01460 /* build-signed.sh */,
 				598C4D615F1305C667645B73 /* make_dmg.sh */,
 				427532C69326A966C829D4D5 /* make_icon.sh */,
+				E47EC96B685D8C69F1E9F0A2 /* package-direct.sh */,
 				5F2E872C024E8A9F6C5EE180 /* prepare-coworkcore.sh */,
+				9CCAD496938C2A348825E244 /* render-dmg-background.swift */,
+				B5015CB0FD5B60ED71F51D64 /* resign-launch-safe.sh */,
 				A755D08659A5D785CCEDF095 /* sign_and_notarize.sh */,
 			);
 			path = Scripts;
@@ -11852,6 +11925,7 @@
 		511DEE4567393D3EDA021960 /* schema */ = {
 			isa = PBXGroup;
 			children = (
+				E96506103FCECD86F61228BA /* v2 */,
 				D7ADBCF5BFC994E75CF1192C /* schema.json */,
 			);
 			path = schema;
@@ -13776,6 +13850,25 @@
 				79AD26DCD0B168F85CE37057 /* no-asm */,
 			);
 			path = "linux-elf";
+			sourceTree = "<group>";
+		};
+		6FEB1CB4AA6C928842794E89 /* schema */ = {
+			isa = PBXGroup;
+			children = (
+				C21930F5FE39BD321E5ED856 /* guards.gen.d.ts */,
+				13292E220F85E0229E9943A5 /* guards.gen.js */,
+				B355397A7F381B8D87EBE587 /* guards.gen.js.map */,
+				50C7333829294C10802E5D1B /* index.d.ts */,
+				48FF80EFE773FA2D3A3DCEF0 /* index.js */,
+				90F847A0C6A6339B06CFA073 /* index.js.map */,
+				3D80434D753A18B8EE3E0C3C /* types.gen.d.ts */,
+				47898B73A20F729A1212EC29 /* types.gen.js */,
+				271A60F575685E33A4F17DA0 /* types.gen.js.map */,
+				1545844B015B34A08326D0A3 /* zod.gen.d.ts */,
+				94F504C504F45C65620F3BAF /* zod.gen.js */,
+				7E396761ACC1E79424E357EE /* zod.gen.js.map */,
+			);
+			path = schema;
 			sourceTree = "<group>";
 		};
 		70626E78F7F8B16E58183D58 /* p-map */ = {
@@ -18463,6 +18556,9 @@
 				D40B75FCD4A5664FE692F7C8 /* client.d.ts */,
 				9D7E6CE79C52730DEEB59606 /* client.js */,
 				3DD357D3E802C2D12420BFFF /* client.js.map */,
+				C03982C02B834275E938D222 /* dual-version-agent.d.ts */,
+				2864BB7FFE17CB44C25DF94A /* dual-version-agent.js */,
+				8EDD7D16C741F5DFB50244FD /* dual-version-agent.js.map */,
 				58193CE16ECCA78DCE0C9E80 /* http-client.d.ts */,
 				F973903F2C976D5434982786 /* http-client.js */,
 				ED99ECE0C9F81F162125D845 /* http-client.js.map */,
@@ -21463,6 +21559,14 @@
 			path = "bundle-name";
 			sourceTree = "<group>";
 		};
+		E75FE82FFDFC2B11323F3403 /* vendor */ = {
+			isa = PBXGroup;
+			children = (
+				10385A0571B0574A57B94DDD /* create-dmg */,
+			);
+			path = vendor;
+			sourceTree = "<group>";
+		};
 		E7C8DD8ECB1E0A53B7F11630 /* crypto */ = {
 			isa = PBXGroup;
 			children = (
@@ -21561,6 +21665,14 @@
 				4F317852B6DB84462D1D675D /* param_names.h */,
 			);
 			path = internal;
+			sourceTree = "<group>";
+		};
+		E96506103FCECD86F61228BA /* v2 */ = {
+			isa = PBXGroup;
+			children = (
+				B0E8009F17564BEADED6419E /* schema.unstable.json */,
+			);
+			path = v2;
 			sourceTree = "<group>";
 		};
 		E9921CD1B864EBCBCABDEF60 /* no-asm */ = {
@@ -22194,6 +22306,14 @@
 				797148B3068914D6CE2F78F6 /* x509v3.h */,
 			);
 			path = openssl;
+			sourceTree = "<group>";
+		};
+		F256C2D07217F702C08D8BF9 /* support */ = {
+			isa = PBXGroup;
+			children = (
+				43E50AECAAAD2ACCD93A17E5 /* template.applescript */,
+			);
+			path = support;
 			sourceTree = "<group>";
 		};
 		F2599790757325E1A422EE55 /* helpers */ = {
@@ -22913,6 +23033,7 @@
 				BDB1BF4ED130CAEC362FF7BC /* examples */,
 				AA9F03EB8F70391845BEB39B /* schema */,
 				ABBD441D9D4EE4F112BFB809 /* test-support */,
+				475E59035580AB2E18A30930 /* v2 */,
 				48D09B4FE1B322419F1AFE43 /* acp.d.ts */,
 				CA347F547982ECB1BFD2E46C /* acp.js */,
 				FA3457E06D40E37401A40D92 /* acp.js.map */,
@@ -22955,6 +23076,12 @@
 				AEE5AE151AE60D67F82416CB /* node-adapter.test.d.ts */,
 				4777BD64D35A494FC2F7C4B4 /* node-adapter.test.js */,
 				E6A14EE2A6F93E31EE8318D7 /* node-adapter.test.js.map */,
+				ED054116F7CAED65A9F2E872 /* protocol-router.d.ts */,
+				F8A09896D810328D3DF69295 /* protocol-router.js */,
+				CD9BE12EB9948DD7B4F70C0E /* protocol-router.js.map */,
+				59EDA4C248B506BCE12A424E /* protocol-router.test.d.ts */,
+				6C8158D240826F0D7E4F9BAC /* protocol-router.test.js */,
+				7AE41C8FCBC10E81DA8D72CE /* protocol-router.test.js.map */,
 				ADD1A7BDD68BF62F045D8D8A /* protocol.d.ts */,
 				3B1F1F6CCC494059C1B62603 /* protocol.js */,
 				D4D4D1ECF97BD98196DCCF99 /* protocol.js.map */,
@@ -23132,6 +23259,7 @@
 			);
 			dependencies = (
 				5BF8CB1E02D33AC2416D8B48 /* PBXTargetDependency */,
+				1A0785FFE93D7EC0D3FC9584 /* PBXTargetDependency */,
 			);
 			name = Citadel;
 			packageProductDependencies = (
@@ -23619,6 +23747,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		1A0785FFE93D7EC0D3FC9584 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 264C79D036F1AD0D7C077D09 /* CitadelNetExt */;
+			targetProxy = F160AA35C41FA10F7E0CFD56 /* PBXContainerItemProxy */;
+		};
 		4B065FCE3985A435DEA95501 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 93ED042817FC8DDC6B9F9397 /* Citadel */;
@@ -23655,7 +23788,8 @@
 			buildSettings = {
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = Sources/GUI/Citadel.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Packaging/Entitlements/CitadelBuild.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_TESTABILITY = YES;
@@ -23673,6 +23807,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Sources/NetExt/NetExt.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Sources/NetExt/Info.plist;
@@ -23722,6 +23857,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -23899,7 +24035,8 @@
 		E6A50078A9B9611EBCAE254D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = Sources/Helper/Helper.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Packaging/Entitlements/CitadelHelperBuild.entitlements;
+				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = Sources/Helper/Info.plist;

@@ -69,6 +69,7 @@ private struct CoworkCronJobRow: View {
                 set: { enabled in Task { await cowork.setCronJobEnabled(job.id, enabled: enabled) } }
             ))
             .labelsHidden()
+            .toggleStyle(PrismHandToggleStyle(kind: .switch))
             Button(L10n.runNow) {
                 Task { await cowork.runCronJob(job.id) }
             }

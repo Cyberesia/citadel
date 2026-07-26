@@ -40,6 +40,7 @@ struct CoworkAssistantEditorView: View {
                         rulesSection
                         promptsSection
                         Toggle(L10n.enabled, isOn: $enabled)
+                            .toggleStyle(PrismHandToggleStyle(kind: .checkbox))
                             .onChange(of: enabled) { _, newValue in
                                 guard isBuiltin, !isLoading else { return }
                                 Task { await saveEnabledOnly(newValue) }
@@ -223,12 +224,23 @@ struct CoworkSkillsHubView: View {
     @State private var skillContents: [String: String] = [:]
     @State private var ruleSaved = false
 
+    private var selectedAssistant: CoworkAssistant? {
+        cowork.assistants.first(where: { $0.id == selectedAssistantID })
+    }
+
+    private var rulesEditable: Bool {
+        selectedAssistant?.isBuiltin != true
+    }
+
+    private var hubSkills: [CoworkSkill] {
+        var seen = Set<String>()
+        return cowork.availableSkills.filter { skill in
+            seen.insert(skill.displayTitle.lowercased()).inserted
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(L10n.skillsHub).font(.ps(14, weight: .bold))
-            Text(L10n.skillsHubHelp)
-                .font(.ps(10))
-                .foregroundStyle(PrismTheme.textTertiary)
             Picker(L10n.assistantLabel, selection: $selectedAssistantID) {
                 ForEach(cowork.assistants) { assistant in
                     Text(assistant.displayName).tag(assistant.id)
@@ -237,9 +249,23 @@ struct CoworkSkillsHubView: View {
             .onChange(of: selectedAssistantID) { _ in Task { await loadRule() } }
 
             Text(L10n.assistantRuleLabel).font(.ps(11, weight: .semibold))
+            if !rulesEditable {
+                Text(L10n.assistantRulesReadOnlyHelp)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.textTertiary)
+            }
             TextEditor(text: $ruleText)
                 .font(.ps(11, design: .monospaced))
-                .frame(minHeight: 140)
+                .frame(minHeight: 180)
+                .scrollContentBackground(.hidden)
+                .padding(10)
+                .background(PrismTheme.surfaceMuted.opacity(0.35))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(PrismTheme.borderSubtle, lineWidth: 1)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .disabled(!rulesEditable)
 
             HStack {
                 Button(L10n.reload) { Task { await loadRule() } }.buttonStyle(PrismHandButtonStyle())
@@ -252,20 +278,23 @@ struct CoworkSkillsHubView: View {
                 Button(L10n.saveRule) {
                     Task {
                         await cowork.saveAssistantRule(assistantID: selectedAssistantID, content: ruleText)
-                        ruleText = CoworkUserFacing.sanitizeFreeText(ruleText)
-                        ruleSaved = true
-                        try? await Task.sleep(nanoseconds: 2_000_000_000)
-                        ruleSaved = false
+                        if rulesEditable {
+                            ruleText = CoworkUserFacing.sanitizeFreeText(ruleText)
+                            ruleSaved = true
+                            try? await Task.sleep(nanoseconds: 2_000_000_000)
+                            ruleSaved = false
+                        }
                     }
                 }
                 .buttonStyle(PrismHandButtonStyle())
                 .help(L10n.saveRuleKeepsOpen)
+                .disabled(!rulesEditable)
             }
 
             Divider().opacity(0.2)
 
             Text(L10n.availableSkills).font(.ps(11, weight: .semibold))
-            ForEach(cowork.availableSkills) { skill in
+            ForEach(hubSkills) { skill in
                 skillRow(skill)
             }
         }

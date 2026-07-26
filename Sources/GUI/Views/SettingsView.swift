@@ -5,7 +5,14 @@ struct SettingsView: View {
     @EnvironmentObject var state: AppState
     @State private var doh = AppConstants.defaultDoHUpstream
     @ObservedObject private var companion = CitadelDeskCompanionController.shared
-    @State private var selectedLocale = CitadelLocale.current
+    @AppStorage("citadel.locale") private var localeRaw = CitadelLocale.current.rawValue
+
+    private var localeBinding: Binding<CitadelLocale> {
+        Binding(
+            get: { CitadelLocale(rawValue: localeRaw) ?? .english },
+            set: { localeRaw = $0.rawValue }
+        )
+    }
     @State private var tab: SettingsTab = .general
     @State private var isEditingFont = false
     @State private var draftScale: Double = 1.0
@@ -53,7 +60,6 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .prismGlobalInteraction()
-        .id(selectedLocale)
         .onAppear {
             state.refreshProfilesAndBlocklists()
             doh = UserDefaults.standard.string(forKey: "citadel.doh") ?? AppConstants.defaultDoHUpstream
@@ -152,13 +158,15 @@ struct SettingsView: View {
 
             settingsSection(L10n.appearance) {
                 fontSizeControl
-                Picker(L10n.language, selection: $selectedLocale) {
+                Picker(L10n.language, selection: localeBinding) {
                     ForEach(CitadelLocale.allCases) { locale in
                         Text(locale.label).tag(locale)
                     }
                 }
-                .onChange(of: selectedLocale) { _, locale in
-                    CitadelLocale.setCurrent(locale)
+                .onChange(of: localeRaw) { _, raw in
+                    if let locale = CitadelLocale(rawValue: raw) {
+                        CitadelLocale.setCurrent(locale)
+                    }
                 }
             }
 

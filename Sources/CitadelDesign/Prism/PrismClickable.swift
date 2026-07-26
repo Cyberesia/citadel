@@ -43,10 +43,10 @@ public extension View {
         prismClickable()
     }
 
-    /// Default Prism interaction affordances for shell roots (buttons + toggles).
+    /// Default Prism interaction affordances for shell roots (buttons only).
+    /// Toggles opt in via `PrismHandToggleStyle` at each call site to avoid recursive styling.
     func prismGlobalInteraction() -> some View {
         buttonStyle(PrismHandButtonStyle())
-            .toggleStyle(PrismHandToggleStyle())
     }
 }
 
@@ -86,28 +86,21 @@ public struct PrismHandToggleStyle: ToggleStyle {
         self.kind = kind
     }
 
-    public func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.label
-            nativeToggle(configuration)
-        }
-        .prismClickable()
-    }
-
     @ViewBuilder
-    private func nativeToggle(_ configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         switch kind {
-        case .automatic:
-            Toggle("", isOn: configuration.$isOn)
-                .labelsHidden()
-        case .checkbox:
-            Toggle("", isOn: configuration.$isOn)
-                .labelsHidden()
-                .toggleStyle(.checkbox)
+        case .automatic, .checkbox:
+            Toggle(isOn: configuration.$isOn) {
+                configuration.label
+            }
+            .toggleStyle(.checkbox)
+            .prismClickable()
         case .switch:
-            Toggle("", isOn: configuration.$isOn)
-                .labelsHidden()
-                .toggleStyle(.switch)
+            Toggle(isOn: configuration.$isOn) {
+                configuration.label
+            }
+            .toggleStyle(.switch)
+            .prismClickable()
         }
     }
 }
