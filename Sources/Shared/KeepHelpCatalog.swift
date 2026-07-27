@@ -313,6 +313,44 @@ Si rien ne se passe, ouvrez Fournisseurs / Modèles depuis le compositeur. Les C
             keywords: ["mcp", "tools", "outils", "oauth"]
         ),
         KeepHelpArticle(
+            id: "agents-cli-auth",
+            category: .agents,
+            modes: ["agents", "teams"],
+            title: [
+                "en": "CLI authentication — why Terminal first?",
+                "fr": "Authentification CLI — pourquoi le Terminal d’abord ?"
+            ],
+            body: [
+                "en": """
+Keep discovers agent CLIs on your Mac’s PATH, but many vendors require a one-time sign-in in Terminal before third-party apps can use them.
+
+Typical flow:
+1. Install the CLI (Claude Code, Codex, Cursor agent, Hermes, Goose, …).
+2. Open Terminal and run the command once — e.g. `claude`, `codex`, or the vendor’s `login` subcommand.
+3. Complete the browser or API-key prompt in Terminal.
+4. Back in Keep → Agents, tap “Scan installed CLIs”, then “Health check”.
+
+Keep only verifies that the CLI responds to ACP — it does not perform vendor login for you. If Health check stays Offline after install, Terminal auth is the most common fix.
+
+Claude Code note: Claude Pro/Max subscription may not apply when driving Claude through third-party apps. You may need an Anthropic API key configured in Terminal instead of relying on subscription-only auth.
+""",
+                "fr": """
+Keep détecte les CLI d’agents dans le PATH de votre Mac, mais beaucoup de fournisseurs exigent une connexion unique dans le Terminal avant qu’une app tierce puisse les utiliser.
+
+Flux typique :
+1. Installez le CLI (Claude Code, Codex, agent Cursor, Hermes, Goose, …).
+2. Ouvrez le Terminal et lancez la commande une fois — ex. `claude`, `codex`, ou la sous-commande `login` du fournisseur.
+3. Terminez l’invite navigateur ou clé API dans le Terminal.
+4. Dans Keep → Agents, « Scanner les CLI installés », puis « Vérifier l’état ».
+
+Keep vérifie seulement que le CLI répond à ACP — il ne fait pas la connexion à votre place. Si Vérifier l’état reste Hors ligne après installation, l’auth Terminal est la cause la plus fréquente.
+
+Note Claude Code : l’abonnement Claude Pro/Max peut ne pas s’appliquer via des apps tierces. Une clé API Anthropic configurée dans le Terminal peut être nécessaire plutôt que l’auth par abonnement seul.
+"""
+            ],
+            keywords: ["auth", "login", "terminal", "codex", "claude", "offline", "health", "authentification"]
+        ),
+        KeepHelpArticle(
             id: "teams",
             category: .teams,
             modes: ["teams"],
@@ -321,10 +359,34 @@ Si rien ne se passe, ouvrez Fournisseurs / Modèles depuis le compositeur. Les C
                 "fr": "Équipes"
             ],
             body: [
-                "en": "Teams orchestrate several agents on a shared workspace: pick a leader and members, then describe a task. Members need capable backends (often MCP/stdio-capable CLIs from the Agents catalog).",
-                "fr": "Les Équipes orchestrent plusieurs agents sur un espace partagé : choisissez un leader et des membres, puis décrivez une tâche. Les membres ont besoin de backends capables (souvent des CLI MCP/stdio du catalogue Agents)."
+                "en": """
+Teams orchestrate several agents on a shared workspace: pick a leader and members, then describe a task.
+
+Setup checklist:
+• Leader — usually Citadel Keep (built-in). Uses your cloud or local model from Ask.
+• Members — often external CLIs (Claude Code, Codex, Cursor, Hermes…). Each must be Installed and Online on the Agents page before joining a team.
+• Terminal auth — run each CLI once in Terminal and sign in, then Health check in Keep.
+• Workspace folder — optional shared directory for file tasks.
+
+If creating a team with multiple CLIs fails, try: (1) Health check each CLI on Agents, (2) create a Keep-only team first, (3) add members one at a time after each shows Online.
+
+Teams pick assistants, not raw Agents rows — generated assistants appear after a successful scan and health check.
+""",
+                "fr": """
+Les Équipes orchestrent plusieurs agents sur un espace partagé : choisissez un leader et des membres, puis décrivez une tâche.
+
+Checklist :
+• Leader — en général Citadel Keep (intégré). Utilise votre modèle cloud ou local de Demander.
+• Membres — souvent des CLI externes (Claude Code, Codex, Cursor, Hermes…). Chacun doit être Installé et En ligne sur la page Agents avant de rejoindre l’équipe.
+• Auth Terminal — lancez chaque CLI une fois dans le Terminal et connectez-vous, puis Vérifier l’état dans Keep.
+• Dossier de travail — répertoire partagé optionnel pour les fichiers.
+
+Si la création avec plusieurs CLI échoue : (1) Vérifier l’état de chaque CLI sur Agents, (2) créer d’abord une équipe Keep seule, (3) ajouter les membres un par un une fois En ligne.
+
+Les Équipes choisissent des Assistants, pas les lignes brutes Agents — les assistants générés apparaissent après un scan et une vérification réussis.
+"""
             ],
-            keywords: ["teams", "équipes", "leader"]
+            keywords: ["teams", "équipes", "leader", "cli", "members", "membres"]
         ),
         KeepHelpArticle(
             id: "schedule",

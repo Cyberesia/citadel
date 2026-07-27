@@ -83,6 +83,8 @@ struct CoworkAgentSettingsView: View {
                 .foregroundStyle(PrismTheme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            agentsAuthBanner
+
             if cowork.managedAgents.isEmpty {
                 Text(L10n.agentsEmptyHint)
                     .font(.ps(11))
@@ -93,6 +95,29 @@ struct CoworkAgentSettingsView: View {
                 }
             }
         }
+    }
+
+    private var agentsAuthBanner: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "terminal.fill")
+                    .font(.ps(11))
+                    .foregroundStyle(PrismTheme.accentSecondary)
+                Text(L10n.agentsCLIAuthBanner)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if cowork.managedAgents.contains(where: { $0.id.lowercased().contains("claude") }) {
+                Text(L10n.claudeSubscriptionNote)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(10)
+        .background(PrismTheme.surfaceMuted.opacity(0.45))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     private func agentRow(_ agent: CoworkManagedAgent) -> some View {
@@ -116,6 +141,12 @@ struct CoworkAgentSettingsView: View {
                         Text(agent.healthSummary)
                             .font(.ps(10))
                             .foregroundStyle(agent.isHealthy ? PrismTheme.signalAllow : PrismTheme.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if !agent.isHealthy, let guidance = agent.lastCheckGuidance, !guidance.isEmpty {
+                        Text(guidance)
+                            .font(.ps(9))
+                            .foregroundStyle(PrismTheme.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }

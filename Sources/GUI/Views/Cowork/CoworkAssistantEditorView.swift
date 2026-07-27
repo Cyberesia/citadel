@@ -241,11 +241,14 @@ struct CoworkSkillsHubView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Picker(L10n.assistantLabel, selection: $selectedAssistantID) {
-                ForEach(cowork.assistants) { assistant in
-                    Text(assistant.displayName).tag(assistant.id)
-                }
-            }
+            PrismDropdownFieldRequired(
+                label: L10n.assistantLabel,
+                selection: $selectedAssistantID,
+                options: cowork.assistants.map {
+                    PrismDropdownOption(value: $0.id, title: $0.displayName, subtitle: $0.displayBackendType)
+                },
+                leadingIcon: "sparkles"
+            )
             .onChange(of: selectedAssistantID) { _ in Task { await loadRule() } }
 
             Text(L10n.assistantRuleLabel).font(.ps(11, weight: .semibold))

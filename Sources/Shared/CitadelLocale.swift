@@ -348,6 +348,28 @@ enum L10n {
     static func teamMemberCount(_ n: Int) -> String {
         t("\(n) agent\(n == 1 ? "" : "s")", "\(n) agent\(n == 1 ? "" : "s")")
     }
+    static var teamSetupHint: String {
+        t("CLI agents (Claude Code, Codex, Cursor, Hermes…) must be installed, authenticated in Terminal, and Online on the Agents page before they can join a team. Keep-only teams work without external CLIs.",
+          "Les agents CLI (Claude Code, Codex, Cursor, Hermes…) doivent être installés, authentifiés dans le Terminal, et En ligne sur la page Agents avant de rejoindre une équipe. Les équipes Keep seules fonctionnent sans CLI externe.")
+    }
+    static var teamCLIAuthHint: String {
+        t("Many CLIs need a one-time login in Terminal first — e.g. run `claude` or `codex` and sign in, then tap Health check on the Agents page.",
+          "Beaucoup de CLI exigent une connexion unique dans le Terminal — lancez par ex. `claude` ou `codex` et connectez-vous, puis Vérifier l’état sur la page Agents.")
+    }
+    static var teamSlotStarting: String {
+        t("Starting agent…", "Démarrage de l’agent…")
+    }
+    static var teamMemberUnavailable: String {
+        t("Not available for teams", "Indisponible pour les équipes")
+    }
+    static var agentsCLIAuthBanner: String {
+        t("Tip: if Health check fails or a CLI is Offline, open Terminal and run the agent command once to sign in (e.g. `claude login`, `codex login`). Keep only verifies the CLI — it does not perform vendor authentication for you.",
+          "Astuce : si Vérifier l’état échoue ou qu’un CLI est Hors ligne, ouvrez le Terminal et lancez la commande une fois pour vous connecter (ex. `claude login`, `codex login`). Keep vérifie seulement le CLI — il ne fait pas l’authentification à votre place.")
+    }
+    static var claudeSubscriptionNote: String {
+        t("Claude Code uses your Anthropic account from Terminal login. Claude Pro/Max subscription may not apply to third-party apps — an API key may be required instead.",
+          "Claude Code utilise votre compte Anthropic via la connexion Terminal. L’abonnement Claude Pro/Max peut ne pas s’appliquer aux apps tierces — une clé API peut être nécessaire.")
+    }
 
     // MARK: - Remote access & bridges
     static var remoteAccess: String { t("Remote access", "Accès distant") }
@@ -786,6 +808,23 @@ enum L10n {
 
     static var coreStarting: String { t("Starting Keep…", "Démarrage de Keep…") }
     static var coreOffline: String { t("Keep engine offline", "Moteur Keep hors ligne") }
+    static var loadingKeepCatalog: String {
+        t("Loading Keep workspace…", "Chargement de l’espace Keep…")
+    }
+    static var sendingMessage: String { t("Sending message…", "Envoi du message…") }
+    static var checkingAgentHealth: String {
+        t("Checking agent health…", "Vérification de l’agent…")
+    }
+    static func checkingAgents(_ n: Int) -> String {
+        t("Checking \(n) agents…", "Vérification de \(n) agents…")
+    }
+    static var enablingRemoteAccess: String {
+        t("Updating remote access…", "Mise à jour de l’accès distant…")
+    }
+    static var teamCreating: String { t("Creating team…", "Création de l’équipe…") }
+    static var teamOpening: String { t("Opening team workspace…", "Ouverture de l’équipe…") }
+    static var teamAddingMember: String { t("Adding team member…", "Ajout du membre…") }
+    static var teamSendingTask: String { t("Sending team task…", "Envoi de la tâche d’équipe…") }
     static var homeGreeting: String { t("What should Keep do?", "Que doit faire Keep ?") }
     static var homeTagline: String {
         t("Agents can read files, write drafts, organize folders, and more — you stay in control.",

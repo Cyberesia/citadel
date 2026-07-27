@@ -91,6 +91,10 @@ final class CoworkState: ObservableObject {
     @Published var teamRunState: CoworkTeamRunState?
     @Published var teamSlotMessages: [String: [CoworkMessage]] = [:]
     @Published var isTeamBusy = false
+    /// Human-readable label while `isTeamBusy` (create team, open, add member, send task).
+    @Published var teamActivityMessage: String?
+    /// Cached per-assistant eligibility for team pickers (`team_selectable` from the backend).
+    @Published var teamAssistantEligibility: [String: CoworkTeamAssistantEligibility] = [:]
     let voiceScribe = CitadelVoiceScribe()
 
     let lifecycle = CoworkCoreLifecycle()

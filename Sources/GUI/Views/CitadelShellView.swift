@@ -177,27 +177,35 @@ struct CitadelShellView: View {
 
     @ViewBuilder
     private var coworkPanel: some View {
-        Group {
-            if let _ = cowork.activeConversationID {
-                CoworkConversationView()
-            } else {
-                switch router.coworkMode {
-                case .home:
-                    CoworkHomeView()
-                case .sessions:
-                    CoworkSessionsView()
-                case .teams:
-                    CoworkTeamsView()
-                case .assistants:
-                    CoworkAssistantsView()
-                case .tools:
-                    CoworkMcpSettingsView()
-                case .schedule:
-                    CoworkScheduledTasksView()
-                case .agents:
-                    CoworkAgentSettingsView()
+        ZStack(alignment: .top) {
+            Group {
+                if let _ = cowork.activeConversationID {
+                    CoworkConversationView()
+                } else {
+                    switch router.coworkMode {
+                    case .home:
+                        CoworkHomeView()
+                    case .sessions:
+                        CoworkSessionsView()
+                    case .teams:
+                        CoworkTeamsView()
+                    case .assistants:
+                        CoworkAssistantsView()
+                    case .tools:
+                        CoworkMcpSettingsView()
+                    case .schedule:
+                        CoworkScheduledTasksView()
+                    case .agents:
+                        CoworkAgentSettingsView()
+                    }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            CoworkKeepActivityOverlay()
+                .environmentObject(cowork)
+                .frame(maxWidth: .infinity, alignment: .top)
+                .allowsHitTesting(false)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $cowork.showProviderSheet) {

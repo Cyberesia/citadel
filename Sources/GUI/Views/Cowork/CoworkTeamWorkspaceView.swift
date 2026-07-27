@@ -17,6 +17,9 @@ struct CoworkTeamWorkspaceView: View {
             composer
         }
         .sheet(isPresented: $showAddMember) { addMemberSheet }
+        .onAppear {
+            Task { await cowork.refreshTeamAssistantEligibility() }
+        }
     }
 
     // MARK: - Header
@@ -48,7 +51,8 @@ struct CoworkTeamWorkspaceView: View {
             runStateBadge
 
             Button {
-                newMemberID = cowork.assistants.first?.id
+                let eligible = cowork.assistantsEligibleForTeam(excluding: cowork.activeTeamAssistantIDs())
+                newMemberID = eligible.first?.id
                 showAddMember = true
             } label: {
                 Label(L10n.addMember, systemImage: "person.badge.plus")
@@ -181,11 +185,19 @@ struct CoworkTeamWorkspaceView: View {
                 LazyVStack(alignment: .leading, spacing: 6) {
                     let messages = visibleMessages(slot)
                     if messages.isEmpty {
-                        Text(L10n.teamNoMessages)
-                            .font(.ps(10))
-                            .foregroundStyle(PrismTheme.textTertiary)
-                            .padding(.top, 12)
-                            .frame(maxWidth: .infinity)
+                        if slot.conversationID == nil {
+                            Text(L10n.teamSlotStarting)
+                                .font(.ps(10))
+                                .foregroundStyle(PrismTheme.textTertiary)
+                                .padding(.top, 12)
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text(L10n.teamNoMessages)
+                                .font(.ps(10))
+                                .foregroundStyle(PrismTheme.textTertiary)
+                                .padding(.top, 12)
+                                .frame(maxWidth: .infinity)
+                        }
                     } else {
                         ForEach(messages, id: \.stableID) { message in
                             slotMessage(message)
@@ -282,12 +294,42 @@ struct CoworkTeamWorkspaceView: View {
     // MARK: - Add member sheet
 
     private var addMemberSheet: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        let eligible = cowork.assistantsEligibleForTeam(excluding: cowork.activeTeamAssistantIDs())
+        return VStack(alignment: .leading, spacing: 14) {
             Text(L10n.addMember).font(.headline)
-            Picker(L10n.teamMember, selection: $newMemberID) {
-                ForEach(cowork.assistants) { assistant in
-                    Text(assistant.displayName).tag(Optional(assistant.id))
-                }
+            Text(L10n.teamCLIAuthHint)
+                .font(.ps(10))
+                .foregroundStyle(PrismTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            PrismDropdownField(
+                label: L10n.teamMember,
+                selection: $newMemberID,
+                options: eligible.map { assistant in
+                    PrismDropdownOption(
+                        value: assistant.id,
+                        title: assistant.displayName,
+                        subtitle: assistant.isAionrs ? nil : assistant.displayBackendType
+                    )
+                },
+                leadingIcon: "person.badge.plus"
+            )
+            if eligible.isEmpty {
+                Text(L10n.teamMemberUnavailable)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.textTertiary)
+            }
+            if cowork.isTeamBusy {
+                PrismActivityBanner(
+                    icon: "person.badge.plus",
+                    message: cowork.teamActivityMessage ?? L10n.teamAddingMember,
+                    compact: true
+                )
+            }
+            if let status = cowork.statusMessage, !status.isEmpty {
+                Text(status)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.signalDeny)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             HStack {
                 Spacer()
@@ -295,16 +337,24 @@ struct CoworkTeamWorkspaceView: View {
                     .buttonStyle(PrismHandButtonStyle())
                 Button(L10n.addMember) {
                     if let id = newMemberID {
-                        Task { await cowork.addTeamMember(assistantID: id) }
+                        Task {
+                            let ok = await cowork.addTeamMember(assistantID: id)
+                            if ok { showAddMember = false }
+                        }
                     }
-                    showAddMember = false
                 }
                 .buttonStyle(PrismHandButtonStyle())
-                .disabled(newMemberID == nil)
+                .disabled(newMemberID == nil || eligible.isEmpty || cowork.isTeamBusy)
             }
         }
         .padding(20)
         .frame(width: 380)
+        .onAppear {
+            Task { await cowork.refreshTeamAssistantEligibility() }
+            if newMemberID == nil || !eligible.contains(where: { $0.id == newMemberID }) {
+                newMemberID = eligible.first?.id
+            }
+        }
     }
 }
 

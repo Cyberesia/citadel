@@ -202,3 +202,227 @@ public struct PrismSelectableRow: View {
         .buttonStyle(PrismPlainHandButtonStyle())
     }
 }
+
+// MARK: - Activity banner
+
+/// Inline loading banner with animated ring — use for background Keep operations.
+public struct PrismActivityBanner: View {
+    public let icon: String
+    public let message: String
+    public var compact: Bool
+
+    @State private var spin = false
+
+    public init(icon: String, message: String, compact: Bool = false) {
+        self.icon = icon
+        self.message = message
+        self.compact = compact
+    }
+
+    public var body: some View {
+        HStack(spacing: compact ? 8 : 12) {
+            ZStack {
+                Circle()
+                    .stroke(PrismTheme.accent.opacity(0.18), lineWidth: 2)
+                    .frame(width: ringSize, height: ringSize)
+                Circle()
+                    .trim(from: 0.08, to: 0.72)
+                    .stroke(
+                        AngularGradient(
+                            colors: [
+                                PrismTheme.accent.opacity(0.15),
+                                PrismTheme.accent,
+                                PrismTheme.accentSecondary,
+                            ],
+                            center: .center
+                        ),
+                        style: StrokeStyle(lineWidth: 2, lineCap: .round)
+                    )
+                    .frame(width: ringSize, height: ringSize)
+                    .rotationEffect(.degrees(spin ? 360 : 0))
+                    .animation(.linear(duration: 1.05).repeatForever(autoreverses: false), value: spin)
+                Image(systemName: icon)
+                    .font(.ps(compact ? 9 : 10, weight: .semibold))
+                    .foregroundStyle(PrismTheme.accentSecondary)
+            }
+            .onAppear { spin = true }
+
+            Text(message)
+                .font(.ps(compact ? 10 : 11, weight: .medium))
+                .foregroundStyle(PrismTheme.textPrimary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, compact ? 10 : 14)
+        .padding(.vertical, compact ? 7 : 10)
+        .background {
+            RoundedRectangle(cornerRadius: compact ? 10 : 14, style: .continuous)
+                .fill(PrismTheme.surface.opacity(0.92))
+                .overlay {
+                    RoundedRectangle(cornerRadius: compact ? 10 : 14, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    PrismTheme.accent.opacity(0.10),
+                                    PrismTheme.surfaceMuted.opacity(0.45),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: compact ? 10 : 14, style: .continuous)
+                        .strokeBorder(PrismTheme.glassStrokeGradient, lineWidth: 1)
+                }
+        }
+        .shadow(color: PrismTheme.accentGlow.opacity(0.12), radius: 14, y: 4)
+    }
+
+    private var ringSize: CGFloat { compact ? 22 : 28 }
+}
+
+// MARK: - Dropdown field
+
+public struct PrismDropdownOption<Value: Hashable>: Identifiable, Hashable {
+    public let value: Value
+    public let title: String
+    public var subtitle: String?
+    public var disabled: Bool
+
+    public var id: Value { value }
+
+    public init(value: Value, title: String, subtitle: String? = nil, disabled: Bool = false) {
+        self.value = value
+        self.title = title
+        self.subtitle = subtitle
+        self.disabled = disabled
+    }
+}
+
+/// Form-style single-select dropdown — replaces native macOS `Picker` menus in Keep sheets.
+public struct PrismDropdownField<Value: Hashable>: View {
+    let label: String?
+    @Binding var selection: Value?
+    let options: [PrismDropdownOption<Value>]
+    var placeholder: String
+    var leadingIcon: String?
+
+    @State private var isOpen = false
+
+    public init(
+        label: String? = nil,
+        selection: Binding<Value?>,
+        options: [PrismDropdownOption<Value>],
+        placeholder: String = "—",
+        leadingIcon: String? = nil
+    ) {
+        self.label = label
+        self._selection = selection
+        self.options = options
+        self.placeholder = placeholder
+        self.leadingIcon = leadingIcon
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let label, !label.isEmpty {
+                Text(label)
+                    .font(.ps(11, weight: .semibold))
+                    .foregroundStyle(PrismTheme.textSecondary)
+            }
+
+            Button { isOpen.toggle() } label: {
+                HStack(spacing: 8) {
+                    if let leadingIcon {
+                        Image(systemName: leadingIcon)
+                            .font(.ps(11, weight: .semibold))
+                            .foregroundStyle(PrismTheme.accentSecondary)
+                            .frame(width: 16)
+                    }
+                    Text(selectedTitle)
+                        .font(.ps(12, weight: .medium))
+                        .foregroundStyle(selection == nil ? PrismTheme.textTertiary : PrismTheme.textPrimary)
+                        .lineLimit(1)
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.ps(9, weight: .bold))
+                        .foregroundStyle(PrismTheme.textTertiary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(PrismTheme.surfaceMuted.opacity(0.42))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(PrismTheme.borderSubtle, lineWidth: 1)
+                        }
+                }
+            }
+            .buttonStyle(PrismHandButtonStyle())
+            .popover(isPresented: $isOpen, arrowEdge: .bottom) {
+                dropdownPanel
+                    .prismPopoverChrome(width: 320, maxHeight: 360)
+            }
+        }
+    }
+
+    private var selectedTitle: String {
+        guard let selection else { return placeholder }
+        return options.first(where: { $0.value == selection })?.title ?? placeholder
+    }
+
+    private var dropdownPanel: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(options) { option in
+                    PrismSelectableRow(
+                        title: option.title,
+                        subtitle: option.subtitle,
+                        isSelected: selection == option.value
+                    ) {
+                        guard !option.disabled else { return }
+                        selection = option.value
+                        isOpen = false
+                    }
+                    .opacity(option.disabled ? 0.45 : 1)
+                }
+            }
+        }
+    }
+}
+
+/// Non-optional binding variant of `PrismDropdownField`.
+public struct PrismDropdownFieldRequired<Value: Hashable>: View {
+    let label: String?
+    @Binding var selection: Value
+    let options: [PrismDropdownOption<Value>]
+    var leadingIcon: String?
+
+    public init(
+        label: String? = nil,
+        selection: Binding<Value>,
+        options: [PrismDropdownOption<Value>],
+        leadingIcon: String? = nil
+    ) {
+        self.label = label
+        self._selection = selection
+        self.options = options
+        self.leadingIcon = leadingIcon
+    }
+
+    public var body: some View {
+        PrismDropdownField(
+            label: label,
+            selection: Binding(
+                get: { selection },
+                set: { if let value = $0 { selection = value } }
+            ),
+            options: options,
+            leadingIcon: leadingIcon
+        )
+    }
+}

@@ -41,7 +41,8 @@ struct CoworkComposerToolbar: View {
             Spacer()
 
             if cowork.isSending {
-                ProgressView().controlSize(.small)
+                PrismActivityBanner(icon: "paperplane", message: L10n.sendingMessage, compact: true)
+                    .frame(maxWidth: 220)
             }
 
             sendButton

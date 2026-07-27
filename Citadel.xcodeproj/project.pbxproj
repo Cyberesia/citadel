@@ -93,6 +93,7 @@
 		51C1619D37E92D0587F1653C /* Tokenizers in Frameworks */ = {isa = PBXBuildFile; productRef = A2AC8AE3565F0BD0E85D1EC7 /* Tokenizers */; };
 		52DDEE0D0BD636F4F1E1757A /* CoworkOllamaModelsAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0DC43DB71A35A42421C364 /* CoworkOllamaModelsAPI.swift */; };
 		53DDE728C84B519D5D447C93 /* CoworkCoreClient+Providers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29327834C1BA58E8E4B78759 /* CoworkCoreClient+Providers.swift */; };
+		545E3BE78DDA1991AEE3855B /* CoworkKeepActivityOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33166DEA332DB7EBF9F4E15F /* CoworkKeepActivityOverlay.swift */; };
 		5575AAB4BC195CE4677575FE /* ProcessIdentityResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66460B07E1FF291A717075E9 /* ProcessIdentityResolver.swift */; };
 		559B54C89CC9957EF63CE3BB /* CoworkExtendedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F285260EE552F866CACA0AE9 /* CoworkExtendedModels.swift */; };
 		55F589D0992A7BC2AB9557C3 /* CoworkWorkspacePanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553EE0D5B5D2144DE17A2933 /* CoworkWorkspacePanel.swift */; };
@@ -1505,6 +1506,7 @@
 		32F5D0DE63A8DF583D527F82 /* der_ecx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = der_ecx.h; sourceTree = "<group>"; };
 		32F7A8C482D1D9C7231780ED /* ocsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ocsp.h; sourceTree = "<group>"; };
 		331250C86ACAC3EAF7D0BF3E /* coerce.d.ts */ = {isa = PBXFileReference; path = coerce.d.ts; sourceTree = "<group>"; };
+		33166DEA332DB7EBF9F4E15F /* CoworkKeepActivityOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkKeepActivityOverlay.swift; sourceTree = "<group>"; };
 		331EB3EA26F0D9CAA3342F6F /* name-provider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "name-provider.h"; sourceTree = "<group>"; };
 		331FD0CEE7BB66658F4B288E /* index.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = index.js; sourceTree = "<group>"; };
 		3326F9481E65AF740AE7D269 /* CoworkState+Remote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CoworkState+Remote.swift"; sourceTree = "<group>"; };
@@ -21801,6 +21803,7 @@
 				B3FE4DA9B24D6DF9E664AE51 /* CoworkConversationUsageView.swift */,
 				6A280FC3B93695BE494D2B96 /* CoworkConversationView.swift */,
 				74CEF5D96C930D078ABDC920 /* CoworkHomeView.swift */,
+				33166DEA332DB7EBF9F4E15F /* CoworkKeepActivityOverlay.swift */,
 				F67125A07D0F7C1682D6351E /* CoworkMarkdownMessageText.swift */,
 				1242DCF1988A4D3060B09413 /* CoworkMcpSettingsView.swift */,
 				DE0C001908C705284449B3B5 /* CoworkMessageBubble.swift */,
@@ -23539,6 +23542,7 @@
 				513D4DC71DC9F9C6753B3061 /* CoworkGFMTableMarkdown.swift in Sources */,
 				AD05A47B79C5B538638E90A7 /* CoworkHomeView.swift in Sources */,
 				0F46F45B34082ABFB93F4D1F /* CoworkJSONValue.swift in Sources */,
+				545E3BE78DDA1991AEE3855B /* CoworkKeepActivityOverlay.swift in Sources */,
 				C87DEA7AC8AC190AD7D28D3B /* CoworkMLXBridgeError.swift in Sources */,
 				2621EECE4FDA8BFCE72225DF /* CoworkMLXHubCache.swift in Sources */,
 				ED90134E431531B42A78B526 /* CoworkMLXHubFilewiseDownloader.swift in Sources */,

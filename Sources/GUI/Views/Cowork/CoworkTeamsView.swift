@@ -13,7 +13,13 @@ struct CoworkTeamsView: View {
                 teamList
             }
         }
-        .onAppear { Task { await cowork.refreshTeams() } }
+        .onAppear {
+            Task {
+                await cowork.refreshTeams()
+                await cowork.refreshManagedAgents()
+                await cowork.refreshTeamAssistantEligibility()
+            }
+        }
         .sheet(isPresented: $showCreate) {
             CoworkTeamCreateSheet()
                 .environmentObject(cowork)
@@ -41,6 +47,11 @@ struct CoworkTeamsView: View {
                         .foregroundStyle(PrismTheme.textSecondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 380)
+                    Text(L10n.teamSetupHint)
+                        .font(.ps(10))
+                        .foregroundStyle(PrismTheme.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: 420)
                     Button(L10n.newTeam) { showCreate = true }
                         .buttonStyle(PrismHandButtonStyle())
                         .padding(.horizontal, 14)
@@ -140,33 +151,58 @@ struct CoworkTeamCreateSheet: View {
     @State private var memberIDs: [String] = []
     @State private var workspace = ""
 
+    private var reservedIDs: Set<String> {
+        var ids = Set(memberIDs)
+        if let leaderID { ids.insert(leaderID) }
+        return ids
+    }
+
+    private var leaderCandidates: [CoworkAssistant] {
+        cowork.assistantsEligibleForTeam(excluding: Set(memberIDs))
+    }
+
+    private var memberCandidates: [CoworkAssistant] {
+        var exclude = Set(memberIDs)
+        if let leaderID { exclude.insert(leaderID) }
+        return cowork.assistantsEligibleForTeam(excluding: exclude)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(L10n.newTeam).font(.headline)
 
+            teamGuidanceBanner
+
             TextField(L10n.teamName, text: $name)
 
-            Picker(L10n.teamLeader, selection: $leaderID) {
-                ForEach(cowork.assistants) { assistant in
-                    Text(assistant.displayName).tag(Optional(assistant.id))
-                }
-            }
+            PrismDropdownField(
+                label: L10n.teamLeader,
+                selection: $leaderID,
+                options: leaderDropdownOptions,
+                leadingIcon: "crown.fill"
+            )
 
             VStack(alignment: .leading, spacing: 6) {
                 Text(L10n.teamMembers)
                     .font(.ps(11, weight: .semibold))
                     .foregroundStyle(PrismTheme.textSecondary)
                 ForEach(Array(memberIDs.enumerated()), id: \.offset) { index, memberID in
-                    HStack {
-                        Picker("", selection: Binding(
-                            get: { memberIDs[index] },
-                            set: { memberIDs[index] = $0 }
-                        )) {
-                            ForEach(cowork.assistants) { assistant in
-                                Text(assistant.displayName).tag(assistant.id)
-                            }
+                    HStack(alignment: .top, spacing: 8) {
+                        PrismDropdownFieldRequired(
+                            selection: Binding(
+                                get: { memberIDs[index] },
+                                set: { memberIDs[index] = $0 }
+                            ),
+                            options: memberDropdownOptions(current: memberID),
+                            leadingIcon: "person.fill"
+                        )
+                        if let reason = cowork.teamBlockReason(for: memberID), !reason.isEmpty {
+                            Text(reason)
+                                .font(.ps(9))
+                                .foregroundStyle(PrismTheme.signalDeny)
+                                .lineLimit(2)
+                                .frame(maxWidth: 120, alignment: .leading)
                         }
-                        .labelsHidden()
                         Button {
                             memberIDs.remove(at: index)
                         } label: {
@@ -177,7 +213,7 @@ struct CoworkTeamCreateSheet: View {
                     .id("\(index)-\(memberID)")
                 }
                 Button {
-                    if let first = cowork.assistants.first?.id {
+                    if let first = memberCandidates.first?.id {
                         memberIDs.append(first)
                     }
                 } label: {
@@ -185,6 +221,7 @@ struct CoworkTeamCreateSheet: View {
                         .font(.ps(11))
                 }
                 .buttonStyle(PrismHandButtonStyle())
+                .disabled(memberCandidates.isEmpty)
             }
 
             HStack {
@@ -193,30 +230,92 @@ struct CoworkTeamCreateSheet: View {
                     .buttonStyle(PrismHandButtonStyle())
             }
 
+            if let status = cowork.statusMessage, !status.isEmpty {
+                Text(status)
+                    .font(.ps(10))
+                    .foregroundStyle(PrismTheme.signalDeny)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             HStack {
                 Spacer()
                 Button(L10n.cronCancel) { dismiss() }
                     .buttonStyle(PrismHandButtonStyle())
                 Button(L10n.createTeam) {
                     Task {
-                        await cowork.createTeam(
+                        let ok = await cowork.createTeam(
                             name: name.isEmpty ? L10n.newTeam : name,
                             leaderAssistantID: leaderID,
                             memberAssistantIDs: memberIDs,
                             workspace: workspace.isEmpty ? nil : workspace
                         )
-                        dismiss()
+                        if ok { dismiss() }
                     }
                 }
                 .buttonStyle(PrismHandButtonStyle())
                 .disabled(leaderID == nil || cowork.isTeamBusy)
             }
+
+            if cowork.isTeamBusy {
+                PrismActivityBanner(icon: "person.3.sequence", message: cowork.teamActivityMessage ?? L10n.teamCreating, compact: true)
+            }
         }
         .padding(20)
         .frame(width: 460)
         .onAppear {
-            if leaderID == nil { leaderID = cowork.assistants.first?.id }
+            Task { await cowork.refreshTeamAssistantEligibility() }
+            if leaderID == nil {
+                leaderID = leaderCandidates.first?.id ?? cowork.assistants.first?.id
+            }
         }
+    }
+
+    private var teamGuidanceBanner: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(L10n.teamSetupHint)
+            Text(L10n.teamCLIAuthHint)
+                .foregroundStyle(PrismTheme.textTertiary)
+        }
+        .font(.ps(10))
+        .foregroundStyle(PrismTheme.textSecondary)
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(PrismTheme.surfaceMuted.opacity(0.45))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    private var leaderDropdownOptions: [PrismDropdownOption<String>] {
+        leaderCandidates.map { assistant in
+            PrismDropdownOption(
+                value: assistant.id,
+                title: assistantTeamLabel(assistant),
+                subtitle: cowork.teamBlockReason(for: assistant.id)
+            )
+        }
+    }
+
+    private func memberDropdownOptions(current: String) -> [PrismDropdownOption<String>] {
+        memberPickerCandidates(current: current).map { assistant in
+            PrismDropdownOption(
+                value: assistant.id,
+                title: assistantTeamLabel(assistant),
+                subtitle: cowork.teamBlockReason(for: assistant.id)
+            )
+        }
+    }
+
+    private func memberPickerCandidates(current: String) -> [CoworkAssistant] {
+        var exclude = reservedIDs
+        exclude.remove(current)
+        return cowork.assistantsEligibleForTeam(excluding: exclude)
+    }
+
+    private func assistantTeamLabel(_ assistant: CoworkAssistant) -> String {
+        var label = assistant.displayName
+        if !assistant.isAionrs {
+            label += " · \(assistant.displayBackendType)"
+        }
+        return label
     }
 
     private func pickFolder() {
