@@ -156,6 +156,42 @@ enum CoworkUserFacing {
         }
     }
 
+    /// Agents page metadata (backend, type, source) — maps upstream ids to product labels.
+    static func agentCatalogMetadataDisplay(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return trimmed }
+        let lower = trimmed.lowercased()
+        switch lower {
+        case "aionrs", "aionui", "aioncore", "citadel", "keep", "cowork", "coworkcore":
+            return "Keep"
+        case "acp":
+            return "ACP"
+        case "internal", "builtin":
+            return L10n.assistantBuiltinBadge
+        case "claude", "claude-code", "claude code":
+            return "Claude Code"
+        case "codex":
+            return "Codex"
+        case "gemini":
+            return "Gemini"
+        case "goose":
+            return "Goose"
+        case "hermes":
+            return "Hermes"
+        case "openclaw":
+            return "OpenClaw"
+        case "cursor", "cursor-agent":
+            return "Cursor"
+        case "copilot":
+            return "Copilot"
+        default:
+            if trimmed.contains("/") {
+                return (trimmed as NSString).lastPathComponent
+            }
+            return sanitizeFreeText(trimmed)
+        }
+    }
+
     /// Config groups emitted for Keep's own data dir — hide from "detected from agents".
     static func isSelfMcpAgentSource(_ raw: String) -> Bool {
         let lower = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()

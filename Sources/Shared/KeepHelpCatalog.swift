@@ -422,9 +422,14 @@ Les Équipes choisissent des Assistants, pas les lignes brutes Agents — les as
 /// Short blurbs for known agent backends (when the API sends no description).
 enum KeepAgentBlurb {
     static func text(for agent: CoworkManagedAgent) -> String {
+        if isBundledKeepAgent(agent) {
+            return L10n.t("Keep’s bundled / internal agent entry.", "Entrée d’agent interne / bundlée Keep.")
+        }
         if let d = agent.description, !d.isEmpty { return d }
         let key = (agent.backend ?? agent.id).lowercased()
         switch key {
+        case "aionrs":
+            return L10n.t("Keep’s bundled / internal agent entry.", "Entrée d’agent interne / bundlée Keep.")
         case "claude", "claude-code":
             return L10n.t("Anthropic’s Claude Code CLI (ACP).", "CLI Claude Code d’Anthropic (ACP).")
         case "codex":
@@ -451,5 +456,14 @@ enum KeepAgentBlurb {
             }
             return L10n.t("External agent CLI Keep can drive when installed.", "CLI agent externe que Keep peut piloter une fois installé.")
         }
+    }
+
+    private static func isBundledKeepAgent(_ agent: CoworkManagedAgent) -> Bool {
+        let key = (agent.backend ?? agent.id).lowercased()
+        let source = (agent.source ?? agent.type ?? "").lowercased()
+        if key == "aionrs" || key.contains("aion") { return true }
+        if agent.id.lowercased().contains("keep") { return true }
+        if source == "internal" || source == "builtin" { return true }
+        return false
     }
 }

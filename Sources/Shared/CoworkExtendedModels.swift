@@ -379,7 +379,10 @@ struct CoworkManagedAgent: Identifiable, Decodable, Hashable {
     }
 
     var subtitleLine: String {
-        let bits = [backend, type, source, command].compactMap { $0 }.filter { !$0.isEmpty }
+        let bits = [backend, type, source, command]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .map { CoworkUserFacing.agentCatalogMetadataDisplay($0) }
         if bits.isEmpty { return "agent" }
         return bits.prefix(2).joined(separator: " · ")
     }
