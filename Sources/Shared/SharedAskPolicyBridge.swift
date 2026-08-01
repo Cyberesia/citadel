@@ -1,6 +1,6 @@
 import Foundation
 
-/// App-group preference for Network Extension ask-timeout behaviour.
+/// App-group preference for how paused network-filter flows behave on timeout.
 public enum SharedAskPolicyBridge {
     public struct Snapshot: Codable, Sendable {
         public var timeoutDeny: Bool
@@ -12,23 +12,13 @@ public enum SharedAskPolicyBridge {
         }
     }
 
-    private static var fileURL: URL? {
-        SharedRuleBridge.containerURL?.appendingPathComponent("ask-policy.json")
-    }
+    private static let store = AppGroupJSONStore<Snapshot>(fileName: "ask-policy.json")
 
     public static func write(timeoutDeny: Bool) {
-        guard let url = fileURL else { return }
-        let snap = Snapshot(timeoutDeny: timeoutDeny)
-        guard let data = try? JSONEncoder().encode(snap) else { return }
-        try? data.write(to: url, options: .atomic)
+        store.write(Snapshot(timeoutDeny: timeoutDeny))
     }
 
     public static func read() -> Snapshot {
-        guard let url = fileURL,
-              let data = try? Data(contentsOf: url),
-              let snap = try? JSONDecoder().decode(Snapshot.self, from: data) else {
-            return Snapshot(timeoutDeny: true)
-        }
-        return snap
+        store.read(default: Snapshot(timeoutDeny: true))
     }
 }

@@ -234,7 +234,7 @@ struct SettingsView: View {
                     .textFieldStyle(.roundedBorder)
                     .onSubmit {
                         UserDefaults.standard.set(doh, forKey: "citadel.doh")
-                        state.helper.remote?.setDoHUpstream(url: doh) { _, _ in }
+                        state.helper.setDoHUpstream(doh)
                     }
                 Text(L10n.localDNSHint)
                     .font(.ps(11))
@@ -280,7 +280,7 @@ struct SettingsView: View {
                     Toggle("", isOn: Binding(
                         get: { b.enabled },
                         set: { newValue in
-                            state.helper.remote?.enableBlocklist(idString: b.id.uuidString, enabled: newValue) { _, _ in }
+                            state.helper.enableBlocklist(id: b.id, enabled: newValue)
                             if var updated = state.blocklists.first(where: { $0.id == b.id }) {
                                 updated.enabled = newValue
                                 try? state.store?.updateBlocklist(updated)

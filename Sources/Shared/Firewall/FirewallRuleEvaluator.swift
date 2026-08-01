@@ -132,26 +132,3 @@ public struct FirewallRuleEvaluator: Sendable {
         return value
     }
 }
-
-/// Compatibility façade — prefer `FirewallRuleEvaluator` in new code.
-public struct RuleMatcher: Sendable {
-    private let evaluator = FirewallRuleEvaluator()
-
-    public init() {}
-
-    public func decision(for c: Connection, rules: [Rule], defaultMode: AppMode) -> RuleAction {
-        evaluator.decision(for: c, rules: rules, defaultMode: defaultMode)
-    }
-
-    public func matches(rule r: Rule, connection c: Connection) -> Bool {
-        evaluator.matches(rule: r, connection: c)
-    }
-
-    public func hostMatches(pattern: String, host: String) -> Bool {
-        evaluator.hostMatches(pattern: pattern, host: host)
-    }
-
-    public func ipMatches(pattern: String, ip: String) -> Bool {
-        evaluator.ipMatches(pattern: pattern, ip: ip)
-    }
-}

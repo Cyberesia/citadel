@@ -1,9 +1,9 @@
 import Foundation
 
-/// App-group mirror of active mode + rules for the Network System Extension.
+/// App-group snapshot of active firewall mode and rules for CitadelNetExt.
 ///
-/// The extension cannot read the helper SQLite DB, so the GUI writes this JSON
-/// snapshot whenever mode/rules change. Codable shape is a frozen wire contract.
+/// The network extension cannot read the privileged helper database, so the GUI
+/// publishes this JSON document whenever enforcement inputs change.
 public enum SharedRuleBridge {
     public struct Snapshot: Codable, Sendable {
         public var mode: AppMode
@@ -17,27 +17,17 @@ public enum SharedRuleBridge {
         }
     }
 
-    public static var containerURL: URL? {
-        FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: AppConstants.appGroup)
-    }
+    private static let store = AppGroupJSONStore<Snapshot>(fileName: "filter-rules.json")
 
-    private static var fileURL: URL? {
-        containerURL?.appendingPathComponent("filter-rules.json")
+    public static var containerURL: URL? {
+        store.fileURL?.deletingLastPathComponent()
     }
 
     public static func write(mode: AppMode, rules: [Rule]) {
-        guard let url = fileURL else { return }
-        let snap = Snapshot(mode: mode, rules: rules)
-        guard let data = try? JSONEncoder().encode(snap) else { return }
-        try? data.write(to: url, options: .atomic)
+        store.write(Snapshot(mode: mode, rules: rules))
     }
 
     public static func read() -> Snapshot {
-        guard let url = fileURL,
-              let data = try? Data(contentsOf: url),
-              let snap = try? JSONDecoder().decode(Snapshot.self, from: data) else {
-            return Snapshot(mode: .alert, rules: [])
-        }
-        return snap
+        store.read(default: Snapshot(mode: .alert, rules: []))
     }
 }

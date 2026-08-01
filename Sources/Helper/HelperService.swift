@@ -1,35 +1,35 @@
 import Foundation
 
-/// Privileged helper façade — XPC selectors are a frozen contract (`HelperProtocol`).
+/// Privileged helper daemon — implements the frozen `HelperProtocol` XPC surface.
 final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
     private let store: RuleStore
     private let packetFilter = PFManager()
     private let dnsProxy = DNSProxy()
     private let netMonitor = NetMonitor()
     private let blocklists: BlocklistManager
+    private let clients = HelperClientHub()
+    private let dnsAsks = PendingDNSAskQueue()
     private let listener: NSXPCListener
 
-    private var clientConnections: [NSXPCConnection] = []
-    private let clientLock = NSLock()
-    private var pendingAsks: [String: (Bool) -> Void] = [:]
-    private let askLock = NSLock()
     private var mode: AppMode = .alert
 
     init(listener: NSXPCListener) throws {
-        let dbDir = "/Library/Application Support/Citadel"
-        try? FileManager.default.createDirectory(atPath: dbDir, withIntermediateDirectories: true)
-        let dbPath = (dbDir as NSString).appendingPathComponent("citadel.sqlite")
-        store = try RuleStore(path: dbPath)
+        let supportDirectory = "/Library/Application Support/Citadel"
+        try? FileManager.default.createDirectory(atPath: supportDirectory, withIntermediateDirectories: true)
+        let databasePath = (supportDirectory as NSString).appendingPathComponent("citadel.sqlite")
+
+        store = try RuleStore(path: databasePath)
         blocklists = BlocklistManager(store: store)
         self.listener = listener
         super.init()
 
-        if let raw = store.getSetting("mode"), let saved = AppMode(rawValue: raw) {
-            mode = saved
+        if let savedMode = store.getSetting("mode").flatMap(AppMode.init(rawValue:)) {
+            mode = savedMode
         }
+
         dnsProxy.rules = store.allRules()
         dnsProxy.mode = mode
-        wireCallbacks()
+        bindSubsystems()
         listener.delegate = self
     }
 
@@ -39,75 +39,82 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
         Task { await blocklists.refresh() }
     }
 
-    private func wireCallbacks() {
+    // MARK: - Subsystem wiring
+
+    private func bindSubsystems() {
+        bindDNSProxy()
+        bindBlocklists()
+        bindNetMonitor()
+    }
+
+    private func bindDNSProxy() {
         dnsProxy.onBlock = { [weak self] domain, _ in
-            self?.broadcast { $0.notifyLog(level: "block", message: "blocked: \(domain)") }
-        }
-        dnsProxy.onResolve = { [weak self] domain, ips in
-            SharedDNSNameBridge.record(domain: domain, ips: ips)
-            self?.broadcast { $0.notifyLog(level: "resolve", message: "\(domain) -> \(ips.joined(separator: ", "))") }
-        }
-        dnsProxy.onAsk = { [weak self] domain, completion in
-            guard let self else { completion(true); return }
-            askLock.lock()
-            pendingAsks[domain] = completion
-            askLock.unlock()
-            let stub = Connection(pid: 0, processName: "dns", processPath: "", remoteHost: domain, status: .pending)
-            guard let data = try? JSONEncoder().encode(stub) else { completion(true); return }
-            broadcast { client in
-                client.notifyAlert(connectionJSON: data) { allow, _ in
-                    self.askLock.lock()
-                    let callback = self.pendingAsks.removeValue(forKey: domain)
-                    self.askLock.unlock()
-                    callback?(allow)
-                }
+            self?.clients.broadcast {
+                $0.notifyLog(level: "block", message: "blocked: \(domain)")
             }
         }
-        blocklists.onUpdate = { [weak self] _ in
-            self?.dnsProxy.blocklist = self?.blocklists.domains ?? []
+
+        dnsProxy.onResolve = { [weak self] domain, addresses in
+            SharedDNSNameBridge.record(domain: domain, ips: addresses)
+            self?.clients.broadcast {
+                $0.notifyLog(level: "resolve", message: "\(domain) -> \(addresses.joined(separator: ", "))")
+            }
         }
+
+        dnsProxy.onAsk = { [weak self] domain, completion in
+            guard let self else {
+                completion(true)
+                return
+            }
+            dnsAsks.enqueue(domain: domain, callback: completion)
+            promptForDNS(domain: domain)
+        }
+    }
+
+    private func promptForDNS(domain: String) {
+        let stub = Connection(
+            pid: 0,
+            processName: "dns",
+            processPath: "",
+            remoteHost: domain,
+            status: .pending
+        )
+        guard let payload = try? JSONEncoder().encode(stub) else {
+            dnsAsks.complete(domain: domain, allowed: true)
+            return
+        }
+
+        clients.broadcast { [weak self] client in
+            client.notifyAlert(connectionJSON: payload) { allow, _ in
+                self?.dnsAsks.complete(domain: domain, allowed: allow)
+            }
+        }
+    }
+
+    private func bindBlocklists() {
+        blocklists.onUpdate = { [weak self] _ in
+            guard let self else { return }
+            dnsProxy.blocklist = blocklists.domains
+        }
+    }
+
+    private func bindNetMonitor() {
         netMonitor.onConnections = { [weak self] connections in
             guard let self else { return }
             for connection in connections {
                 try? store.recordConnection(connection)
             }
-            broadcast { client in
-                if let data = try? JSONEncoder().encode(connections) {
-                    client.notifyConnection(connectionJSON: data)
-                }
-            }
+            guard let payload = try? JSONEncoder().encode(connections) else { return }
+            clients.broadcast { $0.notifyConnection(connectionJSON: payload) }
         }
+
         netMonitor.onSample = { [weak self] sample in
-            self?.broadcast { client in
-                if let data = try? JSONEncoder().encode(sample) {
-                    client.notifyTraffic(sampleJSON: data)
-                }
-            }
+            guard let payload = try? JSONEncoder().encode(sample) else { return }
+            self?.clients.broadcast { $0.notifyTraffic(sampleJSON: payload) }
         }
     }
 
-    private func registerClient(_ connection: NSXPCConnection) {
-        clientLock.lock(); defer { clientLock.unlock() }
-        clientConnections.append(connection)
-    }
-
-    private func unregisterClient(_ connection: NSXPCConnection) {
-        clientLock.lock(); defer { clientLock.unlock() }
-        clientConnections.removeAll { $0 === connection }
-    }
-
-    private func broadcast(_ body: (HelperClientProtocol) -> Void) {
-        clientLock.lock()
-        let connections = clientConnections
-        clientLock.unlock()
-        for connection in connections {
-            if let proxy = connection.remoteObjectProxy as? HelperClientProtocol {
-                body(proxy)
-            }
-        }
-    }
-
-    private func refreshEnforcement() {
+    private func syncEnforcement() {
         let rules = store.allRules()
         dnsProxy.rules = rules
         try? packetFilter.applyRules(rules)
@@ -115,7 +122,9 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
 
     // MARK: - HelperProtocol
 
-    func getVersion(reply: @escaping (String) -> Void) { reply(AppConstants.version) }
+    func getVersion(reply: @escaping (String) -> Void) {
+        reply(AppConstants.version)
+    }
 
     func getStatus(reply: @escaping (Data) -> Void) {
         let status = HelperStatus(
@@ -131,9 +140,12 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
     }
 
     func setMode(rawValue: String, reply: @escaping (Bool, String?) -> Void) {
-        guard let next = AppMode(rawValue: rawValue) else { reply(false, "invalid mode"); return }
-        mode = next
-        dnsProxy.mode = next
+        guard let nextMode = AppMode(rawValue: rawValue) else {
+            reply(false, "invalid mode")
+            return
+        }
+        mode = nextMode
+        dnsProxy.mode = nextMode
         try? store.setSetting("mode", rawValue)
         reply(true, nil)
     }
@@ -142,10 +154,10 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
         do {
             let rules = try JSONDecoder().decode([Rule].self, from: rulesJSON)
             for rule in rules { try store.upsertRule(rule) }
-            refreshEnforcement()
+            syncEnforcement()
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
@@ -153,26 +165,30 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
         do {
             let rule = try JSONDecoder().decode(Rule.self, from: ruleJSON)
             try store.upsertRule(rule)
-            refreshEnforcement()
+            syncEnforcement()
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
     func removeRule(idString: String, reply: @escaping (Bool, String?) -> Void) {
-        guard let id = UUID(uuidString: idString) else { reply(false, "bad uuid"); return }
+        guard let id = UUID(uuidString: idString) else {
+            reply(false, "bad uuid")
+            return
+        }
         do {
             try store.deleteRule(id: id)
-            refreshEnforcement()
+            syncEnforcement()
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
     func listRules(profile: String, reply: @escaping (Data) -> Void) {
-        let rules = store.allRules(profile: profile.isEmpty ? nil : profile)
+        let profileName = profile.isEmpty ? nil : profile
+        let rules = store.allRules(profile: profileName)
         reply((try? JSONEncoder().encode(rules)) ?? Data())
     }
 
@@ -182,7 +198,7 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
             try dnsProxy.start(port: AppConstants.dnsProxyPort)
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
@@ -203,15 +219,17 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
     }
 
     func enableBlocklist(idString: String, enabled: Bool, reply: @escaping (Bool, String?) -> Void) {
-        guard var target = store.allBlocklists().first(where: { $0.id.uuidString == idString }) else {
-            reply(false, "blocklist not found"); return
+        guard var blocklist = store.allBlocklists().first(where: { $0.id.uuidString == idString }) else {
+            reply(false, "blocklist not found")
+            return
         }
-        target.enabled = enabled
+        blocklist.enabled = enabled
         do {
-            try store.updateBlocklist(target)
+            try store.updateBlocklist(blocklist)
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
+            return
         }
         Task { await blocklists.refresh() }
     }
@@ -230,13 +248,11 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
     }
 
     func listBlocklists(reply: @escaping (Data) -> Void) {
-        let lists = store.allBlocklists()
-        reply((try? JSONEncoder().encode(lists)) ?? Data())
+        reply((try? JSONEncoder().encode(store.allBlocklists())) ?? Data())
     }
 
     func listProfiles(reply: @escaping (Data) -> Void) {
-        let profiles = store.allProfiles()
-        reply((try? JSONEncoder().encode(profiles)) ?? Data())
+        reply((try? JSONEncoder().encode(store.allProfiles())) ?? Data())
     }
 
     func setActiveProfile(name: String, reply: @escaping (Bool, String?) -> Void) {
@@ -247,30 +263,30 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
                 dnsProxy.mode = profile.mode
                 try? store.setSetting("mode", profile.mode.rawValue)
             }
-            refreshEnforcement()
+            syncEnforcement()
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
     func purgeExpiredRules(reply: @escaping (Bool, String?) -> Void) {
         do {
             try store.purgeExpiredRules()
-            refreshEnforcement()
+            syncEnforcement()
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
     func purgeSessionRules(reply: @escaping (Bool, String?) -> Void) {
         do {
             try store.purgeSessionRules()
-            refreshEnforcement()
+            syncEnforcement()
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
@@ -284,20 +300,35 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
             }
             reply(true, nil)
         } catch {
-            reply(false, "\(error)")
+            reply(false, String(describing: error))
         }
     }
 
     func installPF(reply: @escaping (Bool, String?) -> Void) {
-        do { try packetFilter.install(); reply(true, nil) } catch { reply(false, "\(error)") }
+        do {
+            try packetFilter.install()
+            reply(true, nil)
+        } catch {
+            reply(false, String(describing: error))
+        }
     }
 
     func uninstallPF(reply: @escaping (Bool, String?) -> Void) {
-        do { try packetFilter.uninstall(); reply(true, nil) } catch { reply(false, "\(error)") }
+        do {
+            try packetFilter.uninstall()
+            reply(true, nil)
+        } catch {
+            reply(false, String(describing: error))
+        }
     }
 
     func flushAll(reply: @escaping (Bool, String?) -> Void) {
-        do { try packetFilter.uninstall(); reply(true, nil) } catch { reply(false, "\(error)") }
+        do {
+            try packetFilter.uninstall()
+            reply(true, nil)
+        } catch {
+            reply(false, String(describing: error))
+        }
     }
 
     func recentBlocked(limit: Int, reply: @escaping (Data) -> Void) {
@@ -310,18 +341,24 @@ final class HelperService: NSObject, HelperProtocol, @unchecked Sendable {
     }
 }
 
+// MARK: - NSXPCListenerDelegate
+
 extension HelperService: NSXPCListenerDelegate {
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
         newConnection.exportedInterface = HelperBridge.remoteInterface()
         newConnection.exportedObject = self
         newConnection.remoteObjectInterface = HelperBridge.exportedInterface()
+
         newConnection.invalidationHandler = { [weak self, weak newConnection] in
-            if let connection = newConnection { self?.unregisterClient(connection) }
+            guard let connection = newConnection else { return }
+            self?.clients.detach(connection)
         }
         newConnection.interruptionHandler = { [weak self, weak newConnection] in
-            if let connection = newConnection { self?.unregisterClient(connection) }
+            guard let connection = newConnection else { return }
+            self?.clients.detach(connection)
         }
-        registerClient(newConnection)
+
+        clients.attach(newConnection)
         newConnection.resume()
         return true
     }

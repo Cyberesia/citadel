@@ -1,11 +1,17 @@
 import Foundation
 import NetworkExtension
 
-// Entry point for the Network System Extension. The NetworkExtension framework
-// instantiates FilterDataProvider (declared via NEProviderClasses in Info.plist)
-// once the filter is started.
-autoreleasepool {
-    NEProvider.startSystemExtensionMode()
+/// Citadel network system extension process entry point.
+///
+/// NetworkExtension loads `FilterDataProvider` from Info.plist; this bootstrap
+/// only starts extension mode and keeps the process alive on the main run loop.
+enum CitadelNetworkExtensionEntry {
+    static func run() -> Never {
+        autoreleasepool {
+            NEProvider.startSystemExtensionMode()
+        }
+        dispatchMain()
+    }
 }
 
-dispatchMain()
+CitadelNetworkExtensionEntry.run()

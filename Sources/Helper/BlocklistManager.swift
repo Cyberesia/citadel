@@ -1,72 +1,75 @@
 import Foundation
 
-/// Downloads and merges enabled DNS blocklists for the Citadel DNS proxy.
+/// Fetches enabled remote blocklists and publishes a merged domain set for DNS filtering.
 final class BlocklistManager: @unchecked Sendable {
     private let store: RuleStore
-    private(set) var domains: Set<String> = []
-    private let queue = DispatchQueue(label: "com.citadel.firewall.blocklists")
+    private let fetchSession: URLSession
+    private let stateLock = NSLock()
+    private var cachedDomains: Set<String> = []
+
     var onUpdate: ((Int) -> Void)?
+
+    var domains: Set<String> {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return cachedDomains
+    }
 
     init(store: RuleStore) {
         self.store = store
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 15
+        config.timeoutIntervalForResource = 30
+        fetchSession = URLSession(configuration: config)
     }
 
     func refresh() async {
-        let lists = store.allBlocklists().filter(\.enabled)
-        var merged: Set<String> = []
+        let enabledLists = store.allBlocklists().filter(\.enabled)
+        var merged = Set<String>()
+
         await withTaskGroup(of: (BlocklistInfo, Set<String>).self) { group in
-            for list in lists {
-                group.addTask { (list, await self.fetch(list)) }
+            for list in enabledLists {
+                group.addTask { [fetchSession] in
+                    let domains = await Self.downloadDomains(for: list, session: fetchSession)
+                    return (list, domains)
+                }
             }
-            for await (list, set) in group {
-                merged.formUnion(set)
-                var updated = list
-                updated.entryCount = set.count
-                updated.lastUpdated = Date()
-                try? store.updateBlocklist(updated)
+
+            for await (list, downloaded) in group {
+                merged.formUnion(downloaded)
+                persistMetadata(for: list, entryCount: downloaded.count)
             }
         }
-        queue.sync { domains = merged }
+
+        stateLock.lock()
+        cachedDomains = merged
+        stateLock.unlock()
+
         onUpdate?(merged.count)
     }
 
-    private func fetch(_ list: BlocklistInfo) async -> Set<String> {
+    // MARK: - Fetch
+
+    private static func downloadDomains(for list: BlocklistInfo, session: URLSession) async -> Set<String> {
         guard let url = URL(string: list.url) else { return [] }
-        var request = URLRequest(url: url, timeoutInterval: 15)
+
+        var request = URLRequest(url: url)
         request.setValue("Citadel/\(AppConstants.version)", forHTTPHeaderField: "User-Agent")
+
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await session.data(for: request)
             guard let text = String(data: data, encoding: .utf8) else { return [] }
-            return parseHostsFile(text)
+            return BlocklistFeedParser.domains(from: text)
         } catch {
-            PSLog.error(PSLog.dns, "blocklist fetch failed: \(list.name) — \(error)")
+            CitadelLog.error(CitadelLog.dns, "Blocklist download failed (\(list.name)): \(error.localizedDescription)")
             return []
         }
     }
 
-    private func parseHostsFile(_ text: String) -> Set<String> {
-        var out: Set<String> = []
-        out.reserveCapacity(50_000)
-        for raw in text.split(separator: "\n") {
-            let line = raw.trimmingCharacters(in: .whitespaces)
-            if line.isEmpty || line.hasPrefix("#") || line.hasPrefix("!") { continue }
-            var parts = line.split(whereSeparator: { $0 == " " || $0 == "\t" }).map(String.init)
-            if parts.isEmpty { continue }
-            var host = parts.last ?? ""
-            if parts.count >= 2, ["0.0.0.0", "127.0.0.1", "::1"].contains(parts[0]) {
-                host = parts[1]
-            }
-            if host.hasPrefix("||") {
-                let end = host.firstIndex(of: "^") ?? host.endIndex
-                host = String(host[host.index(host.startIndex, offsetBy: 2)..<end])
-            }
-            host = host.lowercased()
-            if host.contains("/") { continue }
-            if host.isEmpty || host == "localhost" || host == "0.0.0.0" || host == "broadcasthost" {
-                continue
-            }
-            out.insert(host)
-        }
-        return out
+    private func persistMetadata(for list: BlocklistInfo, entryCount: Int) {
+        var updated = list
+        updated.entryCount = entryCount
+        updated.lastUpdated = Date()
+        try? store.updateBlocklist(updated)
     }
 }

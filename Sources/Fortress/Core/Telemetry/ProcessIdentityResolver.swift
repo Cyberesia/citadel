@@ -62,10 +62,7 @@ public final class ProcessIdentityResolver: @unchecked Sendable {
     // MARK: - System helpers
 
     private static func path(for pid: pid_t) -> String {
-        var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN))
-        let result = proc_pidpath(pid, &buffer, UInt32(MAXPATHLEN))
-        guard result > 0 else { return "" }
-        return String(cString: buffer)
+        ProcessExecutableLookup.executablePath(for: pid)
     }
 
     private static func name(for pid: pid_t, path: String) -> String {
@@ -73,10 +70,10 @@ public final class ProcessIdentityResolver: @unchecked Sendable {
             let base = (path as NSString).lastPathComponent
             if !base.isEmpty { return base }
         }
-        var nameBuf = [CChar](repeating: 0, count: 256)
-        let ok = proc_name(pid, &nameBuf, UInt32(nameBuf.count))
-        if ok > 0 {
-            return String(cString: nameBuf)
+        var nameBuffer = [CChar](repeating: 0, count: 256)
+        let length = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+        if length > 0 {
+            return String(cString: nameBuffer)
         }
         return "pid-\(pid)"
     }
@@ -230,16 +227,7 @@ public final class ProcessIdentityResolver: @unchecked Sendable {
     }
 }
 
-// Darwin proc APIs
-@_silgen_name("proc_pidpath")
-private func proc_pidpath(_ pid: Int32, _ buffer: UnsafeMutablePointer<CChar>, _ buffersize: UInt32) -> Int32
-
-@_silgen_name("proc_name")
-private func proc_name(_ pid: Int32, _ buffer: UnsafeMutablePointer<CChar>, _ buffersize: UInt32) -> Int32
-
-@_silgen_name("proc_pidinfo")
-private func proc_pidinfo(_ pid: Int32, _ flavor: Int32, _ arg: UInt64, _ buffer: UnsafeMutableRawPointer?, _ buffersize: Int32) -> Int32
-
+// Darwin proc APIs used for optional parent-PID enrichment.
 private let PROC_PIDTBSDINFO: Int32 = 3
 
 /// Minimal subset of `proc_bsdinfo` — only `pbi_ppid` is read.

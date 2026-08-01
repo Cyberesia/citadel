@@ -94,7 +94,7 @@ Whether you are hardening a work machine or running agents on-device, Citadel is
 <br/>
 
 <!-- Optional: embed Star History chart once the repo is public -->
-<!-- [![Star History Chart](https://api.star-history.com/svg?repos=YOUR_ORG/citadel&type=Date)](https://star-history.com/#YOUR_ORG/citadel&Date) -->
+<!-- [![Star History Chart](https://api.star-history.com/svg?repos=cyberesia/citadel&type=Date)](https://star-history.com/#cyberesia/citadel&Date) -->
 
 <br/>
 
@@ -210,7 +210,7 @@ Citadel ships as a signed macOS app (`.app` / `.dmg`). Build from source for dev
 **Quick debug build:**
 
 ```bash
-git clone https://github.com/YOUR_ORG/citadel.git
+git clone https://github.com/cyberesia/citadel.git
 cd citadel
 ./Scripts/build-debug.sh
 ```
@@ -347,7 +347,7 @@ Keep extends through **MCP servers**, bundled **skills**, and **agent CLI** inte
 Clone and build on an Apple Silicon Mac with Xcode 15+.
 
 ```bash
-git clone https://github.com/YOUR_ORG/citadel.git
+git clone https://github.com/cyberesia/citadel.git
 cd citadel
 brew install xcodegen
 ./Scripts/build-debug.sh
@@ -415,7 +415,7 @@ Contributions of all kinds are welcome — code, docs, issues, and design feedba
 <!-- Optional: GitHub Sponsors, Open Collective, or company backing -->
 Citadel is open source. If it saves you time or keeps your Mac safer, consider sponsoring development or starring the repo.
 
-<!-- [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/YOUR_ORG) -->
+<!-- [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/cyberesia) -->
 
 [![][back-to-top]](#readme-top)
 
@@ -448,7 +448,7 @@ Third-party notices: [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTI
 
 <br/>
 
-<!-- Reference links (update YOUR_ORG before launch) -->
+<!-- Reference links (update cyberesia before launch) -->
 
 [back-to-top]: https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square
 [aioncore-link]: https://github.com/iOfficeAI/AionCore
@@ -457,40 +457,40 @@ Third-party notices: [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTI
 [changelog-link]: ./CHANGELOG.md
 [discord-link]: https://discord.gg/PLACEHOLDER
 [discord-shield-badge]: https://img.shields.io/discord/PLACEHOLDER?color=5865F2&label=discord&labelColor=151515&logo=discord&logoColor=white&style=for-the-badge
-[github-action-test-link]: https://github.com/YOUR_ORG/citadel/actions
-[github-action-test-shield]: https://img.shields.io/github/actions/workflow/status/YOUR_ORG/citadel/test.yml?label=test&labelColor=151515&logo=githubactions&logoColor=white&style=flat-square
-[github-contributors-link]: https://github.com/YOUR_ORG/citadel/graphs/contributors
-[github-contributors-shield]: https://img.shields.io/github/contributors/YOUR_ORG/citadel?color=c4f042&labelColor=151515&style=flat-square
-[github-forks-link]: https://github.com/YOUR_ORG/citadel/network/members
-[github-forks-shield]: https://img.shields.io/github/forks/YOUR_ORG/citadel?color=8ae8ff&labelColor=151515&style=flat-square
-[github-issues-link]: https://github.com/YOUR_ORG/citadel/issues
-[github-issues-shield]: https://img.shields.io/github/issues/YOUR_ORG/citadel?color=ff80eb&labelColor=151515&style=flat-square
+[github-action-test-link]: https://github.com/cyberesia/citadel/actions
+[github-action-test-shield]: https://img.shields.io/github/actions/workflow/status/cyberesia/citadel/test.yml?label=test&labelColor=151515&logo=githubactions&logoColor=white&style=flat-square
+[github-contributors-link]: https://github.com/cyberesia/citadel/graphs/contributors
+[github-contributors-shield]: https://img.shields.io/github/contributors/cyberesia/citadel?color=c4f042&labelColor=151515&style=flat-square
+[github-forks-link]: https://github.com/cyberesia/citadel/network/members
+[github-forks-shield]: https://img.shields.io/github/forks/cyberesia/citadel?color=8ae8ff&labelColor=151515&style=flat-square
+[github-issues-link]: https://github.com/cyberesia/citadel/issues
+[github-issues-shield]: https://img.shields.io/github/issues/cyberesia/citadel?color=ff80eb&labelColor=151515&style=flat-square
 [github-license-link]: ./LICENSE
 [github-license-shield]: https://img.shields.io/badge/license-TBD-white?labelColor=151515&style=flat-square
-[github-release-link]: https://github.com/YOUR_ORG/citadel/releases
-[github-release-shield]: https://img.shields.io/github/v/release/YOUR_ORG/citadel?color=369eff&labelColor=151515&logo=github&style=flat-square
-[github-repo-link]: https://github.com/YOUR_ORG/citadel
-[github-stars-link]: https://github.com/YOUR_ORG/citadel/stargazers
-[github-stars-shield]: https://img.shields.io/github/stars/YOUR_ORG/citadel?color=ffcb47&labelColor=151515&style=flat-square
+[github-release-link]: https://github.com/cyberesia/citadel/releases
+[github-release-shield]: https://img.shields.io/github/v/release/cyberesia/citadel?color=369eff&labelColor=151515&logo=github&style=flat-square
+[github-repo-link]: https://github.com/cyberesia/citadel
+[github-stars-link]: https://github.com/cyberesia/citadel/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/cyberesia/citadel?color=ffcb47&labelColor=151515&style=flat-square
 [image-banner]: docs/assets/banner.png
 [macos-requirements-link]: #requirements
 [macos-shield]: https://img.shields.io/badge/macOS-14%2B-000000?labelColor=151515&logo=apple&logoColor=white&style=flat-square
 [mlx-swift-link]: https://github.com/ml-explore/mlx-swift
 [mlx-swift-lm-link]: https://github.com/ml-explore/mlx-swift-lm
-[platform-link]: https://github.com/YOUR_ORG/citadel
+[platform-link]: https://github.com/cyberesia/citadel
 [platform-shield]: https://img.shields.io/badge/platform-macOS%20arm64-007ACC?labelColor=151515&style=flat-square
-[pr-welcome-link]: https://github.com/YOUR_ORG/citadel/pulls
+[pr-welcome-link]: https://github.com/cyberesia/citadel/pulls
 [pr-welcome-shield]: https://img.shields.io/badge/🏰_PR_welcome-→-ffcb47?labelColor=151515&style=for-the-badge
 [release-link]: ./RELEASE.md
-[share-linkedin-link]: https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-linkedin-link]: https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-151515?labelColor=151515&logo=linkedin&logoColor=white&style=flat-square
-[share-mastodon-link]: https://mastodon.social/share?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20local%20AI%20agents%20in%20one%20menu-bar%20app.%20https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-mastodon-link]: https://mastodon.social/share?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20local%20AI%20agents%20in%20one%20menu-bar%20app.%20https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-mastodon-shield]: https://img.shields.io/badge/-share%20on%20mastodon-151515?labelColor=151515&logo=mastodon&logoColor=white&style=flat-square
-[share-reddit-link]: https://www.reddit.com/submit?title=Citadel%20%E2%80%94%20macOS%20Fortress%20firewall%20%2B%20Keep%20AI%20agents&url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-reddit-link]: https://www.reddit.com/submit?title=Citadel%20%E2%80%94%20macOS%20Fortress%20firewall%20%2B%20Keep%20AI%20agents&url=https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-reddit-shield]: https://img.shields.io/badge/-share%20on%20reddit-151515?labelColor=151515&logo=reddit&logoColor=white&style=flat-square
-[share-telegram-link]: https://t.me/share/url?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20AI%20agents&url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-telegram-link]: https://t.me/share/url?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20AI%20agents&url=https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-telegram-shield]: https://img.shields.io/badge/-share%20on%20telegram-151515?labelColor=151515&logo=telegram&logoColor=white&style=flat-square
-[share-x-link]: https://x.com/intent/tweet?text=Citadel%20%E2%80%94%20Fortress%20network%20guardian%20%2B%20Keep%20AI%20agents%20for%20macOS&url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-x-link]: https://x.com/intent/tweet?text=Citadel%20%E2%80%94%20Fortress%20network%20guardian%20%2B%20Keep%20AI%20agents%20for%20macOS&url=https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-x-shield]: https://img.shields.io/badge/-share%20on%20x-151515?labelColor=151515&logo=x&logoColor=white&style=flat-square
 [swift-link]: https://www.swift.org
 [swift-shield]: https://img.shields.io/badge/Swift-5.10-F05138?labelColor=151515&logo=swift&logoColor=white&style=flat-square

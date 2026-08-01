@@ -1,5 +1,6 @@
 import Foundation
 
+/// Frozen XPC selectors between Citadel.app and CitadelHelper.
 @objc public protocol HelperProtocol {
     func getVersion(reply: @escaping (String) -> Void)
     func getStatus(reply: @escaping (Data) -> Void)
@@ -33,6 +34,7 @@ import Foundation
     func recentDenied(limit: Int, reply: @escaping (Data) -> Void)
 }
 
+/// Push channel from CitadelHelper back into the GUI process.
 @objc public protocol HelperClientProtocol {
     func notifyConnection(connectionJSON: Data)
     func notifyTraffic(sampleJSON: Data)
@@ -40,15 +42,22 @@ import Foundation
     func notifyLog(level: String, message: String)
 }
 
-public enum HelperBridge {
+/// Builds the NSXPC interfaces used by the helper daemon and GUI client.
+public enum HelperXPC {
     public static let machServiceName = AppConstants.xpcMachServiceName
 
-    public static func remoteInterface() -> NSXPCInterface {
-        let iface = NSXPCInterface(with: HelperProtocol.self)
-        return iface
+    public static func helperInterface() -> NSXPCInterface {
+        NSXPCInterface(with: HelperProtocol.self)
     }
-    public static func exportedInterface() -> NSXPCInterface {
-        let iface = NSXPCInterface(with: HelperClientProtocol.self)
-        return iface
+
+    public static func clientInterface() -> NSXPCInterface {
+        NSXPCInterface(with: HelperClientProtocol.self)
     }
+}
+
+/// Legacy alias kept for existing call sites.
+public enum HelperBridge {
+    public static let machServiceName = HelperXPC.machServiceName
+    public static func remoteInterface() -> NSXPCInterface { HelperXPC.helperInterface() }
+    public static func exportedInterface() -> NSXPCInterface { HelperXPC.clientInterface() }
 }
