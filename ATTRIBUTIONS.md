@@ -20,3 +20,15 @@ from the AionCore source tree and may be distributed under Apache-2.0 terms.
 ## Cleanshot / Prism
 
 Design system adapted from Cyberesia's Cleanshot Prism UI patterns in `Sources/CitadelDesign/Prism/`.
+
+## PureSnitch (inspiration)
+
+Early Citadel firewall ideas (local DNS proxy, privileged helper, `pfctl` anchor,
+network system extension) were informed by [PureSnitch](https://github.com/momenbasel/puresnitch)
+by Moamen Basel (MIT License).
+
+Citadel's helper, DNS resolver, packet filter, persistence, and network-extension
+code in `Sources/Helper/`, `Sources/Shared/Firewall/`, and `Sources/NetExt/` were
+rewritten as Cyberesia-specific implementations. Remaining overlap is limited to
+small frozen wire contracts (XPC selectors, app-group JSON snapshots) and is not
+a derivative of PureSnitch source code.

@@ -298,6 +298,7 @@ Citadel s’intègre à la pile IA locale et sécurité macOS — pas un jardin 
 | **swift-transformers** | [huggingface/swift-transformers][swift-transformers-link] | Tokenizers |
 | **Network Extension** | Apple | `NEFilterDataProvider` par app |
 | **Prism UI** | Citadel `Sources/CitadelDesign/` | Design system en verre (inspiré Cleanshot) |
+| **PureSnitch** | [momenbasel/puresnitch][puresnitch-link] | Inspiration initiale pour l’architecture pare-feu (MIT) ; helper/DNS/pf/netext réécrits — voir [Attributions][attributions-link] |
 
 ```mermaid
 flowchart TB
@@ -424,6 +425,7 @@ Citadel est open source. Si le projet vous fait gagner du temps ou sécurise vot
 
 - **[AionCore][aioncore-link]** — backend agent upstream (Apache-2.0)
 - **[AionUi][aionui-link]** — UI de référence pour espaces agents
+- **[PureSnitch][puresnitch-link]** — inspiration initiale Fortress helper/DNS/`pfctl`/NetExt (MIT) ; non inclus ; implémentation Citadel réécrite
 - **[mlx-swift][mlx-swift-link]** — framework ML Apple Silicon pour Swift
 - **[XcodeGen](https://github.com/yonaskolb/XcodeGen)** — génère `Citadel.xcodeproj` depuis `project.yml`
 
@@ -439,9 +441,13 @@ Citadel est open source. Si le projet vous fait gagner du temps ou sécurise vot
 
 Copyright © 2026 [Contributeurs Citadel][github-repo-link].
 
-Mentions tierces : [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTIONS.md)
+Sous **[Apache License 2.0 avec obligations supplémentaires](./LICENSE)**.
+Vous pouvez modifier et redistribuer le logiciel, mais vous devez conserver
+**Citadel**, **Fortress** et **Keep** partout où ils apparaissent ici, garder le
+**logo et les assets de marque officiels**, **retenir les mises à jour amont** des
+noms/logos/marque, et inclure `NOTICES.md`, `ATTRIBUTIONS.md` et `CHANGELOG.md`.
 
-<!-- Ajouter un fichier LICENSE avant l’ouverture, ex. Apache-2.0 ou MIT -->
+Mentions tierces et crédits d’inspiration : [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTIONS.md)
 
 </div>
 
@@ -465,7 +471,7 @@ Mentions tierces : [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTION
 [github-issues-link]: https://github.com/cyberesia/citadel/issues
 [github-issues-shield]: https://img.shields.io/github/issues/cyberesia/citadel?color=ff80eb&labelColor=151515&style=flat-square
 [github-license-link]: ./LICENSE
-[github-license-shield]: https://img.shields.io/badge/license-TBD-white?labelColor=151515&style=flat-square
+[github-license-shield]: https://img.shields.io/badge/license-Apache--2.0%2B%20obligations-blue?labelColor=151515&style=flat-square
 [github-release-link]: https://github.com/cyberesia/citadel/releases
 [github-release-shield]: https://img.shields.io/github/v/release/cyberesia/citadel?color=369eff&labelColor=151515&logo=github&style=flat-square
 [github-repo-link]: https://github.com/cyberesia/citadel
@@ -478,6 +484,7 @@ Mentions tierces : [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTION
 [mlx-swift-lm-link]: https://github.com/ml-explore/mlx-swift-lm
 [platform-link]: https://github.com/cyberesia/citadel
 [platform-shield]: https://img.shields.io/badge/platform-macOS%20arm64-007ACC?labelColor=151515&style=flat-square
+[puresnitch-link]: https://github.com/momenbasel/puresnitch
 [pr-welcome-link]: https://github.com/cyberesia/citadel/pulls
 [pr-welcome-shield]: https://img.shields.io/badge/🏰_PR_bienvenue-→-ffcb47?labelColor=151515&style=for-the-badge
 [release-link]: ./RELEASE.md
