@@ -1,6 +1,5 @@
 <div id="readme-top"></div>
 
-<!-- Replace banner: docs/assets/banner.png (1920×640) -->
 [![Citadel — Fortress, Keep, Prism for macOS][image-banner]][github-repo-link]
 
 # Citadel
@@ -71,12 +70,7 @@ You stay in charge — on your Mac, on your terms.
 
 </details>
 
-<!-- Hero demo: replace docs/assets/hero.webm (16:9, ~30–60s) -->
-https://github.com/user-attachments/assets/PLACEHOLDER-citadel-hero.webm
-
-<!-- Or use a repo-relative path once uploaded:
-![Citadel demo](docs/assets/hero.webm)
--->
+![Citadel — Fortress Activity with live 3D network map](docs/assets/fortress-overview.png)
 
 <br/>
 
@@ -90,15 +84,12 @@ Whether you are hardening a work machine or running agents on-device, Citadel is
 
 | | |
 | :-- | :-- |
-| <!-- Replace: docs/assets/community-discord.png --> [![][discord-shield-badge]][discord-link] | **Join the community** — connect with maintainers and early adopters. *(Discord link placeholder)* |
-| <!-- Replace: docs/assets/community-github.png --> [![][github-stars-shield]][github-stars-link] | **Star the repo** — follow releases and roadmap updates on GitHub. |
+| [![][discord-shield-badge]][discord-link] | **Join the community** — connect with maintainers and early adopters. *(Discord link placeholder)* |
+| [![][github-stars-shield]][github-stars-link] | **Star the repo** — follow releases and roadmap updates on GitHub. |
 
 > [!IMPORTANT]
 >
 > **Star us** on GitHub to get notified on every release — no delay ~ ⭐️
-
-<!-- Replace: docs/assets/star-us.png -->
-[![][image-star]][github-stars-link]
 
 <br/>
 
@@ -115,9 +106,6 @@ Most security tools and AI clients live in separate worlds. Firewalls block with
 
 Citadel treats **network visibility** and **agent work** as one surface: Fortress enforces policy, Keep runs the agents, and Prism keeps the experience calm. Humans and agents share the same walls.
 
-<!-- Replace: docs/assets/fortress-overview.png -->
-![Citadel overview — replace with screenshot](docs/assets/fortress-overview.png)
-
 ### Fortress: Your Network Guardian
 
 Live telemetry, explainable suspects, and rules you can reason about — from the menubar to a 2D/3D flow map.
@@ -130,11 +118,9 @@ Live telemetry, explainable suspects, and rules you can reason about — from th
 - **Per-app filter** — Network System Extension for process-level enforcement
 - **Menubar & Crest** — protection status, mode picker, recover UI when the icon is hidden
 
-<!-- Replace: docs/assets/fortress-activity.png -->
-![Fortress Activity — replace with screenshot](docs/assets/fortress-activity.png)
+![Fortress Activity — stream detail with allow/deny actions](docs/assets/fortress-activity.png)
 
-<!-- Replace: docs/assets/fortress-suspects.png -->
-![Fortress Suspects — replace with screenshot](docs/assets/fortress-suspects.png)
+![Fortress Suspects — explainable alerts for sensitive ports and new destinations](docs/assets/fortress-suspects.png)
 
 [![][back-to-top]](#readme-top)
 
@@ -152,11 +138,9 @@ Your agents run inside Citadel — local models, cloud BYOK, MCP tools, teams, a
 - **Workspace** — folder picker, attachments, file preview, voice scribe
 - **Permission modes** — standard, auto-edits, full auto, plan-only
 
-<!-- Replace: docs/assets/keep-sessions.png -->
-![Keep sessions — replace with screenshot](docs/assets/keep-sessions.png)
+![Keep Ask — local models, MCP, skills, and workspace tools](docs/assets/keep-sessions.png)
 
-<!-- Replace: docs/assets/keep-agents.png -->
-![Keep agents & teams — replace with screenshot](docs/assets/keep-agents.png)
+![Keep Agents — orchestrate Claude Code, Codex, Gemini, and other CLIs](docs/assets/keep-agents.png)
 
 [![][back-to-top]](#readme-top)
 
@@ -171,11 +155,7 @@ A dark glass design system built for long sessions: ambient canvas, readable typ
 - **Desk Companion** — optional floating ambient panel
 - **Localization** — English and French in-app; adjustable font scaling
 
-<!-- Replace: docs/assets/prism-shell.png -->
-![Prism shell — replace with screenshot](docs/assets/prism-shell.png)
-
-<!-- Replace: docs/assets/menubar.png -->
-![Menubar & Crest — replace with screenshot](docs/assets/menubar.png)
+![Prism shell — Assistants grid with glass-dark surfaces](docs/assets/prism-shell.png)
 
 [![][back-to-top]](#readme-top)
 
@@ -190,8 +170,7 @@ Citadel is built for the Mac you actually use — not a remote dashboard.
 - **Agent traffic guarded** — Keep inherits Fortress policy; same walls for apps and agents
 - **Open components** — Swift UI + helper + NetExt; CoworkCore backend from [AionCore][aioncore-link] (Apache-2.0)
 
-<!-- Replace: docs/assets/fortress-rules.png -->
-![Fortress rules & alerts — replace with screenshot](docs/assets/fortress-rules.png)
+![Fortress Rules — suggestions from live activity and rule inspector](docs/assets/fortress-rules.png)
 
 > ✨ More features ship as Citadel evolves. See [CHANGELOG][changelog-link].
 
@@ -213,9 +192,6 @@ Citadel ships as a signed macOS app (`.app` / `.dmg`). Build from source for dev
 2. Drag **Citadel** to Applications.
 3. Launch from Applications or Spotlight — Citadel lives in the **menu bar** (no Dock icon by default).
 4. Complete [first-run permissions](#first-run-permissions) for full protection.
-
-<!-- Replace: docs/assets/install-dmg.png -->
-![Install from DMG — replace with screenshot](docs/assets/install-dmg.png)
 
 | Step | Action |
 | :--: | :-- |
@@ -281,12 +257,6 @@ For full Fortress protection, approve the privileged helper and network filter i
 | 1 | Allow **Citadel** login item / helper | System Settings → General → Login Items & Extensions |
 | 2 | Allow **network filter** / system extension | Privacy & Security → Network Extensions |
 | 3 | Confirm **Protection active** in Citadel | Fortress status / menubar |
-
-<!-- Replace: docs/assets/permissions-helper.png -->
-![Approve helper — replace with screenshot](docs/assets/permissions-helper.png)
-
-<!-- Replace: docs/assets/permissions-netext.png -->
-![Approve network filter — replace with screenshot](docs/assets/permissions-netext.png)
 
 #### What works when
 
@@ -362,8 +332,7 @@ Keep extends through **MCP servers**, bundled **skills**, and **agent CLI** inte
 - **Agent CLIs** — Claude Code, Codex, Gemini, Goose, Hermes, OpenClaw, Cursor, Copilot, … via ACP
 - **Channels** — chat platform bridges and remote access (pairing plugins)
 
-<!-- Replace: docs/assets/keep-mcp.png -->
-![Keep MCP & tools — replace with screenshot](docs/assets/keep-mcp.png)
+![Keep Tools — Teams, MCP, Schedule, and Agents in one shell](docs/assets/keep-mcp.png)
 
 > [!NOTE]
 >
@@ -504,7 +473,6 @@ Third-party notices: [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTI
 [github-stars-link]: https://github.com/YOUR_ORG/citadel/stargazers
 [github-stars-shield]: https://img.shields.io/github/stars/YOUR_ORG/citadel?color=ffcb47&labelColor=151515&style=flat-square
 [image-banner]: docs/assets/banner.png
-[image-star]: docs/assets/star-us.png
 [macos-requirements-link]: #requirements
 [macos-shield]: https://img.shields.io/badge/macOS-14%2B-000000?labelColor=151515&logo=apple&logoColor=white&style=flat-square
 [mlx-swift-link]: https://github.com/ml-explore/mlx-swift
