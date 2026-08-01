@@ -1,69 +1,294 @@
+<div id="readme-top"></div>
+
+<!-- Replace banner: docs/assets/banner.png (1920×640) -->
+[![Citadel — Fortress, Keep, Prism for macOS][image-banner]][github-repo-link]
+
 # Citadel
 
-A macOS application firewall (**Fortress**) with Keep agents and Prism UI.
+Citadel is your macOS command center for network control and local AI.
 
-**Citadel** ships a Citadel-native firewall engine (rules, helper, DNS/pf, network extension) plus Fortress Activity / Suspects / History and Keep (local + cloud AI agents), with Prism UI.
+**Fortress** watches every connection. **Keep** runs your agents inside the walls.
 
-## Features
+You stay in charge — on your Mac, on your terms.
 
-### Fortress
-- **Activity** — process families, Sites breakdown, 2D/3D map, firewall actions
-- **Suspects** — hard, explainable signals (unsigned apps, first-seen destinations, sensitive ports…)
-- **History** — persisted connections with filters and CSV export
-- **Connection alerts** — allow/deny with real scope + duration (app / host / IP+port; forever / session / 1h / 24h)
-- **Rules** — domains, IPs, process + Team ID identity, blocklists, temporary expiry
+**English** · [Français](./README.fr.md) · [Changelog][changelog-link] · [Release guide][release-link] · [Attributions][attributions-link] · [Feedback][github-issues-link]
+
+<br/>
+
+[![][github-release-shield]][github-release-link]
+[![][macos-shield]][macos-requirements-link]
+[![][swift-shield]][swift-link]
+[![][platform-shield]][platform-link]
+[![][github-action-test-shield]][github-action-test-link]
+[![][github-contributors-shield]][github-contributors-link]
+[![][github-forks-shield]][github-forks-link]
+[![][github-stars-shield]][github-stars-link]
+[![][github-issues-shield]][github-issues-link]
+[![][github-license-shield]][github-license-link]
+
+**Share Citadel**
+
+[![][share-x-shield]][share-x-link]
+[![][share-telegram-shield]][share-telegram-link]
+[![][share-reddit-shield]][share-reddit-link]
+[![][share-linkedin-shield]][share-linkedin-link]
+[![][share-mastodon-shield]][share-mastodon-link]
+
+**Your network guardian. Your agents. One menu bar.**
+
+<!-- Optional: Product Hunt / community badges -->
+<!-- [![Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=PLACEHOLDER&theme=dark)](https://www.producthunt.com/products/citadel) -->
+<!-- [![][discord-shield-badge]][discord-link] -->
+
+<br/>
+
+<details>
+<summary><kbd>Table of contents</kbd></summary>
+
+<br/>
+
+#### TOC
+
+- [👋🏻 Getting Started & Join Our Community](#-getting-started--join-our-community)
+- [✨ Features](#-features)
+  - [Fortress: Your Network Guardian](#fortress-your-network-guardian)
+  - [Keep: Agents Inside the Walls](#keep-agents-inside-the-walls)
+  - [Prism: Interface That Gets Out of the Way](#prism-interface-that-gets-out-of-the-way)
+  - [Trust: Privacy by Architecture](#trust-privacy-by-architecture)
+- [📥 Install Citadel](#-install-citadel)
+  - [`A` Download the latest release](#a-download-the-latest-release)
+  - [`B` Build from source](#b-build-from-source)
+  - [First-run permissions](#first-run-permissions)
+  - [Environment variables](#environment-variables)
+- [📦 Ecosystem](#-ecosystem)
+- [🧩 MCP, Skills & Agent CLIs](#-mcp-skills--agent-clis)
+- [⌨️ Local Development](#️-local-development)
+- [🤝 Contributing](#-contributing)
+- [❤️ Sponsor](#️-sponsor)
+- [🔗 Related Projects](#-related-projects)
+
+<br/>
+
+</details>
+
+<!-- Hero demo: replace docs/assets/hero.webm (16:9, ~30–60s) -->
+https://github.com/user-attachments/assets/PLACEHOLDER-citadel-hero.webm
+
+<!-- Or use a repo-relative path once uploaded:
+![Citadel demo](docs/assets/hero.webm)
+-->
+
+<br/>
+
+## 👋🏻 Getting Started & Join Our Community
+
+Citadel is a macOS menu-bar app that combines a native application firewall, a full AI agent workspace, and a glass-dark design system — built for people who want **visibility and control** without giving up modern agent tooling.
+
+Fortress watches the network. Keep is where local and cloud AI agents help with files, code, and chores — privately on your Mac. Prism is the shell that ties it together: ambient canvas, menubar presence, and a desk companion when you want one.
+
+Whether you are hardening a work machine or running agents on-device, Citadel is designed to be **open, inspectable, and yours**. The project is under active development; feedback and issues are welcome.
+
+| | |
+| :-- | :-- |
+| <!-- Replace: docs/assets/community-discord.png --> [![][discord-shield-badge]][discord-link] | **Join the community** — connect with maintainers and early adopters. *(Discord link placeholder)* |
+| <!-- Replace: docs/assets/community-github.png --> [![][github-stars-shield]][github-stars-link] | **Star the repo** — follow releases and roadmap updates on GitHub. |
+
+> [!IMPORTANT]
+>
+> **Star us** on GitHub to get notified on every release — no delay ~ ⭐️
+
+<!-- Replace: docs/assets/star-us.png -->
+[![][image-star]][github-stars-link]
+
+<br/>
+
+<!-- Optional: embed Star History chart once the repo is public -->
+<!-- [![Star History Chart](https://api.star-history.com/svg?repos=YOUR_ORG/citadel&type=Date)](https://star-history.com/#YOUR_ORG/citadel&Date) -->
+
+<br/>
+
+## ✨ Features
+
+Most security tools and AI clients live in separate worlds. Firewalls block without context. Agent apps chat without seeing what is on the wire. You end up alt-tabbing between System Settings, terminal proxies, and half a dozen chat windows — with no shared picture of what your Mac is doing.
+
+**Citadel changes that.**
+
+Citadel treats **network visibility** and **agent work** as one surface: Fortress enforces policy, Keep runs the agents, and Prism keeps the experience calm. Humans and agents share the same walls.
+
+<!-- Replace: docs/assets/fortress-overview.png -->
+![Citadel overview — replace with screenshot](docs/assets/fortress-overview.png)
+
+### Fortress: Your Network Guardian
+
+Live telemetry, explainable suspects, and rules you can reason about — from the menubar to a 2D/3D flow map.
+
+- **Activity** — process families, site breakdown, live map, one-click allow/deny
+- **Suspects** — hard local signals only: unsigned apps, first-seen destinations, sensitive ports
+- **History** — persisted connections, filters, CSV export
+- **Rules** — domains, IPs/CIDR, process identity (name, bundle ID, Team ID), blocklists, expiry
 - **DNS over HTTPS** — local DNS proxy with blocklist integration
-- **Packet filtering** — `pfctl` anchor for IP/CIDR/port rules
-- **Per-app filter** — embedded Network System Extension (approve in System Settings)
-- **Menubar** — live traffic, mode picker, protection status
-- **Guide** — in-app Fortress help (English / French), same pattern as Keep
+- **Per-app filter** — Network System Extension for process-level enforcement
+- **Menubar & Crest** — protection status, mode picker, recover UI when the icon is hidden
 
-### Keep
-- Local AI agents for files, code, and chores (Ollama / LM Studio / MLX)
-- Cloud models via BYOK (your API keys)
-- Guarded by Fortress network policy
+<!-- Replace: docs/assets/fortress-activity.png -->
+![Fortress Activity — replace with screenshot](docs/assets/fortress-activity.png)
 
-### Prism UI
-- Dark glass shell, animated ambient canvas, desk companion
+<!-- Replace: docs/assets/fortress-suspects.png -->
+![Fortress Suspects — replace with screenshot](docs/assets/fortress-suspects.png)
 
-## Requirements
+[![][back-to-top]](#readme-top)
 
-- macOS 13.0+ (map view requires macOS 14+)
-- Xcode 15+
-- [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`)
-- For full per-app filtering: Apple Developer signing + `xcodebuild -scheme CitadelFull` (builds/embeds `CitadelNetExt`). Debug `Citadel` scheme runs Fortress without the extension until you ship a signed Full build.
+<br/>
 
-## Release / packaging
+### Keep: Agents Inside the Walls
 
-Developer ID sign + DMG + optional notarize (same flow as Murmure):
+Your agents run inside Citadel — local models, cloud BYOK, MCP tools, teams, and schedules — all guarded by Fortress network policy.
+
+- **Local models** — Ollama, LM Studio, native MLX (on-device via mlx-swift)
+- **Cloud BYOK** — OpenAI, Anthropic, Gemini, xAI, OpenRouter, OpenAI-compatible endpoints
+- **Agent CLIs** — Claude Code, Codex, Gemini, Goose, Cursor, Copilot, and more via ACP
+- **MCP & skills** — configure servers, OAuth, PDF/Mermaid/cron/office automation, and more
+- **Sessions & teams** — history, fork, search, multi-agent orchestration, cron schedules
+- **Workspace** — folder picker, attachments, file preview, voice scribe
+- **Permission modes** — standard, auto-edits, full auto, plan-only
+
+<!-- Replace: docs/assets/keep-sessions.png -->
+![Keep sessions — replace with screenshot](docs/assets/keep-sessions.png)
+
+<!-- Replace: docs/assets/keep-agents.png -->
+![Keep agents & teams — replace with screenshot](docs/assets/keep-agents.png)
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+### Prism: Interface That Gets Out of the Way
+
+A dark glass design system built for long sessions: ambient canvas, readable typography, and optional delight without noise.
+
+- **LivingCanvas** — animated background with palette extraction from your wallpaper
+- **Prism glass** — surfaces, popovers, and sheets with consistent depth
+- **Desk Companion** — optional floating ambient panel
+- **Localization** — English and French in-app; adjustable font scaling
+
+<!-- Replace: docs/assets/prism-shell.png -->
+![Prism shell — replace with screenshot](docs/assets/prism-shell.png)
+
+<!-- Replace: docs/assets/menubar.png -->
+![Menubar & Crest — replace with screenshot](docs/assets/menubar.png)
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+### Trust: Privacy by Architecture
+
+Citadel is built for the Mac you actually use — not a remote dashboard.
+
+- **On-device first** — connection history and rules live locally (SQLite + app group)
+- **Transparent suspects** — every signal is explainable; no opaque ML scoring
+- **Agent traffic guarded** — Keep inherits Fortress policy; same walls for apps and agents
+- **Open components** — Swift UI + helper + NetExt; CoworkCore backend from [AionCore][aioncore-link] (Apache-2.0)
+
+<!-- Replace: docs/assets/fortress-rules.png -->
+![Fortress rules & alerts — replace with screenshot](docs/assets/fortress-rules.png)
+
+> ✨ More features ship as Citadel evolves. See [CHANGELOG][changelog-link].
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## 📥 Install Citadel
+
+Citadel ships as a signed macOS app (`.app` / `.dmg`). Build from source for development; use a release build for daily use.
+
+> [!TIP]
+>
+> Maintainer packaging, notarization, and Developer ID signing are documented in [RELEASE.md][release-link].
+
+### `A` Download the latest release
+
+1. Open **[Releases][github-release-link]** and download the latest `Citadel.dmg`.
+2. Drag **Citadel** to Applications.
+3. Launch from Applications or Spotlight — Citadel lives in the **menu bar** (no Dock icon by default).
+4. Complete [first-run permissions](#first-run-permissions) for full protection.
+
+<!-- Replace: docs/assets/install-dmg.png -->
+![Install from DMG — replace with screenshot](docs/assets/install-dmg.png)
+
+| Step | Action |
+| :--: | :-- |
+| 1 | Download `Citadel.dmg` from Releases |
+| 2 | Open the DMG and drag Citadel to Applications |
+| 3 | Launch Citadel and approve helper + network filter when prompted |
+
+> [!NOTE]
+>
+> **Requirements:** macOS 14.0+ on Apple Silicon (arm64). Map view and main app target require macOS 14+. See [requirements](#requirements) below.
+
+<br/>
+
+### `B` Build from source
+
+**Quick debug build:**
 
 ```bash
-# See RELEASE.md for notary profile setup
-./Scripts/package-direct.sh
-```
-
-## Build
-
-```bash
+git clone https://github.com/YOUR_ORG/citadel.git
+cd citadel
 ./Scripts/build-debug.sh
 ```
 
-Manual:
+**Manual build:**
 
 ```bash
-./Scripts/prepare-coworkcore.sh
+./Scripts/prepare-coworkcore.sh   # bundles CoworkCore from AionCore; SKIP_COWORKCORE=1 to skip
 xcodegen generate
 xcodebuild -scheme Citadel -configuration Debug -derivedDataPath build build
 open build/Build/Products/Debug/Citadel.app
 ```
 
-Demo UI:
+**Full build with Network Extension** (requires Apple Developer signing):
+
+```bash
+xcodebuild -scheme CitadelFull -configuration Release -derivedDataPath build build
+```
+
+**Demo UI** (synthetic Fortress traffic):
 
 ```bash
 CITADEL_FORTRESS_DEMO=1 open build/Build/Products/Debug/Citadel.app
 ```
 
-## What works when
+#### Requirements
+
+| Requirement | Notes |
+|-------------|--------|
+| macOS 14.0+ | Main app target; map requires 14+ |
+| Apple Silicon | arm64-only main target |
+| Xcode 15+ | Swift 5.10, SwiftUI + AppKit |
+| [XcodeGen](https://github.com/yonaskolb/XcodeGen) | `brew install xcodegen` |
+| Apple Developer account | Required for `CitadelFull` / embedded NetExt in production |
+
+<br/>
+
+### First-run permissions
+
+For full Fortress protection, approve the privileged helper and network filter in System Settings.
+
+| | Step | Where |
+| :-: | :-- | :-- |
+| 1 | Allow **Citadel** login item / helper | System Settings → General → Login Items & Extensions |
+| 2 | Allow **network filter** / system extension | Privacy & Security → Network Extensions |
+| 3 | Confirm **Protection active** in Citadel | Fortress status / menubar |
+
+<!-- Replace: docs/assets/permissions-helper.png -->
+![Approve helper — replace with screenshot](docs/assets/permissions-helper.png)
+
+<!-- Replace: docs/assets/permissions-netext.png -->
+![Approve network filter — replace with screenshot](docs/assets/permissions-netext.png)
+
+#### What works when
 
 | Component | Without approval | With helper + NetExt approved |
 |-----------|------------------|-------------------------------|
@@ -71,33 +296,234 @@ CITADEL_FORTRESS_DEMO=1 open build/Build/Products/Debug/Citadel.app
 | Allow/deny remembered | May be limited | Enforced per-app via NetExt |
 | DNS blocklists | Needs helper | Yes |
 | Connection history | Yes (on-device) | Yes |
+| Keep agents | Yes (agent traffic follows Fortress when active) | Yes |
 
-## Architecture
+<br/>
 
+### Environment variables
+
+Useful flags for development and CI:
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `NO_RUN` | No | Build only; do not launch the app | `NO_RUN=1 ./Scripts/build-debug.sh` |
+| `SKIP_COWORKCORE` | No | Skip AionCore download/build | `SKIP_COWORKCORE=1` |
+| `CITADEL_DEMO` | No | Enable demo data (app state) | `CITADEL_DEMO=1` |
+| `CITADEL_FORTRESS_DEMO` | No | Synthetic Fortress traffic | `CITADEL_FORTRESS_DEMO=1` |
+| `COWORKCORE_LOCAL_BINARY` | No | Use a local CoworkCore binary | `/path/to/aioncore` |
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## 📦 Ecosystem
+
+Citadel integrates with the local AI and macOS security stack — not a walled garden.
+
+| Component | Repository | Role in Citadel |
+|-----------|------------|-----------------|
+| **CoworkCore** | [iOfficeAI/AionCore][aioncore-link] | Agent backend (HTTP/WebSocket); Apache-2.0 |
+| **MLX Swift** | [ml-explore/mlx-swift][mlx-swift-link] | On-device inference |
+| **mlx-swift-lm** | [ml-explore/mlx-swift-lm][mlx-swift-lm-link] | LLM loading & generation |
+| **swift-transformers** | [huggingface/swift-transformers][swift-transformers-link] | Tokenizers |
+| **Network Extension** | Apple | Per-app `NEFilterDataProvider` |
+| **Prism UI** | Citadel `Sources/CitadelDesign/` | Glass design system (Cleanshot-inspired patterns) |
+
+```mermaid
+flowchart TB
+  subgraph App["Citadel.app"]
+    F[Fortress UI]
+    K[Keep UI]
+    P[Prism shell]
+  end
+  H[CitadelHelper<br/>DNS · pfctl · monitor]
+  N[CitadelNetExt<br/>per-process filter]
+  C[CoworkCore<br/>AionCore]
+  M[MLX / Ollama / BYOK]
+
+  App <-->|XPC| H
+  App <-->|App Group| N
+  K <-->|HTTP/WS| C
+  K --> M
+  F --> H
+  F --> N
 ```
-Citadel.app (Fortress + Keep + Settings)
-    ↕ XPC
-CitadelHelper (DNS proxy, pfctl, privileged NetMonitor)
-    ↕ app group JSON
-CitadelNetExt (per-process filter — embedded in app bundle)
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## 🧩 MCP, Skills & Agent CLIs
+
+Keep extends through **MCP servers**, bundled **skills**, and **agent CLI** integrations — the same extension model as modern agent harnesses, running behind Fortress.
+
+- **MCP** — configure servers, OAuth, and scan agent configs from the Tools panel
+- **Skills** — PDF, Mermaid, cron, office automation, remote agent setup, and more
+- **Agent CLIs** — Claude Code, Codex, Gemini, Goose, Hermes, OpenClaw, Cursor, Copilot, … via ACP
+- **Channels** — chat platform bridges and remote access (pairing plugins)
+
+<!-- Replace: docs/assets/keep-mcp.png -->
+![Keep MCP & tools — replace with screenshot](docs/assets/keep-mcp.png)
+
+> [!NOTE]
+>
+> Upstream skill and MCP identifiers are mapped to Citadel-facing copy in `Sources/Shared/CoworkUserFacing.swift`. Backend IDs stay compatible with AionCore.
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## ⌨️ Local Development
+
+Clone and build on an Apple Silicon Mac with Xcode 15+.
+
+```bash
+git clone https://github.com/YOUR_ORG/citadel.git
+cd citadel
+brew install xcodegen
+./Scripts/build-debug.sh
 ```
 
-## Project layout
+**Run tests:**
+
+```bash
+xcodebuild -scheme Citadel -configuration Debug -derivedDataPath build test
+```
+
+**Project layout:**
 
 ```
 Sources/
-├── CitadelDesign/   # Prism UI + map
+├── CitadelDesign/   # Prism UI, map, LivingCanvas
 ├── Fortress/        # Activity, Suspects, History, telemetry
-├── GUI/             # Shell, menubar, alerts, settings, help
-├── Shared/          # Models + Firewall evaluator + RuleStore + help catalogs
+├── GUI/             # Shell, menubar, settings, Keep views
+├── Shared/          # Models, RuleStore, Cowork client, help catalogs
+├── CoworkMLX/       # Native MLX OpenAI-compatible server
 ├── Helper/          # Privileged daemon
 └── NetExt/          # Network system extension
+
+Scripts/             # build, package, notarize, coworkcore prep
+Tests/               # Firewall rule evaluator tests
 ```
 
-## Attribution
+**Schemes:**
 
-See `ATTRIBUTIONS.md` and `NOTICES.md`.
+| Scheme | Use |
+|--------|-----|
+| `Citadel` | Day-to-day debug (app + helper + tests) |
+| `CitadelFull` | Release build with embedded NetExt |
 
-## License
+See [RELEASE.md][release-link] for Developer ID signing, DMG packaging, and notarization.
 
-Third-party notices are in `NOTICES.md` and `ATTRIBUTIONS.md`.
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## 🤝 Contributing
+
+Contributions of all kinds are welcome — code, docs, issues, and design feedback.
+
+> [!TIP]
+>
+> Before opening a PR, run tests and ensure `./Scripts/build-debug.sh` succeeds on macOS 14+ arm64.
+
+- **[Issues][github-issues-link]** — bugs and feature requests
+- **[Pull requests][pr-welcome-link]** — code changes
+- **In-app guides** — Fortress and Keep help catalogs (EN/FR) in `Sources/Shared/`
+
+[![][pr-welcome-shield]][pr-welcome-link]
+
+<!-- Add maintainer handles when public:
+**Principal Maintainers:** @your-handle
+-->
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## ❤️ Sponsor
+
+<!-- Optional: GitHub Sponsors, Open Collective, or company backing -->
+Citadel is open source. If it saves you time or keeps your Mac safer, consider sponsoring development or starring the repo.
+
+<!-- [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/YOUR_ORG) -->
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+## 🔗 Related Projects
+
+- **[AionCore][aioncore-link]** — upstream agent backend (Apache-2.0)
+- **[AionUi][aionui-link]** — reference UI for agent workspaces
+- **[mlx-swift][mlx-swift-link]** — Apple Silicon ML framework for Swift
+- **[XcodeGen](https://github.com/yonaskolb/XcodeGen)** — generate `Citadel.xcodeproj` from `project.yml`
+
+[![][back-to-top]](#readme-top)
+
+<br/>
+
+---
+
+<div align="center">
+
+#### 📝 License
+
+Copyright © 2026 [Citadel contributors][github-repo-link].
+
+Third-party notices: [NOTICES.md](./NOTICES.md) · [ATTRIBUTIONS.md](./ATTRIBUTIONS.md)
+
+<!-- Add LICENSE file before open-source launch, e.g. Apache-2.0 or MIT -->
+
+</div>
+
+<br/>
+
+<!-- Reference links (update YOUR_ORG before launch) -->
+
+[back-to-top]: https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square
+[aioncore-link]: https://github.com/iOfficeAI/AionCore
+[aionui-link]: https://github.com/iOfficeAI/AionUi
+[attributions-link]: ./ATTRIBUTIONS.md
+[changelog-link]: ./CHANGELOG.md
+[discord-link]: https://discord.gg/PLACEHOLDER
+[discord-shield-badge]: https://img.shields.io/discord/PLACEHOLDER?color=5865F2&label=discord&labelColor=151515&logo=discord&logoColor=white&style=for-the-badge
+[github-action-test-link]: https://github.com/YOUR_ORG/citadel/actions
+[github-action-test-shield]: https://img.shields.io/github/actions/workflow/status/YOUR_ORG/citadel/test.yml?label=test&labelColor=151515&logo=githubactions&logoColor=white&style=flat-square
+[github-contributors-link]: https://github.com/YOUR_ORG/citadel/graphs/contributors
+[github-contributors-shield]: https://img.shields.io/github/contributors/YOUR_ORG/citadel?color=c4f042&labelColor=151515&style=flat-square
+[github-forks-link]: https://github.com/YOUR_ORG/citadel/network/members
+[github-forks-shield]: https://img.shields.io/github/forks/YOUR_ORG/citadel?color=8ae8ff&labelColor=151515&style=flat-square
+[github-issues-link]: https://github.com/YOUR_ORG/citadel/issues
+[github-issues-shield]: https://img.shields.io/github/issues/YOUR_ORG/citadel?color=ff80eb&labelColor=151515&style=flat-square
+[github-license-link]: ./LICENSE
+[github-license-shield]: https://img.shields.io/badge/license-TBD-white?labelColor=151515&style=flat-square
+[github-release-link]: https://github.com/YOUR_ORG/citadel/releases
+[github-release-shield]: https://img.shields.io/github/v/release/YOUR_ORG/citadel?color=369eff&labelColor=151515&logo=github&style=flat-square
+[github-repo-link]: https://github.com/YOUR_ORG/citadel
+[github-stars-link]: https://github.com/YOUR_ORG/citadel/stargazers
+[github-stars-shield]: https://img.shields.io/github/stars/YOUR_ORG/citadel?color=ffcb47&labelColor=151515&style=flat-square
+[image-banner]: docs/assets/banner.png
+[image-star]: docs/assets/star-us.png
+[macos-requirements-link]: #requirements
+[macos-shield]: https://img.shields.io/badge/macOS-14%2B-000000?labelColor=151515&logo=apple&logoColor=white&style=flat-square
+[mlx-swift-link]: https://github.com/ml-explore/mlx-swift
+[mlx-swift-lm-link]: https://github.com/ml-explore/mlx-swift-lm
+[platform-link]: https://github.com/YOUR_ORG/citadel
+[platform-shield]: https://img.shields.io/badge/platform-macOS%20arm64-007ACC?labelColor=151515&style=flat-square
+[pr-welcome-link]: https://github.com/YOUR_ORG/citadel/pulls
+[pr-welcome-shield]: https://img.shields.io/badge/🏰_PR_welcome-→-ffcb47?labelColor=151515&style=for-the-badge
+[release-link]: ./RELEASE.md
+[share-linkedin-link]: https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-151515?labelColor=151515&logo=linkedin&logoColor=white&style=flat-square
+[share-mastodon-link]: https://mastodon.social/share?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20local%20AI%20agents%20in%20one%20menu-bar%20app.%20https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-mastodon-shield]: https://img.shields.io/badge/-share%20on%20mastodon-151515?labelColor=151515&logo=mastodon&logoColor=white&style=flat-square
+[share-reddit-link]: https://www.reddit.com/submit?title=Citadel%20%E2%80%94%20macOS%20Fortress%20firewall%20%2B%20Keep%20AI%20agents&url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-reddit-shield]: https://img.shields.io/badge/-share%20on%20reddit-151515?labelColor=151515&logo=reddit&logoColor=white&style=flat-square
+[share-telegram-link]: https://t.me/share/url?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20AI%20agents&url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-telegram-shield]: https://img.shields.io/badge/-share%20on%20telegram-151515?labelColor=151515&logo=telegram&logoColor=white&style=flat-square
+[share-x-link]: https://x.com/intent/tweet?text=Citadel%20%E2%80%94%20Fortress%20network%20guardian%20%2B%20Keep%20AI%20agents%20for%20macOS&url=https%3A%2F%2Fgithub.com%2FYOUR_ORG%2Fcitadel
+[share-x-shield]: https://img.shields.io/badge/-share%20on%20x-151515?labelColor=151515&logo=x&logoColor=white&style=flat-square
+[swift-link]: https://www.swift.org
+[swift-shield]: https://img.shields.io/badge/Swift-5.10-F05138?labelColor=151515&logo=swift&logoColor=white&style=flat-square
+[swift-transformers-link]: https://github.com/huggingface/swift-transformers
