@@ -413,10 +413,32 @@ Contributions of all kinds are welcome — code, docs, issues, and design feedba
 
 ## ❤️ Sponsor
 
-<!-- Optional: GitHub Sponsors, Open Collective, or company backing -->
-Citadel is open source. If it saves you time or keeps your Mac safer, consider sponsoring development or starring the repo.
+Citadel is open source. If Fortress and Keep make your Mac safer and your agents
+more useful, here is the best way to give back:
 
-<!-- [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/cyberesia) -->
+**Use the cloud. Fund the walls.**
+
+The strongest sponsorship is not a one-off tip — it is to **subscribe to and use
+[Aisance Cloud][aisance-cloud-link]** or **[Cyclones Cloud][cyclones-cloud-link]**.
+Same team behind Citadel; two Swiss AI platforms that extend what you started
+locally — **Aisance Cloud** for everyday life and learning, **Cyclones Cloud**
+([cyclones.cloud][cyclones-cloud-link]) as the live business showcase.
+
+**Citadel holds the perimeter. The cloud expands the playbook.**
+
+| Platform | What you learn & do | How it pairs with Citadel |
+| :-- | :-- | :-- |
+| **[Aisance Cloud][aisance-cloud-link]** | **Campus** flashcards, quizzes, mind maps, and tutors; **Camille** for admin; **Finance**; **Cosmos** chat; **Imagine** for visuals — structured skills for families and teams | Guard agents on-device with Fortress; bring cloud models into Keep via BYOK; delegate everyday work to specialized assistants |
+| **[Cyclones Cloud][cyclones-cloud-link]** | Cyberesia’s **business showcase** on [cyclones.cloud][cyclones-cloud-link]: **Genesis** coworkers, **Orbit** workflows, **Veloce**, **Plume**, and multi-app missions across email, browser, and social — see automation in production | Start with local agents in Keep; graduate to full cloud orchestration when you are ready to wire business tools together |
+
+Together they cover the full arc: **protect on-device → learn with Campus → automate
+with Genesis → create with Imagine and Plume**. A week of real use teaches more than
+months of scattered AI tab-hopping.
+
+[![Try Aisance Cloud](https://img.shields.io/badge/Try_Aisance_Cloud-→-369eff?labelColor=151515&style=for-the-badge)][aisance-cloud-link]
+[![Try Cyclones Cloud](https://img.shields.io/badge/Try_Cyclones_Cloud-→-8ae8ff?labelColor=151515&style=for-the-badge)][cyclones-cloud-link]
+
+Star the repo too — it helps others discover Citadel.
 
 [![][back-to-top]](#readme-top)
 
@@ -489,6 +511,8 @@ Third-party notices and inspiration credits: [NOTICES.md](./NOTICES.md) · [ATTR
 [pr-welcome-link]: https://github.com/cyberesia/citadel/pulls
 [pr-welcome-shield]: https://img.shields.io/badge/🏰_PR_welcome-→-ffcb47?labelColor=151515&style=for-the-badge
 [release-link]: ./RELEASE.md
+[aisance-cloud-link]: https://aisance.cloud
+[cyclones-cloud-link]: https://cyclones.cloud
 [share-linkedin-link]: https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-linkedin-shield]: https://img.shields.io/badge/-share%20on%20linkedin-151515?labelColor=151515&logo=linkedin&logoColor=white&style=flat-square
 [share-mastodon-link]: https://mastodon.social/share?text=Citadel%20%E2%80%94%20macOS%20firewall%20%2B%20local%20AI%20agents%20in%20one%20menu-bar%20app.%20https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel

@@ -413,9 +413,33 @@ Les contributions de toutes sortes sont les bienvenues — code, docs, issues, r
 
 ## ❤️ Sponsor
 
-Citadel est open source. Si le projet vous fait gagner du temps ou sécurise votre Mac, pensez à sponsoriser le développement ou à mettre une étoile au dépôt.
+Citadel est open source. Si Fortress et Keep rendent votre Mac plus sûr et vos agents
+plus utiles, voici la meilleure façon de soutenir le projet :
 
-<!-- [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-❤-ea4aaa?style=for-the-badge&logo=github)](https://github.com/sponsors/cyberesia) -->
+**Utilisez le cloud. Financez les remparts.**
+
+Le meilleur soutien n’est pas un don ponctuel — c’est de **s’abonner et d’utiliser
+[Aisance Cloud][aisance-cloud-link]** ou **[Cyclones Cloud][cyclones-cloud-link]**.
+La même équipe que Citadel ; deux plateformes IA suisses qui prolongent ce que vous
+faites déjà en local — **Aisance Cloud** pour le quotidien et l’apprentissage,
+**Cyclones Cloud** ([cyclones.cloud][cyclones-cloud-link]) comme vitrine fonctionnelle
+pour le business.
+
+**Citadel tient le périmètre. Le cloud élargit le terrain de jeu.**
+
+| Plateforme | Ce que vous apprenez et faites | Comment ça complète Citadel |
+| :-- | :-- | :-- |
+| **[Aisance Cloud][aisance-cloud-link]** | **Campus** : flashcards, quiz, cartes mentales et tuteurs ; **Camille** pour l’admin ; **Finance** ; **Cosmos** ; **Imagine** pour le visuel — des parcours structurés pour familles et équipes | Protégez vos agents sur l’appareil avec Fortress ; branchez les modèles cloud dans Keep via BYOK ; déléguez le quotidien à des assistants spécialisés |
+| **[Cyclones Cloud][cyclones-cloud-link]** | **Vitrine business** de Cyberesia sur [cyclones.cloud][cyclones-cloud-link] : **Genesis**, **Orbit**, **Veloce**, **Plume** et missions multi-apps (email, navigateur, réseaux sociaux…) — l’automatisation en conditions réelles | Commencez avec des agents locaux dans Keep ; passez à l’orchestration cloud quand vous êtes prêt à connecter vos outils métier |
+
+Ensemble, elles couvrent tout l’arc : **protéger en local → apprendre avec Campus →
+automatiser avec Genesis → créer avec Imagine et Plume**. Une semaine d’usage réel
+vaut des mois d’essais IA éparpillés dans dix onglets.
+
+[![Essayer Aisance Cloud](https://img.shields.io/badge/Essayer_Aisance_Cloud-→-369eff?labelColor=151515&style=for-the-badge)][aisance-cloud-link]
+[![Essayer Cyclones Cloud](https://img.shields.io/badge/Essayer_Cyclones_Cloud-→-8ae8ff?labelColor=151515&style=for-the-badge)][cyclones-cloud-link]
+
+Mettez aussi une étoile au dépôt — cela aide d’autres personnes à découvrir Citadel.
 
 [![][back-to-top]](#readme-top)
 
@@ -488,6 +512,8 @@ Mentions tierces et crédits d’inspiration : [NOTICES.md](./NOTICES.md) · [AT
 [pr-welcome-link]: https://github.com/cyberesia/citadel/pulls
 [pr-welcome-shield]: https://img.shields.io/badge/🏰_PR_bienvenue-→-ffcb47?labelColor=151515&style=for-the-badge
 [release-link]: ./RELEASE.md
+[aisance-cloud-link]: https://aisance.cloud
+[cyclones-cloud-link]: https://cyclones.cloud
 [share-linkedin-link]: https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
 [share-linkedin-shield]: https://img.shields.io/badge/-partager%20sur%20linkedin-151515?labelColor=151515&logo=linkedin&logoColor=white&style=flat-square
 [share-mastodon-link]: https://mastodon.social/share?text=Citadel%20%E2%80%94%20pare-feu%20macOS%20%2B%20agents%20IA%20locaux%20dans%20une%20app%20barre%20de%20menus.%20https%3A%2F%2Fgithub.com%2Fcyberesia%2Fcitadel
