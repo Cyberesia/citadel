@@ -1,0 +1,49 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Prepare signing stubs for CI
+        env:
+          TEAM_ID: XXXXXXXXXX
+        run: |
+          echo "TEAM_ID=$TEAM_ID" > Scripts/signing.local.env
+          chmod +x Scripts/prepare-signing.sh
+          ./Scripts/prepare-signing.sh
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build
+        env:
+          SKIP_COWORKCORE: "1"
+        run: |
+          xcodebuild \
+            -scheme Citadel \
+            -configuration Debug \
+            -derivedDataPath build \
+            -skipMacroValidation \
+            build
+
+      - name: Test
+        env:
+          SKIP_COWORKCORE: "1"
+        run: |
+          xcodebuild \
+            -scheme Citadel \
+            -configuration Debug \
+            -derivedDataPath build \
+            -skipMacroValidation \
+            test

@@ -1,0 +1,263 @@
+name: Citadel
+options:
+  bundleIdPrefix: com.citadel
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+  defaultConfig: Release
+  developmentLanguage: en
+  groupSortPosition: top
+  generateEmptyDirectories: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_STYLE: Automatic
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ARCHS: "arm64 x86_64"
+    SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
+    GCC_TREAT_WARNINGS_AS_ERRORS: NO
+    ALWAYS_SEARCH_USER_PATHS: NO
+    CLANG_ENABLE_OBJC_ARC: YES
+    SWIFT_STRICT_CONCURRENCY: minimal
+  configs:
+    Debug:
+      ONLY_ACTIVE_ARCH: YES
+      CODE_SIGN_IDENTITY: "-"
+    Release:
+      ONLY_ACTIVE_ARCH: NO
+      CODE_SIGN_IDENTITY: "-"
+
+schemes:
+  Citadel:
+    build:
+      targets:
+        Citadel: all
+        CitadelHelper: all
+        CitadelFirewallTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - CitadelFirewallTests
+  CitadelFull:
+    build:
+      targets:
+        Citadel: all
+        CitadelHelper: all
+        CitadelNetExt: all
+    run:
+      config: Release
+
+fileGroups:
+  - Sources
+  - path: Resources
+    excludes:
+      - coworkcore-bundled
+  - Scripts
+
+packages:
+  mlx-swift:
+    url: https://github.com/ml-explore/mlx-swift
+    from: 0.31.3
+  mlx-swift-lm:
+    url: https://github.com/ml-explore/mlx-swift-lm
+    from: 3.31.3
+  swift-huggingface:
+    url: https://github.com/huggingface/swift-huggingface
+    from: 0.9.0
+  swift-transformers:
+    url: https://github.com/huggingface/swift-transformers
+    from: 1.3.0
+
+targets:
+  Citadel:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/GUI
+      - path: Sources/CitadelDesign
+      - path: Sources/Shared
+      - path: Sources/Fortress
+      - path: Sources/CoworkMLX
+      - path: Resources/Assets.xcassets
+      - path: Resources/Textures
+        buildPhase: resources
+    info:
+      path: Sources/GUI/Info.plist
+      properties:
+        CFBundleName: Citadel
+        CFBundleDisplayName: Citadel
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        LSMinimumSystemVersion: "14.0"
+        LSUIElement: true
+        NSHumanReadableCopyright: "© 2026 Citadel contributors."
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
+        NSPrincipalClass: NSApplication
+        LSApplicationCategoryType: public.app-category.utilities
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.citadel.firewall
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        ARCHS: arm64
+        SWIFT_ACTIVE_COMPILATION_CONDITIONS: CITADEL_MLX_NATIVE
+        INFOPLIST_KEY_LSUIElement: YES
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
+        ENABLE_HARDENED_RUNTIME: YES
+        COMBINE_HIDPI_IMAGES: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      configs:
+        Debug:
+          CODE_SIGN_ENTITLEMENTS: Sources/GUI/Citadel.debug.entitlements
+          CODE_SIGN_IDENTITY: "-"
+          ENABLE_TESTABILITY: YES
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Packaging/Entitlements/CitadelBuild.entitlements
+          CODE_SIGN_IDENTITY: "-"
+          ENABLE_TESTABILITY: YES
+    postBuildScripts:
+      - name: Embed Helper
+        runOnlyWhenInstalling: false
+        script: |
+          set -e
+          APP="${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
+          HELPER_BIN="${BUILT_PRODUCTS_DIR}/CitadelHelper"
+          if [ -f "$HELPER_BIN" ]; then
+            mkdir -p "$APP/Contents/MacOS"
+            cp -f "$HELPER_BIN" "$APP/Contents/MacOS/CitadelHelper"
+            mkdir -p "$APP/Contents/Library/LaunchDaemons"
+            cp -f "${SRCROOT}/Sources/Helper/Launchd.plist" "$APP/Contents/Library/LaunchDaemons/com.citadel.firewall.helper.plist"
+          else
+            echo "warning: helper binary not found, skipping embed"
+          fi
+      - name: Embed CoworkCore
+        runOnlyWhenInstalling: false
+        script: |
+          set -e
+          APP="${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
+          SRC="${SRCROOT}/Resources/coworkcore-bundled"
+          if [ -d "$SRC" ]; then
+            rm -rf "$APP/Contents/Resources/coworkcore-bundled"
+            mkdir -p "$APP/Contents/Resources"
+            cp -R "$SRC" "$APP/Contents/Resources/coworkcore-bundled"
+            chmod +x "$APP/Contents/Resources/coworkcore-bundled"/*/coworkcore 2>/dev/null || true
+            echo "Embedded CoworkCore into app bundle"
+          else
+            echo "warning: Resources/coworkcore-bundled not found — run Scripts/prepare-coworkcore.sh"
+          fi
+      - name: Embed NetExt
+        runOnlyWhenInstalling: false
+        basedOnDependencyAnalysis: false
+        inputFiles:
+          - $(BUILT_PRODUCTS_DIR)/CitadelNetExt.systemextension
+        script: |
+          set -e
+          APP="${BUILT_PRODUCTS_DIR}/${WRAPPER_NAME}"
+          EXT_SRC="${BUILT_PRODUCTS_DIR}/CitadelNetExt.systemextension"
+          DEST_DIR="${APP}/Contents/Library/SystemExtensions"
+          if [ -d "$EXT_SRC" ]; then
+            mkdir -p "$DEST_DIR"
+            rm -rf "${DEST_DIR}/CitadelNetExt.systemextension"
+            cp -R "$EXT_SRC" "$DEST_DIR/"
+            echo "Embedded CitadelNetExt into app bundle"
+          else
+            echo "warning: CitadelNetExt.systemextension not found — build CitadelNetExt first"
+          fi
+    dependencies:
+      - target: CitadelHelper
+        embed: false
+        link: false
+      - target: CitadelNetExt
+        embed: false
+        link: false
+      - package: mlx-swift
+        product: MLX
+      - package: mlx-swift
+        product: MLXNN
+      - package: mlx-swift-lm
+        product: MLXLLM
+      - package: mlx-swift-lm
+        product: MLXLMCommon
+      - package: mlx-swift-lm
+        product: MLXHuggingFace
+      - package: swift-huggingface
+        product: HuggingFace
+      - package: swift-transformers
+        product: Tokenizers
+
+  CitadelNetExt:
+    type: system-extension
+    platform: macOS
+    sources:
+      - path: Sources/NetExt
+        excludes:
+          - "*.md"
+      - path: Sources/Shared
+    info:
+      path: Sources/NetExt/Info.plist
+      properties:
+        CFBundleName: CitadelNetExt
+        CFBundleDisplayName: Citadel Network Extension
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        CFBundlePackageType: SYSX
+        LSMinimumSystemVersion: "13.0"
+        NSSystemExtensionUsageDescription: "Citadel filters per-app network connections."
+        NetworkExtension:
+          NEMachServiceName: group.com.citadel.firewall.ipc
+          NEProviderClasses:
+            com.apple.networkextension.filter-data: CitadelNetExt.FilterDataProvider
+    entitlements:
+      path: Sources/NetExt/NetExt.entitlements
+    settings:
+      base:
+        PRODUCT_NAME: CitadelNetExt
+        PRODUCT_BUNDLE_IDENTIFIER: com.citadel.firewall.netext
+        PRODUCT_MODULE_NAME: CitadelNetExt
+        CODE_SIGN_ENTITLEMENTS: Sources/NetExt/NetExt.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Packaging/Entitlements/CitadelNetExtBuild.entitlements
+          CODE_SIGN_IDENTITY: "-"
+
+  CitadelHelper:
+    type: tool
+    platform: macOS
+    sources:
+      - path: Sources/Helper
+        excludes:
+          - "*.plist"
+          - "*.entitlements"
+      - path: Sources/Shared
+    settings:
+      base:
+        PRODUCT_NAME: CitadelHelper
+        PRODUCT_BUNDLE_IDENTIFIER: com.citadel.firewall.helper
+        CODE_SIGN_ENTITLEMENTS: Sources/Helper/Helper.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        OTHER_LDFLAGS: "-sectcreate __TEXT __info_plist $(SRCROOT)/Sources/Helper/Info.plist -sectcreate __TEXT __launchd_plist $(SRCROOT)/Sources/Helper/Launchd.plist"
+      configs:
+        Release:
+          CODE_SIGN_ENTITLEMENTS: Packaging/Entitlements/CitadelHelperBuild.entitlements
+          CODE_SIGN_IDENTITY: "-"
+
+  CitadelFirewallTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/CitadelFirewallTests
+    dependencies:
+      - target: Citadel
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.citadel.firewall.tests
+        GENERATE_INFOPLIST_FILE: YES
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Citadel.app/Contents/MacOS/Citadel"
+        BUNDLE_LOADER: "$(TEST_HOST)"
