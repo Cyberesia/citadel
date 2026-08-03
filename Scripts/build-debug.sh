@@ -2,6 +2,22 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+if [[ ! -f Sources/Helper/Info.plist ]]; then
+  if [[ -f Scripts/signing.local.env ]]; then
+    ./Scripts/prepare-signing.sh
+  else
+    cat >&2 <<'EOF'
+error: Sources/Helper/Info.plist is missing (gitignored — not in the public repo).
+
+  cp Scripts/signing.local.env.example Scripts/signing.local.env
+  # edit TEAM_ID (any value works for unsigned debug builds)
+  ./Scripts/prepare-signing.sh
+
+EOF
+    exit 1
+  fi
+fi
+
 APP="build/Build/Products/Debug/Citadel.app"
 
 if [ "${SKIP_COWORKCORE:-0}" != "1" ]; then

@@ -37,7 +37,6 @@ You stay in charge — on your Mac, on your terms.
 
 <!-- Optional: Product Hunt / community badges -->
 <!-- [![Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=PLACEHOLDER&theme=dark)](https://www.producthunt.com/products/citadel) -->
-<!-- [![][discord-shield-badge]][discord-link] -->
 
 <br/>
 
@@ -84,8 +83,8 @@ Whether you are hardening a work machine or running agents on-device, Citadel is
 
 | | |
 | :-- | :-- |
-| [![][discord-shield-badge]][discord-link] | **Join the community** — connect with maintainers and early adopters. *(Discord link placeholder)* |
 | [![][github-stars-shield]][github-stars-link] | **Star the repo** — follow releases and roadmap updates on GitHub. |
+| [![][github-issues-shield]][github-issues-link] | **Open an issue** — bugs, feature requests, and feedback. |
 
 > [!IMPORTANT]
 >
@@ -188,7 +187,7 @@ Citadel ships as a signed macOS app (`.app` / `.dmg`). Build from source for dev
 
 ### `A` Download the latest release
 
-1. Open **[Releases][github-release-link]** and download the latest `Citadel.dmg`.
+1. Open **[Releases][github-release-link]** and download the latest `Citadel.dmg` *(when published)*.
 2. Drag **Citadel** to Applications.
 3. Launch from Applications or Spotlight — Citadel lives in the **menu bar** (no Dock icon by default).
 4. Complete [first-run permissions](#first-run-permissions) for full protection.
@@ -397,6 +396,8 @@ Contributions of all kinds are welcome — code, docs, issues, and design feedba
 >
 > Before opening a PR, run tests and ensure `./Scripts/build-debug.sh` succeeds on macOS 14+ arm64.
 
+- **[Contributing guide](./CONTRIBUTING.md)** — setup, PR expectations, license
+- **[Security](./SECURITY.md)** — report vulnerabilities privately
 - **[Issues][github-issues-link]** — bugs and feature requests
 - **[Pull requests][pr-welcome-link]** — code changes
 - **In-app guides** — Fortress and Keep help catalogs (EN/FR) in `Sources/Shared/`
@@ -476,15 +477,11 @@ Third-party notices and inspiration credits: [NOTICES.md](./NOTICES.md) · [ATTR
 
 <br/>
 
-<!-- Reference links (update cyberesia before launch) -->
-
 [back-to-top]: https://img.shields.io/badge/-BACK_TO_TOP-151515?style=flat-square
 [aioncore-link]: https://github.com/iOfficeAI/AionCore
 [aionui-link]: https://github.com/iOfficeAI/AionUi
 [attributions-link]: ./ATTRIBUTIONS.md
 [changelog-link]: ./CHANGELOG.md
-[discord-link]: https://discord.gg/PLACEHOLDER
-[discord-shield-badge]: https://img.shields.io/discord/PLACEHOLDER?color=5865F2&label=discord&labelColor=151515&logo=discord&logoColor=white&style=for-the-badge
 [github-action-test-link]: https://github.com/cyberesia/citadel/actions
 [github-action-test-shield]: https://img.shields.io/github/actions/workflow/status/cyberesia/citadel/test.yml?label=test&labelColor=151515&logo=githubactions&logoColor=white&style=flat-square
 [github-contributors-link]: https://github.com/cyberesia/citadel/graphs/contributors

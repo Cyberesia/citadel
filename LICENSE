@@ -1,53 +1,55 @@
 Citadel — Apache License 2.0 with additional obligations
 ==========================================================
 
-This software is licensed under the **Apache License, Version 2.0**, **plus the
-additional obligations below**. If you use, modify, or redistribute this project,
-you must comply with **both**.
+This software is licensed under the Apache License, Version 2.0, plus the
+additional obligations below. If you use, modify, or redistribute this project,
+you must comply with both.
 
 Full Apache-2.0 text: https://www.apache.org/licenses/LICENSE-2.0.txt
 
 
-## Additional obligations (Citadel project)
+Additional obligations (Citadel project)
+----------------------------------------
 
-1. **Preserve product names** — Do **not** rename or remove **Citadel**, **Fortress**,
-   or **Keep** where they appear in this repository (source identifiers, UI copy,
+1. Preserve product names — Do not rename or remove Citadel, Fortress,
+   or Keep where they appear in this repository (source identifiers, UI copy,
    docs, bundle IDs, module names, or user-facing labels). You may change behavior
    and add features; you may not strip or replace these names.
 
-2. **Preserve the logo and official branding** — Do **not** replace or remove the
+2. Preserve the logo and official branding — Do not replace or remove the
    Citadel logo and official branding assets shipped in this repository, including
-   `Resources/Assets.xcassets/AppIcon.appiconset/`,
-   `Resources/Assets.xcassets/CitadelMark.imageset/`,
-   `Resources/Assets.xcassets/AisanceMark.imageset/`, and related artwork under
-   `docs/assets/`. You may add assets; you may not swap official marks for a
+   Resources/Assets.xcassets/AppIcon.appiconset/,
+   Resources/Assets.xcassets/CitadelMark.imageset/,
+   Resources/Assets.xcassets/AisanceMark.imageset/, and related artwork under
+   docs/assets/. You may add assets; you may not swap official marks for a
    different product identity.
 
-3. **Keep upstream branding and naming updates** — When you merge from or track
-   this project, preserve **future updates** to product names, logos, and branding
+3. Keep upstream branding and naming updates — When you merge from or track
+   this project, preserve future updates to product names, logos, and branding
    assets from upstream. Do not permanently fork off and block or discard later
    official naming or branding changes from this repository.
 
-4. **Keep project notices** — Preserve this file, `NOTICES.md`, `ATTRIBUTIONS.md`,
-   and `CHANGELOG.md` (or their substance) in source and binary distributions.
+4. Keep project notices — Preserve this file, NOTICES.md, ATTRIBUTIONS.md,
+   and CHANGELOG.md (or their substance) in source and binary distributions.
 
 
-## Apache License 2.0 obligations (summary)
+Apache License 2.0 obligations (summary)
+----------------------------------------
 
 In addition to the items above, Apache-2.0 requires you to:
 
-1. **Keep copyright and license notices** — Include the Apache-2.0 copyright and
+1. Keep copyright and license notices — Include the Apache-2.0 copyright and
    license statements in redistributions.
-2. **State changes** — If you distribute modified files, include a prominent notice
+2. State changes — If you distribute modified files, include a prominent notice
    that you changed them.
-3. **Include NOTICE text** — Pass through any NOTICE entries from files that contain
-   them (see Apache-2.0 §4(d)).
-4. **Third-party components** — Honor upstream licenses for bundled or referenced
-   software (e.g. CoworkCore / AionCore). See `ATTRIBUTIONS.md`.
-5. **No implied endorsement** — Do not use contributor names or trademarks to
+3. Include NOTICE text — Pass through any NOTICE entries from files that contain
+   them (see Apache-2.0 section 4(d)).
+4. Third-party components — Honor upstream licenses for bundled or referenced
+   software (e.g. CoworkCore / AionCore). See ATTRIBUTIONS.md.
+5. No implied endorsement — Do not use contributor names or trademarks to
    endorse a derivative product without permission.
 
-Patent rights and termination rules are defined in the full License (§3, §5–6).
+Patent rights and termination rules are defined in the full License (sections 3, 5–6).
 
 
 ---

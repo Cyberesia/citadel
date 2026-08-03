@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build Citadel, re-sign the app + embedded helper with the Cyberesia Developer ID,
+# Build Citadel, re-sign the app + embedded helper with a Developer ID identity,
 # install to /Applications, and launch. This is what makes the privileged helper
 # (SMAppService daemon) registerable — ad-hoc signed builds cannot register it.
 #
@@ -8,12 +8,16 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-TEAM_ID="98Y85F8KFJ"
+# shellcheck source=load-signing-env.sh
+source "$(dirname "$0")/load-signing-env.sh"
+citadel_require_team_id
+citadel_require_signing_files || exit 1
+
 # Resolve a single identity SHA-1 (the keychain can hold duplicate certs with the
 # same name, which makes codesign fail with "ambiguous"); pick the first match.
-IDENTITY="$(security find-identity -v -p codesigning \
-  | grep "Developer ID Application: Cyberesia SA (${TEAM_ID})" \
-  | head -1 | awk '{print $2}')"
+IDENTITY="${CODESIGN_IDENTITY:-$(security find-identity -v -p codesigning \
+  | grep "Developer ID Application:.*(${TEAM_ID})" \
+  | head -1 | awk '{print $2}')}"
 [ -n "$IDENTITY" ] || { echo "error: no Developer ID identity for team ${TEAM_ID}"; exit 1; }
 echo "==> Using signing identity $IDENTITY"
 CONFIG="Debug"

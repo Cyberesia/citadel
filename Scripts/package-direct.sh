@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
-# Direct distribution package for Citadel — same flow as __murmura/Scripts/package-direct.sh:
-# Release build → Developer ID sign (app + helper + NetExt) → DMG → optional notarize/staple.
+# Direct distribution package for Citadel — Release build → Developer ID sign
+# (app + helper + NetExt) → DMG → optional notarize/staple.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=load-signing-env.sh
+source "$ROOT_DIR/Scripts/load-signing-env.sh"
+citadel_require_team_id
+citadel_require_signing_files || exit 1
+
 APP_NAME="${APP_NAME:-Citadel}"
 VERSION="${VERSION:-0.1.0}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
 BUNDLE_ID="${BUNDLE_ID:-com.citadel.firewall}"
-TEAM_ID="${TEAM_ID:-98Y85F8KFJ}"
 # Local keychain alias for notary credentials (see RELEASE.md). Not visible to Apple.
 NOTARYTOOL_PROFILE="${NOTARYTOOL_PROFILE:-citadel-notary}"
 
@@ -288,7 +292,7 @@ sign_path "$APP_PATH" "$APP_SIGN_ENT"
 echo "Verifying signatures…"
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
-# --- DMG (same detach / create-dmg / fallback pattern as murmura) ---
+# --- DMG (detach / create-dmg / hdiutil fallback) ---
 
 detach_all_dmg_mounts_for_packaging
 

@@ -1,6 +1,6 @@
 # Citadel Release Guide
 
-Same distribution model as Murmure (`__murmura`): **Developer ID** signed, hardened runtime, **notarized** `.app`, packaged as `.dmg`.
+**Developer ID** signed, hardened runtime, **notarized** `.app`, packaged as `.dmg`.
 
 **Notarization is required** for distribution to other Macs (Gatekeeper). Signing alone is not enough.
 
@@ -8,15 +8,42 @@ Citadel additionally embeds:
 - `CitadelHelper` (privileged daemon)
 - `CitadelNetExt.systemextension` (per-app network filter)
 
+## Signing setup (one time per machine)
+
+Team-specific files are **not** in git. Copy the templates and configure locally:
+
+```bash
+cp Scripts/signing.local.env.example Scripts/signing.local.env
+# Edit TEAM_ID in signing.local.env (10-character Apple Developer Team ID)
+
+./Scripts/prepare-signing.sh
+```
+
+This creates (gitignored, local only):
+
+| File | From template |
+| :-- | :-- |
+| `Scripts/signing.local.env` | `Scripts/signing.local.env.example` |
+| `Sources/Helper/Info.plist` | `Sources/Helper/Info.plist.example` |
+| `Packaging/Entitlements/CitadelHelper.entitlements` | `Packaging/Entitlements/CitadelHelper.entitlements.example` |
+
+`prepare-signing.sh` skips files that already exist — safe to re-run.
+
+Find your Team ID: **Xcode → Settings → Accounts → Team ID**, or:
+
+```bash
+security find-identity -v -p codesigning
+```
+
 ## Direct release
 
 ```bash
 export VERSION=0.1.0
 export BUILD_NUMBER=1
-export TEAM_ID=98Y85F8KFJ
+# TEAM_ID is read from Scripts/signing.local.env
 # Optional — resolved automatically from the keychain if unset:
-# export CODESIGN_IDENTITY="Developer ID Application: Cyberesia SA (98Y85F8KFJ)"
-# Default: citadel-notary (local Keychain alias — create once, see below)
+# export CODESIGN_IDENTITY="Developer ID Application: Your Org (YOUR_TEAM_ID)"
+# Default notary profile name: citadel-notary (local Keychain alias — create once, see below)
 
 ./Scripts/package-direct.sh
 ```
@@ -48,18 +75,15 @@ SKIP_COWORKCORE=1 CITADEL_SIMPLE_DMG=1 ./Scripts/package-direct.sh
 
 `NOTARYTOOL_PROFILE` is only a **local Keychain label** on your Mac (`notarytool store-credentials`). Apple never sees the profile name — each submission is judged on the signed binary (bundle ID, team ID, entitlements, hardened runtime, etc.) and the Developer account used to upload it.
 
-You can safely create a **dedicated Citadel profile** even if it uses the same Apple ID and team as Murmure. No confusion on Apple’s side.
-
 ### One-time setup (recommended)
 
 ```bash
+# TEAM_ID from Scripts/signing.local.env
 xcrun notarytool store-credentials citadel-notary \
   --apple-id "you@example.com" \
-  --team-id 98Y85F8KFJ \
+  --team-id "$TEAM_ID" \
   --password "<app-specific-password>"
 ```
-
-Use the same Apple ID / app-specific password as `murmure-notary` if you want — that only duplicates credentials locally under a clearer name.
 
 Verify:
 
@@ -132,6 +156,7 @@ Re-notarize after changing signatures if you redistribute the build.
 
 | Script | Role |
 |--------|------|
+| `Scripts/prepare-signing.sh` | Create local signing files from `.example` templates |
 | `Scripts/package-direct.sh` | **Ship** — Release + sign + DMG + notary (this guide) |
 | `Scripts/resign-launch-safe.sh` | Fix launch on a signed build missing provisioning profiles |
 | `Scripts/build-signed.sh` | Local Debug install to `/Applications` |
@@ -142,4 +167,4 @@ Re-notarize after changing signatures if you redistribute the build.
 
 - System extension + Developer ID requires the Network Extension / System Extension capabilities on the team.
 - App Group `group.com.citadel.firewall` must match across app, helper, and NetExt.
-- Murmure reference implementation: `__murmura/Scripts/package-direct.sh` and `__murmura/RELEASE.md`.
+- Forks and third-party builds must use **their own** Team ID in `signing.local.env` and the generated local plists/entitlements.

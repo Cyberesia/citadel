@@ -53,7 +53,9 @@ schemes:
 
 fileGroups:
   - Sources
-  - Resources
+  - path: Resources
+    excludes:
+      - coworkcore-bundled
   - Scripts
 
 packages:

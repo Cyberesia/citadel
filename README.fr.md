@@ -37,7 +37,6 @@ Vous gardez le contrôle — sur votre Mac, à vos conditions.
 
 <!-- Optionnel : Product Hunt / badges communauté -->
 <!-- [![Product Hunt](https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=PLACEHOLDER&theme=dark)](https://www.producthunt.com/products/citadel) -->
-<!-- [![][discord-shield-badge]][discord-link] -->
 
 <br/>
 
@@ -84,8 +83,8 @@ Que vous durcissiez une machine de travail ou fassiez tourner des agents sur l�
 
 | | |
 | :-- | :-- |
-| [![][discord-shield-badge]][discord-link] | **Rejoindre la communauté** — échanger avec les mainteneurs et les premiers utilisateurs. *(Lien Discord à définir)* |
 | [![][github-stars-shield]][github-stars-link] | **Mettre une étoile** — suivre les releases et la feuille de route sur GitHub. |
+| [![][github-issues-shield]][github-issues-link] | **Ouvrir une issue** — bugs, demandes de fonctionnalités et retours. |
 
 > [!IMPORTANT]
 >
@@ -188,7 +187,7 @@ Citadel est distribué comme application macOS signée (`.app` / `.dmg`). Compil
 
 ### `A` Télécharger la dernière version
 
-1. Ouvrez **[Releases][github-release-link]** et téléchargez le dernier `Citadel.dmg`.
+1. Ouvrez **[Releases][github-release-link]** et téléchargez le dernier `Citadel.dmg` *(dès publication)*.
 2. Glissez **Citadel** dans Applications.
 3. Lancez depuis Applications ou Spotlight — Citadel vit dans la **barre de menus** (pas d’icône dans le Dock par défaut).
 4. Complétez les [autorisations au premier lancement](#autorisations-au-premier-lancement) pour une protection complète.
@@ -397,6 +396,8 @@ Les contributions de toutes sortes sont les bienvenues — code, docs, issues, r
 >
 > Avant d’ouvrir une PR, lancez les tests et vérifiez que `./Scripts/build-debug.sh` réussit sur macOS 14+ arm64.
 
+- **[Guide de contribution](./CONTRIBUTING.md)** — setup, attentes PR, licence
+- **[Sécurité](./SECURITY.md)** — signaler les vulnérabilités en privé
 - **[Issues][github-issues-link]** — bugs et demandes de fonctionnalités
 - **[Pull requests][pr-welcome-link]** — modifications de code
 - **Guides in-app** — catalogues d’aide Fortress et Keep (EN/FR) dans `Sources/Shared/`
@@ -477,15 +478,11 @@ Mentions tierces et crédits d’inspiration : [NOTICES.md](./NOTICES.md) · [AT
 
 <br/>
 
-<!-- Liens de référence (mettre à jour cyberesia avant le lancement) -->
-
 [back-to-top]: https://img.shields.io/badge/-RETOUR_HAUT-151515?style=flat-square
 [aioncore-link]: https://github.com/iOfficeAI/AionCore
 [aionui-link]: https://github.com/iOfficeAI/AionUi
 [attributions-link]: ./ATTRIBUTIONS.md
 [changelog-link]: ./CHANGELOG.md
-[discord-link]: https://discord.gg/PLACEHOLDER
-[discord-shield-badge]: https://img.shields.io/discord/PLACEHOLDER?color=5865F2&label=discord&labelColor=151515&logo=discord&logoColor=white&style=for-the-badge
 [github-action-test-link]: https://github.com/cyberesia/citadel/actions
 [github-action-test-shield]: https://img.shields.io/github/actions/workflow/status/cyberesia/citadel/test.yml?label=test&labelColor=151515&logo=githubactions&logoColor=white&style=flat-square
 [github-contributors-link]: https://github.com/cyberesia/citadel/graphs/contributors

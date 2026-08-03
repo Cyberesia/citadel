@@ -14,7 +14,7 @@
     <string>XPC!</string>
     <key>SMAuthorizedClients</key>
     <array>
-        <string>identifier "com.citadel.firewall" and anchor apple generic and certificate leaf[subject.OU] = "98Y85F8KFJ"</string>
+        <string>identifier "com.citadel.firewall" and anchor apple generic and certificate leaf[subject.OU] = "YOUR_TEAM_ID"</string>
     </array>
 </dict>
 </plist>

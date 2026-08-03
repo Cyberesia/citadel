@@ -5,7 +5,7 @@
 	<key>com.apple.security.app-sandbox</key>
 	<false/>
 	<key>com.apple.application-identifier</key>
-	<string>98Y85F8KFJ.com.citadel.firewall.helper</string>
+	<string>YOUR_TEAM_ID.com.citadel.firewall.helper</string>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.com.citadel.firewall</string>

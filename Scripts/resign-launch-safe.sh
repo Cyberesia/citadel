@@ -8,7 +8,11 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 APP="${1:-/Applications/Citadel.app}"
-TEAM_ID="${TEAM_ID:-98Y85F8KFJ}"
+# shellcheck source=load-signing-env.sh
+source "$ROOT/Scripts/load-signing-env.sh"
+citadel_require_team_id
+citadel_require_signing_files || exit 1
+
 IDENTITY="${CODESIGN_IDENTITY:-$(security find-identity -v -p codesigning | grep "Developer ID Application:.*(${TEAM_ID})" | head -1 | awk '{print $2}')}"
 APP_ENT="${APP_ENT:-$ROOT/Packaging/Entitlements/CitadelDirectLaunch.entitlements}"
 HELPER_ENT="$ROOT/Packaging/Entitlements/CitadelHelper.entitlements"

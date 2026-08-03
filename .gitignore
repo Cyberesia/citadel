@@ -72,9 +72,19 @@ temp/
 !.env.example
 *.pem
 
+# Apple signing — local Team ID (copy from .example templates)
+Scripts/signing.local.env
+Sources/Helper/Info.plist
+Packaging/Entitlements/CitadelHelper.entitlements
+
 # Optional:
 __inspire/
+__aisance/
+__murmura/
 direct/
+companion-preview*.png
+Resources/companion-preview*.png
+*.xcresult
 
 # docs/.build/
 
