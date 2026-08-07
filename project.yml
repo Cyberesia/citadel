@@ -90,8 +90,8 @@ targets:
       properties:
         CFBundleName: Citadel
         CFBundleDisplayName: Citadel
-        CFBundleShortVersionString: "0.1.2"
-        CFBundleVersion: "3"
+        CFBundleShortVersionString: "0.1.3"
+        CFBundleVersion: "4"
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true
         NSHumanReadableCopyright: "© 2026 Citadel contributors."
@@ -204,8 +204,8 @@ targets:
       properties:
         CFBundleName: CitadelNetExt
         CFBundleDisplayName: Citadel Network Extension
-        CFBundleShortVersionString: "0.1.2"
-        CFBundleVersion: "3"
+        CFBundleShortVersionString: "0.1.3"
+        CFBundleVersion: "4"
         CFBundlePackageType: SYSX
         LSMinimumSystemVersion: "13.0"
         NSSystemExtensionUsageDescription: "Citadel filters per-app network connections."

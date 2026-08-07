@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-08-08
+
+### Added
+
+- **Murmura-style Keep streaming** — live markdown while the answer types out (typewriter), instead of raw `**markdown**` that snaps into format at the end.
+- **Global tool-permission card** — Allow/Deny prompts stay visible across Keep tabs and Fortress; survive leaving the chat; optional “Open session” when the conversation is closed.
+- **Collapsible Fortress status bar** — hide/show the bottom “Watching locally / Surveillance locale” bar so Activity summaries stay readable.
+- **Richer agent activity status** — banner/header show the live tool, permission wait, reasoning, or assistant name (with roller + shimmer), not only “Agent working…”.
+- **Clearer MLX → tools guidance** — copy points to Ollama or a cloud model that supports tools.
+
+### Fixed
+
+- **Permission prompts missing on the first turn** — resync confirmation queue on tool calls; do not wipe pending confirmations when switching Keep tabs.
+- **Allow/Deny after leaving chat** — responses resolve against the anchored conversation ID so tools are not stuck as “User denied”.
+
 ## [0.1.2] - 2026-08-07
 
 ### Added
@@ -38,7 +53,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Initial public release: Fortress firewall, Keep agents, Prism UI.
 - Open-source README (EN/FR), documentation scaffold, and release guide.
 
-[Unreleased]: https://github.com/Cyberesia/citadel/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/Cyberesia/citadel/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/Cyberesia/citadel/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/Cyberesia/citadel/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/Cyberesia/citadel/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/Cyberesia/citadel/releases/tag/v0.1.0
