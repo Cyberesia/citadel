@@ -8,9 +8,16 @@ struct CoworkPromptCard: View {
             sessionConfigSection
             composerSection
             workspaceSection
-            CoworkAttachmentBar(paths: cowork.attachmentPaths) { path in
-                cowork.removeAttachment(path, target: .home)
-            }
+            CoworkAttachmentBar(
+                paths: cowork.attachmentPaths,
+                indexedPaths: cowork.indexedAttachmentPaths,
+                onRemove: { path in
+                    cowork.removeAttachment(path, target: .home)
+                },
+                onPreview: { path in
+                    cowork.previewLocalAttachment(path)
+                }
+            )
             CoworkComposerToolbar(target: .home)
 
             if let notice = cowork.toolsDisabledNotice {
@@ -56,7 +63,17 @@ struct CoworkPromptCard: View {
                 maxHeight: 180,
                 focusRequest: cowork.composerFocusGeneration,
                 onDropFileURLs: { urls in
-                    cowork.attachmentPaths.append(contentsOf: urls.map(\.path))
+                    let paths = urls.map(\.path)
+                    cowork.attachmentPaths.append(contentsOf: paths)
+                    if let last = paths.last {
+                        cowork.previewLocalAttachment(last)
+                    }
+                    for path in paths {
+                        let url = URL(fileURLWithPath: path)
+                        if CoworkDocumentTextExtractor.extractText(from: url) != nil {
+                            cowork.indexedAttachmentPaths.insert(path)
+                        }
+                    }
                 },
                 onSubmit: {
                     Task { await cowork.sendFromHome() }

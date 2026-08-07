@@ -46,7 +46,6 @@ enum CoworkModelToolSupport {
         }
     }
 
-    /// Fallback when Ollama does not report capabilities (older servers).
     static func heuristicForModelName(_ modelID: String) -> Bool {
         let lower = modelID.lowercased()
         if lower.contains("gemma") { return false }
@@ -60,5 +59,24 @@ enum CoworkModelToolSupport {
         if lower.contains("gpt") || lower.contains("claude") || lower.contains("gemini") { return true }
         if lower.contains("llama3") || lower.contains("llama-3") { return true }
         return false
+    }
+
+    /// Cloud BYOK providers need curated MCP (schema-safe subset), not a blind enable-all.
+    static func prefersCuratedMcp(platform: String) -> Bool {
+        switch platform.lowercased() {
+        case "openai", "anthropic", "gemini", "google", "xai", "openrouter", "infomaniak", "custom":
+            return true
+        default:
+            return false
+        }
+    }
+
+    static func mcpToolProfile(platform: String) -> CoworkMcpToolProfile {
+        CoworkMcpToolProfile.from(platform: platform)
+    }
+
+    @available(*, deprecated, renamed: "prefersCuratedMcp")
+    static func prefersMcpOffByDefault(platform: String) -> Bool {
+        prefersCuratedMcp(platform: platform)
     }
 }

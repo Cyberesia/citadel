@@ -237,6 +237,68 @@ struct CoworkConversationOverrides: Encodable {
     }
 }
 
+// MARK: - Chat file refs (aligned with AionCore ChatFileRef)
+
+/// Source-tagged file reference sent with messages — backend resolves `local` paths on this Mac.
+struct CoworkChatFileRef: Codable, Hashable {
+    enum Kind: String, Codable, Hashable {
+        case local
+        case upload
+        case project
+    }
+
+    let kind: Kind
+    var path: String?
+    var peID: String?
+    var relativePath: String?
+
+    enum CodingKeys: String, CodingKey {
+        case kind, path
+        case peID = "pe_id"
+        case relativePath = "relative_path"
+    }
+
+    static func local(_ path: String) -> CoworkChatFileRef {
+        CoworkChatFileRef(kind: .local, path: path, peID: nil, relativePath: nil)
+    }
+
+    static func localRefs(from paths: [String]) -> [CoworkChatFileRef] {
+        paths.map { .local($0) }
+    }
+
+    init(kind: Kind, path: String?, peID: String?, relativePath: String?) {
+        self.kind = kind
+        self.path = path
+        self.peID = peID
+        self.relativePath = relativePath
+    }
+
+    init(from decoder: Decoder) throws {
+        if let container = try? decoder.container(keyedBy: CodingKeys.self),
+           let kind = try? container.decode(Kind.self, forKey: .kind) {
+            self.kind = kind
+            path = try container.decodeIfPresent(String.self, forKey: .path)
+            peID = try container.decodeIfPresent(String.self, forKey: .peID)
+            relativePath = try container.decodeIfPresent(String.self, forKey: .relativePath)
+            return
+        }
+        let legacyPath = try decoder.singleValueContainer().decode(String.self)
+        self = .local(legacyPath)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(kind, forKey: .kind)
+        switch kind {
+        case .local, .upload:
+            try container.encode(path, forKey: .path)
+        case .project:
+            try container.encode(peID, forKey: .peID)
+            try container.encode(relativePath, forKey: .relativePath)
+        }
+    }
+}
+
 struct CoworkConversationExtra: Codable, Hashable {
     var workspace: String?
     var customWorkspace: Bool?
@@ -277,7 +339,7 @@ struct CoworkSessionMcpServer: Codable, Hashable {
 struct CoworkSendMessageRequest: Encodable {
     let input: String
     let conversationID: String
-    var files: [String]?
+    var files: [CoworkChatFileRef]?
 
     enum CodingKeys: String, CodingKey {
         case input, files
@@ -760,17 +822,58 @@ struct CoworkMcpServer: Identifiable, Decodable, Hashable {
         guard let transport, transport.type != "stdio" else { return nil }
         return transport.url
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        enabled = try container.decode(Bool.self, forKey: .enabled)
+        builtin = try container.decodeIfPresent(Bool.self, forKey: .builtin)
+        tools = try container.decodeIfPresent([CoworkMcpTool].self, forKey: .tools)
+        lastTestStatus = try container.decodeIfPresent(String.self, forKey: .lastTestStatus)
+        transport = try container.decodeIfPresent(CoworkMcpTransport.self, forKey: .transport)
+    }
 }
 
 struct CoworkMcpTool: Decodable, Hashable, Identifiable {
     let name: String
     let description: String?
+    let inputSchema: CoworkJSONValue?
 
     var id: String { name }
+
+    enum CodingKeys: String, CodingKey {
+        case name, description
+        case inputSchema = "input_schema"
+    }
 }
 
 struct CoworkMcpImportRequest: Encodable {
     let servers: [CoworkMcpImportServer]
+}
+
+struct CoworkMcpTestConnectionRequest: Encodable {
+    var id: String?
+    let name: String
+    let transport: CoworkMcpTransport
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, transport
+    }
+}
+
+struct CoworkMcpConnectionTestResult: Decodable {
+    let success: Bool
+    let tools: [CoworkMcpTool]?
+    let error: String?
+    let code: String?
+    let needsAuth: Bool?
+
+    enum CodingKeys: String, CodingKey {
+        case success, tools, error, code
+        case needsAuth = "needs_auth"
+    }
 }
 
 struct CoworkMcpImportServer: Encodable {

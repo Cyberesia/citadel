@@ -18,9 +18,16 @@ struct CoworkSessionComposer: View {
                 .padding(.horizontal, 14)
             }
 
-            CoworkAttachmentBar(paths: cowork.composerAttachments) { path in
-                cowork.removeAttachment(path, target: .composer)
-            }
+            CoworkAttachmentBar(
+                paths: cowork.composerAttachments,
+                indexedPaths: cowork.indexedAttachmentPaths,
+                onRemove: { path in
+                    cowork.removeAttachment(path, target: .composer)
+                },
+                onPreview: { path in
+                    cowork.previewLocalAttachment(path)
+                }
+            )
 
             HStack(alignment: .bottom, spacing: 10) {
                 CoworkComposerAction(
@@ -47,7 +54,17 @@ struct CoworkSessionComposer: View {
                     maxHeight: 88,
                     focusRequest: cowork.composerFocusGeneration,
                     onDropFileURLs: { urls in
-                        cowork.composerAttachments.append(contentsOf: urls.map(\.path))
+                        let paths = urls.map(\.path)
+                        cowork.composerAttachments.append(contentsOf: paths)
+                        if let last = paths.last {
+                            cowork.previewLocalAttachment(last)
+                        }
+                        for path in paths {
+                            let url = URL(fileURLWithPath: path)
+                            if CoworkDocumentTextExtractor.extractText(from: url) != nil {
+                                cowork.indexedAttachmentPaths.insert(path)
+                            }
+                        }
                     },
                     onSubmit: send
                 )

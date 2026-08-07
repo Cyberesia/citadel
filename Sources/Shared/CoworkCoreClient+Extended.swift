@@ -147,6 +147,15 @@ extension CoworkCoreClient {
         try await request("POST", path: "api/fs/read-buffer", body: CoworkFSReadRequest(path: path, workspace: workspace))
     }
 
+    /// Import macOS picker paths into the conversation workspace (AionUi `copyFilesToWorkspace`).
+    func copyFilesToWorkspace(filePaths: [String], workspace: String) async throws -> CoworkFSCopyResult {
+        try await request(
+            "POST",
+            path: "api/fs/copy",
+            body: CoworkFSCopyRequest(filePaths: filePaths, workspace: workspace)
+        )
+    }
+
     // MARK: - Cron
 
     func listCronJobs(conversationID: String? = nil) async throws -> [CoworkCronJob] {

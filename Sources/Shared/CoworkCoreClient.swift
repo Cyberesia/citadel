@@ -135,7 +135,7 @@ struct CoworkCoreClient: Sendable {
         let _: CoworkEmpty = try await request("POST", path: "api/fs/snapshot/init", body: CoworkFSWorkspaceRequest(workspace: workspace))
     }
 
-    func sendMessage(conversationID: String, input: String, files: [String] = []) async throws -> CoworkSendMessageResult {
+    func sendMessage(conversationID: String, input: String, files: [CoworkChatFileRef] = []) async throws -> CoworkSendMessageResult {
         let body = CoworkSendMessageBody(content: input, files: files.isEmpty ? nil : files)
         return try await request("POST", path: "api/conversations/\(conversationID)/messages", body: body)
     }
@@ -174,6 +174,10 @@ struct CoworkCoreClient: Sendable {
 
     func importMcpServers(_ body: CoworkMcpImportRequest) async throws -> [CoworkMcpServer] {
         try await request("POST", path: "api/mcp/servers/import", body: body)
+    }
+
+    func testMcpConnection(_ body: CoworkMcpTestConnectionRequest) async throws -> CoworkMcpConnectionTestResult {
+        try await request("POST", path: "api/mcp/test-connection", body: body)
     }
 
     func listConfirmations(conversationID: String) async throws -> [CoworkConfirmation] {
@@ -215,7 +219,7 @@ struct CoworkCoreClient: Sendable {
     }
     private struct CoworkSendMessageBody: Encodable {
         let content: String
-        let files: [String]?
+        let files: [CoworkChatFileRef]?
     }
 
     func request<T: Decodable>(_ method: String, path: String, body: (any Encodable)? = nil) async throws -> T {

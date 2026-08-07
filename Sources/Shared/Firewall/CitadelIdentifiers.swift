@@ -9,7 +9,7 @@ public enum AppConstants {
     public static let ipcMachServiceName = "group.com.citadel.firewall.ipc"
     public static let appGroup = "group.com.citadel.firewall"
     public static let teamID = "group"
-    public static let version = "0.1.0"
+    public static let version = "0.1.1"
     public static let dnsProxyPort: UInt16 = 53
     public static let defaultDoHUpstream = "https://cloudflare-dns.com/dns-query"
 

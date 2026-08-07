@@ -134,7 +134,7 @@ Vos agents tournent dans Citadel — modèles locaux, cloud BYOK, outils MCP, é
 - **CLI d’agents** — Claude Code, Codex, Gemini, Goose, Cursor, Copilot, et plus via ACP
 - **MCP & skills** — configuration de serveurs, OAuth, PDF/Mermaid/cron/automatisation bureautique, etc.
 - **Sessions & équipes** — historique, fork, recherche, orchestration multi-agents, tâches cron
-- **Espace de travail** — choix de dossier, pièces jointes, aperçu de fichiers, dictée vocale
+- **Espace de travail** — choix de dossier, pièces jointes PDF/DOCX (indexées automatiquement), panneau Aperçu, dictée vocale
 - **Modes de permission** — standard, modifications auto, auto complet, plan seulement
 
 ![Keep Demander — modèles locaux, MCP, skills et outils workspace](docs/assets/fr/keep-sessions.png)
@@ -187,7 +187,7 @@ Citadel est distribué comme application macOS signée (`.app` / `.dmg`). Compil
 
 ### `A` Télécharger la dernière version
 
-1. Ouvrez **[Releases][github-release-link]** et téléchargez le dernier `Citadel.dmg`.
+1. Ouvrez **[Releases][github-release-link]** et téléchargez le dernier `Citadel.dmg` *(dès publication)*.
 2. Glissez **Citadel** dans Applications.
 3. Lancez depuis Applications ou Spotlight — Citadel vit dans la **barre de menus** (pas d’icône dans le Dock par défaut).
 4. Complétez les [autorisations au premier lancement](#autorisations-au-premier-lancement) pour une protection complète.

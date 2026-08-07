@@ -8,7 +8,7 @@ enum CoworkMessageSegment {
 
 /// Rich chat bubble: markdown body, inline images, streaming support.
 struct CoworkMessageBubble: View {
-    let message: CoworkMessage
+    var message: CoworkMessage?
     let text: String
     let isUser: Bool
     @EnvironmentObject var cowork: CoworkState

@@ -52,6 +52,8 @@ final class CoworkState: ObservableObject {
 
     @Published var attachmentPaths: [String] = []
     @Published var composerAttachments: [String] = []
+    /// Paths whose text was successfully extracted for the next send (shown on attachment chips).
+    @Published var indexedAttachmentPaths: Set<String> = []
     @Published var mcpServers: [CoworkMcpServer] = []
     @Published var mcpAgentConfigs: [CoworkMcpAgentConfigGroup] = []
     @Published var selectedMcpIDs: Set<String> = []
@@ -367,9 +369,7 @@ final class CoworkState: ObservableObject {
             conversations = try await conversationList.items
             mcpServers = try await mcpList
             statusMessage = nil
-            if selectedMcpIDs.isEmpty {
-                selectedMcpIDs = Set(mcpServers.filter { $0.enabled }.map(\.id))
-            }
+            applyMcpDefaultsForSelectedProvider()
 
             if selectedProviderID == nil {
                 selectedProviderID = providers.first?.id
@@ -475,7 +475,56 @@ final class CoworkState: ObservableObject {
     }
 
     var effectiveMcpIDs: [String] {
-        activeModelSupportsTools ? Array(selectedMcpIDs) : []
+        guard activeModelSupportsTools else { return [] }
+        return Array(curatedMcpSelection())
+    }
+
+    private func mcpToolProfile() -> CoworkMcpToolProfile {
+        CoworkModelToolSupport.mcpToolProfile(platform: resolvedProviderPlatform() ?? "custom")
+    }
+
+    /// Applies Cursor-style MCP curation: schema-safe servers, tool budget, heavy servers excluded by default on cloud.
+    func curatedMcpSelection(preferDefaults: Bool = false) -> Set<String> {
+        CoworkMcpCurator.curatedIDs(
+            servers: mcpServers,
+            userSelected: selectedMcpIDs,
+            profile: mcpToolProfile(),
+            preferDefaults: preferDefaults
+        )
+    }
+
+    /// Refreshes cached MCP tool lists (when missing) and re-applies curation before send.
+    func prepareMcpSelectionForSend() async {
+        guard activeModelSupportsTools else { return }
+        guard let client else { return }
+
+        let profile = mcpToolProfile()
+        guard profile != .localPermissive else { return }
+
+        let candidates = mcpServers.filter { selectedMcpIDs.contains($0.id) && ($0.tools?.isEmpty != false) }
+        for server in candidates {
+            guard let transport = server.transport else { continue }
+            _ = try? await client.testMcpConnection(
+                CoworkMcpTestConnectionRequest(id: server.id, name: server.name, transport: transport)
+            )
+        }
+        if !candidates.isEmpty {
+            if let refreshed = try? await client.listMcpServers() {
+                mcpServers = refreshed
+            }
+        }
+
+        let before = selectedMcpIDs
+        let after = curatedMcpSelection()
+        selectedMcpIDs = after
+        if let dropped = CoworkMcpCurator.droppedServerSummary(
+            servers: mcpServers,
+            before: before,
+            after: after,
+            profile: profile
+        ) {
+            statusMessage = L10n.mcpCuratedDropNotice(dropped)
+        }
     }
 
     var effectiveSkillIDs: [String] {
@@ -513,8 +562,8 @@ final class CoworkState: ObservableObject {
                             )
                         ),
                         extra: CoworkConversationExtra(
-                            selectedMcpServerIDs: mcp,
-                            skillIDs: skills
+                            selectedMcpServerIDs: mcp.isEmpty ? nil : mcp,
+                            skillIDs: skills.isEmpty ? nil : skills
                         ),
                         mergeExtra: true
                     )
@@ -681,7 +730,7 @@ final class CoworkState: ObservableObject {
             if let tip = page.items.last(where: { $0.isTips })?.errorMessage ?? page.items.last(where: { $0.isTips })?.textBody,
                !tip.isEmpty,
                !( !activeModelSupportsTools && Self.isStaleToolRejection(tip) ) {
-                statusMessage = L10n.localizeError(tip)
+                statusMessage = tip
             } else if !activeModelSupportsTools {
                 statusMessage = nil
             }
@@ -840,13 +889,63 @@ final class CoworkState: ObservableObject {
         }
     }
 
+    /// Infer provider platform for error localization (OpenAI cloud even when provider id is stale).
+    func resolvedProviderPlatform() -> String? {
+        if let platform = selectedProvider?.platform, !platform.isEmpty {
+            return platform
+        }
+        if let providerID = activeConversation?.model?.providerID ?? selectedProviderID,
+           let provider = providers.first(where: { $0.id == providerID }) {
+            return provider.platform
+        }
+        let model = (resolvedModelID ?? selectedModelID ?? "").lowercased()
+        if model.contains("gpt") { return "openai" }
+        if model.contains("claude") { return "anthropic" }
+        if model.contains("gemini") { return "gemini" }
+        if model.contains("grok") || model.contains("xai") { return "xai" }
+        return nil
+    }
+
     func localizedStatus(_ raw: String?) -> String? {
         guard let raw, !raw.isEmpty else { return nil }
         if !activeModelSupportsTools && Self.isStaleToolRejection(raw) { return nil }
-        return L10n.statusLine(raw, chatOnly: !activeModelSupportsTools)
+        let platform = resolvedProviderPlatform()
+        let normalized = Self.normalizeStaleRejectionMessage(raw, platform: platform)
+        return L10n.statusLine(
+            normalized,
+            chatOnly: !activeModelSupportsTools,
+            providerPlatform: platform,
+            mcpCount: selectedEnabledMcpCount
+        )
     }
 
-    func sendFromHome() async {
+    /// Maps cached Ollama-flavoured rejections back to raw tokens for re-localization with cloud platform.
+    static func normalizeStaleRejectionMessage(_ raw: String, platform: String?) -> String {
+        let lower = raw.lowercased()
+        if lower.contains("qwen3.6") || lower.contains("avec ollama") || lower.contains("with ollama") {
+            if platform?.lowercased() != "ollama" {
+                return "model provider rejected the request"
+            }
+        }
+        return raw
+    }
+
+    /// MCP defaults: curated safe subset for cloud BYOK; all enabled servers for local Ollama.
+    func applyMcpDefaultsForSelectedProvider() {
+        guard let provider = selectedProvider else { return }
+        let profile = CoworkModelToolSupport.mcpToolProfile(platform: provider.platform)
+        if CoworkModelToolSupport.prefersCuratedMcp(platform: provider.platform) {
+            if selectedMcpIDs.isEmpty {
+                selectedMcpIDs = CoworkMcpCurator.defaultSelectedIDs(servers: mcpServers, profile: profile)
+            } else {
+                selectedMcpIDs = curatedMcpSelection()
+            }
+        } else if selectedMcpIDs.isEmpty {
+            selectedMcpIDs = Set(mcpServers.filter(\.enabled).map(\.id))
+        }
+    }
+
+    func sendFromHome(retryWithoutMcp: Bool = false) async {
         let text = promptText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else {
             statusMessage = L10n.emptyMessage
@@ -902,8 +1001,11 @@ final class CoworkState: ObservableObject {
 
         do {
             if availableSkills.isEmpty { await refreshSkills() }
+            if !retryWithoutMcp, activeModelSupportsTools {
+                await prepareMcpSelectionForSend()
+            }
             let workspace = workspacePath.trimmingCharacters(in: .whitespacesAndNewlines)
-            let mcpIDs = effectiveMcpIDs
+            let mcpIDs = retryWithoutMcp ? [] : effectiveMcpIDs
             let skillIDs = effectiveSkillIDs
             let supportsTools = CoworkModelToolSupport.supportsTools(
                 modelID: model,
@@ -941,24 +1043,42 @@ final class CoworkState: ObservableObject {
                     )
             )
             let conversation = try await client.createConversation(request)
-            let files = attachmentPaths
+            let attachmentPathsToSend = attachmentPaths
+            let enriched = enrichMessageWithDocuments(text, attachmentPaths: attachmentPathsToSend)
+            let fileRefs = activeModelSupportsTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
             promptText = ""
             attachmentPaths = []
+            indexedAttachmentPaths = []
             await refreshConversations()
             activeConversationID = conversation.id
             activeConversation = conversation
-            let result = try await client.sendMessage(conversationID: conversation.id, input: text, files: files)
+            await loadConversationDetail(conversation.id)
+            if !attachmentPathsToSend.isEmpty {
+                await ingestAttachments(attachmentPathsToSend)
+            }
+            let result = try await client.sendMessage(conversationID: conversation.id, input: enriched, files: fileRefs)
             activeTurnID = result.turnID
             statusMessage = nil
             isStreaming = true
             await loadMessages(for: conversation.id)
             await refreshWorkspace()
         } catch {
-            statusMessage = L10n.localizeError(error.localizedDescription)
+            let raw = error.localizedDescription
+            if !retryWithoutMcp, Self.isStaleToolRejection(raw), !effectiveMcpIDs.isEmpty {
+                selectedMcpIDs = []
+                await applyToolCapabilityProfile()
+                if activeConversationID != nil {
+                    await sendInConversation(text, retryWithoutMcp: true)
+                } else {
+                    await sendFromHome(retryWithoutMcp: true)
+                }
+                return
+            }
+            statusMessage = raw
         }
     }
 
-    func sendInConversation(_ text: String) async {
+    func sendInConversation(_ text: String, retryWithoutMcp: Bool = false) async {
         guard let client, let conversationID = activeConversationID else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
@@ -973,17 +1093,34 @@ final class CoworkState: ObservableObject {
             if preferredLocalBackend == .mlx, let mlxModel = resolvedHomeModelID {
                 try await ensureMLXReadyForSend(repoID: mlxModel)
             }
+            if !retryWithoutMcp, activeModelSupportsTools {
+                await prepareMcpSelectionForSend()
+            }
             await applyToolCapabilityProfile()
             try? await client.ensureRuntime(conversationID: conversationID)
-            let files = composerAttachments
-            let result = try await client.sendMessage(conversationID: conversationID, input: trimmed, files: files)
+            let attachmentPathsToSend = composerAttachments
+            let enriched = enrichMessageWithDocuments(trimmed, attachmentPaths: attachmentPathsToSend)
+            let fileRefs = activeModelSupportsTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
+            composerAttachments = []
+            indexedAttachmentPaths = []
+            if !attachmentPathsToSend.isEmpty {
+                await ingestAttachments(attachmentPathsToSend)
+            }
+            let result = try await client.sendMessage(conversationID: conversationID, input: enriched, files: fileRefs)
             activeTurnID = result.turnID
             statusMessage = nil
-            composerAttachments = []
             isStreaming = true
             await loadMessages(for: conversationID)
+            await refreshWorkspace()
         } catch {
-            statusMessage = error.localizedDescription
+            let raw = error.localizedDescription
+            if !retryWithoutMcp, Self.isStaleToolRejection(raw), !effectiveMcpIDs.isEmpty {
+                selectedMcpIDs = []
+                await applyToolCapabilityProfile()
+                await sendInConversation(trimmed, retryWithoutMcp: true)
+                return
+            }
+            statusMessage = raw
         }
     }
 
@@ -1101,6 +1238,7 @@ final class CoworkState: ObservableObject {
         if activeConversationID != nil, let providerID = selectedProviderID {
             await switchActiveConversationModel(providerID: providerID, model: name)
         }
+        applyMcpDefaultsForSelectedProvider()
     }
 
     func selectCloudModel(providerID: String, model: String) async {
@@ -1108,6 +1246,7 @@ final class CoworkState: ObservableObject {
         selectedProviderID = providerID
         selectedModelID = model
         statusMessage = nil
+        applyMcpDefaultsForSelectedProvider()
         if activeConversationID != nil {
             await switchActiveConversationModel(providerID: providerID, model: model)
         }
@@ -1247,6 +1386,19 @@ final class CoworkState: ObservableObject {
             case .composer:
                 composerAttachments.append(contentsOf: paths)
             }
+            if let last = paths.last {
+                previewLocalAttachment(last)
+            }
+            indexAttachmentPaths(paths)
+        }
+    }
+
+    private func indexAttachmentPaths(_ paths: [String]) {
+        for path in paths {
+            let url = URL(fileURLWithPath: path)
+            if CoworkDocumentTextExtractor.extractText(from: url) != nil {
+                indexedAttachmentPaths.insert(path)
+            }
         }
     }
 
@@ -1256,18 +1408,151 @@ final class CoworkState: ObservableObject {
         switch target {
         case .home:
             attachmentPaths.removeAll { $0 == path }
+            indexedAttachmentPaths.remove(path)
         case .composer:
             composerAttachments.removeAll { $0 == path }
+            indexedAttachmentPaths.remove(path)
         }
+    }
+
+    /// Prepends extracted document text so chat-only models can answer (Murmura-style indexing).
+    func enrichMessageWithDocuments(_ text: String, attachmentPaths: [String]) -> String {
+        var paths = attachmentPaths
+        let workspaceMatches = workspaceDocumentPaths(matching: text)
+        paths.append(contentsOf: workspaceMatches)
+        paths = Array(Set(paths))
+
+        guard !paths.isEmpty else { return text }
+
+        var blocks: [String] = []
+        var indexed = Set<String>()
+        var totalChars = 0
+        let maxTotal = CoworkDocumentTextExtractor.maxCharacters
+
+        for path in paths {
+            let url = URL(fileURLWithPath: path)
+            guard let content = CoworkDocumentTextExtractor.extractText(from: url)?
+                .trimmingCharacters(in: .whitespacesAndNewlines),
+                  !content.isEmpty else { continue }
+
+            let name = (path as NSString).lastPathComponent
+            let remaining = maxTotal - totalChars
+            guard remaining > 400 else { break }
+            let clipped = content.count > remaining
+                ? String(content.prefix(remaining)) + "\n… [truncated]"
+                : content
+            blocks.append("--- \(name) ---\n\(clipped)")
+            totalChars += clipped.count
+            indexed.insert(path)
+        }
+
+        indexedAttachmentPaths.formUnion(indexed)
+        guard !blocks.isEmpty else { return text }
+
+        return CoworkDocumentContextParser.wrapDocumentBlocks(blocks, userText: text)
+    }
+
+    /// Workspace PDF/DOCX files whose names match tokens in the user message (e.g. "sophie" → CV Sophie).
+    func workspaceDocumentPaths(matching query: String) -> [String] {
+        let workspace = activeConversation?.workspacePath ?? (workspacePath.isEmpty ? nil : workspacePath)
+        guard let workspace, !workspace.isEmpty else { return [] }
+        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: workspace) else { return [] }
+
+        let docExtensions = Set(["pdf", "docx", "rtf", "rtfd", "txt", "md", "markdown"])
+        let docs = entries.compactMap { name -> String? in
+            let ext = (name as NSString).pathExtension.lowercased()
+            guard docExtensions.contains(ext) else { return nil }
+            return (workspace as NSString).appendingPathComponent(name)
+        }
+        guard !docs.isEmpty else { return [] }
+
+        let lower = query.lowercased()
+        let bulkCV = ["cv", "resume", "résumé", "curriculum", "candidat", "gens", "people"]
+            .contains(where: { lower.contains($0) })
+        if bulkCV {
+            return Array(docs.prefix(8))
+        }
+
+        let tokens = lower
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
+            .map(String.init)
+            .filter { $0.count >= 3 }
+
+        guard !tokens.isEmpty else { return [] }
+
+        return docs.filter { path in
+            let name = (path as NSString).lastPathComponent.lowercased()
+            return tokens.contains(where: { name.contains($0) })
+        }
+    }
+
+    /// Copies picker attachments into the conversation workspace and refreshes the file list.
+    func ingestAttachments(_ paths: [String]) async {
+        guard let client, !paths.isEmpty else { return }
+        let workspace = activeConversation?.workspacePath ?? (workspacePath.isEmpty ? nil : workspacePath)
+        guard let workspace, !workspace.isEmpty else { return }
+        do {
+            let result = try await client.copyFilesToWorkspace(filePaths: paths, workspace: workspace)
+            if let failed = result.failedFiles, !failed.isEmpty {
+                let names = failed.map { "\(($0.path as NSString).lastPathComponent): \($0.message)" }.joined(separator: "; ")
+                statusMessage = L10n.attachmentsCopyPartial(names)
+            }
+            await refreshWorkspace()
+            if let first = result.copiedFiles?.first ?? paths.first {
+                let title = (first as NSString).lastPathComponent
+                await openPreview(path: (first as NSString).lastPathComponent, workspace: workspace, title: title)
+            }
+        } catch {
+            CitadelLog.debug(CitadelLog.app, "Attachment ingest failed: \(error.localizedDescription)")
+        }
+    }
+
+    /// Preview a file from the macOS picker before it is copied into the workspace.
+    func previewLocalAttachment(_ path: String) {
+        let title = (path as NSString).lastPathComponent
+        let ext = (path as NSString).pathExtension.lowercased()
+        let imageExtensions = ["png", "jpg", "jpeg", "gif", "webp", "svg"]
+        let textExtensions = ["md", "markdown", "txt", "json", "swift", "py", "js", "ts", "html", "css", "sh", "yml", "yaml", "xml", "csv"]
+
+        if imageExtensions.contains(ext), let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+            upsertPreview(CoworkPreviewItem(
+                id: path,
+                title: title,
+                path: path,
+                content: "",
+                contentType: .image,
+                imageBase64: data.base64EncodedString()
+            ))
+            return
+        }
+        if ext == "pdf", let data = try? Data(contentsOf: URL(fileURLWithPath: path)) {
+            upsertPreview(CoworkPreviewItem(
+                id: path,
+                title: title,
+                path: path,
+                content: data.base64EncodedString(),
+                contentType: .pdf,
+                imageBase64: nil
+            ))
+            return
+        }
+        if textExtensions.contains(ext), let text = try? String(contentsOfFile: path, encoding: .utf8) {
+            let type: CoworkPreviewContentType
+            if ext == "html" || ext == "htm" { type = .html }
+            else if ext == "md" || ext == "markdown" { type = .markdown }
+            else { type = .code }
+            upsertPreview(CoworkPreviewItem(id: path, title: title, path: path, content: text, contentType: type, imageBase64: nil))
+            return
+        }
+        CoworkQuickLookController.shared.present(paths: [path])
     }
 
     func refreshMcpServers() async {
         guard let client else { return }
         do {
             mcpServers = try await client.listMcpServers()
-            if selectedMcpIDs.isEmpty {
-                selectedMcpIDs = Set(mcpServers.filter { $0.enabled }.map(\.id))
-            } else {
+            applyMcpDefaultsForSelectedProvider()
+            if !selectedMcpIDs.isEmpty {
                 pruneMcpSelection()
             }
         } catch {

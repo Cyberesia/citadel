@@ -38,8 +38,8 @@ security find-identity -v -p codesigning
 ## Direct release
 
 ```bash
-export VERSION=0.1.0
-export BUILD_NUMBER=1
+export VERSION=0.1.1
+export BUILD_NUMBER=2
 # TEAM_ID is read from Scripts/signing.local.env
 # Optional — resolved automatically from the keychain if unset:
 # export CODESIGN_IDENTITY="Developer ID Application: Your Org (YOUR_TEAM_ID)"

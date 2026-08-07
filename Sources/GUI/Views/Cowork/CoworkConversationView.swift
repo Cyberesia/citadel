@@ -67,7 +67,7 @@ struct CoworkConversationView: View {
             if !cowork.activeModelSupportsTools && CoworkState.isStaleToolRejection(tip) {
                 return nil
             }
-            return L10n.statusLine(tip, chatOnly: !cowork.activeModelSupportsTools)
+            return L10n.statusLine(tip, chatOnly: !cowork.activeModelSupportsTools, providerPlatform: cowork.selectedProvider?.platform, mcpCount: cowork.selectedEnabledMcpCount)
         }
         return nil
     }
@@ -300,7 +300,10 @@ struct CoworkConversationView: View {
         let isLive = segment != nil && cowork.isStreaming
 
         if message.isUser {
-            CoworkMessageBubble(message: message, text: message.textBody, isUser: true)
+            CoworkUserMessageContent(
+                text: message.textBody,
+                isShimmering: cowork.isStreaming && isLatestUserMessage(message)
+            )
         } else if isLive || !message.textBody.isEmpty {
             HStack {
                 CoworkAssistantMessageContent(
@@ -341,5 +344,12 @@ struct CoworkConversationView: View {
 
     private var composer: some View {
         CoworkSessionComposer(text: $composerText)
+    }
+
+    private func isLatestUserMessage(_ message: CoworkMessage) -> Bool {
+        guard let latest = cowork.messages.last(where: \.isUser) else { return false }
+        let currentID = message.msgID ?? message.id
+        let latestID = latest.msgID ?? latest.id
+        return currentID != nil && currentID == latestID
     }
 }

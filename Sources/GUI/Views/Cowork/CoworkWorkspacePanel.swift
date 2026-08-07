@@ -199,7 +199,8 @@ struct CoworkWorkspacePanel: View {
         let ext = (entry.name as NSString).pathExtension.lowercased()
         let textTypes = ["md", "markdown", "txt", "json", "swift", "py", "js", "ts", "html", "css", "sh", "yml", "yaml", "xml", "csv"]
         let imageTypes = ["png", "jpg", "jpeg", "gif", "webp", "svg"]
-        return textTypes.contains(ext) || imageTypes.contains(ext)
+        let docTypes = ["pdf"]
+        return textTypes.contains(ext) || imageTypes.contains(ext) || docTypes.contains(ext)
     }
 
     private func absolutePath(_ entry: CoworkFSEntry) -> String {

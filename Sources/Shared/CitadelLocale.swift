@@ -95,7 +95,10 @@ enum L10n {
     static var send: String { t("Send", "Envoyer") }
     static var sendHelp: String { t("Send reply (Return)", "Envoyer (Entrée)") }
     static var attach: String { t("Attach", "Joindre") }
-    static var attachHelp: String { t("Add files to send with this message", "Ajouter des fichiers à envoyer") }
+    static var attachHelp: String {
+        t("Attach PDFs, Word, images — indexed into the workspace and sent to the agent",
+          "Joindre PDF, Word, images — indexés dans l'espace de travail et envoyés à l'agent")
+    }
     static var replyPlaceholder: String { t("Reply to Keep…", "Répondre à Keep…") }
     static var messagePlaceholder: String { t("Ask Keep…", "Demander à Keep…") }
     static var message: String { t("Message", "Message") }
@@ -293,16 +296,34 @@ enum L10n {
           "Votre dossier si défini sur Demander ; sinon le bac à sable Keep.")
     }
     static var workspaceEmpty: String {
-        t("No user files yet. Pick a folder on Home before sending, or wait for the agent to create output.",
-          "Aucun fichier. Choisissez un dossier sur l'accueil ou attendez que l'agent crée des fichiers.")
+        t("No files yet. Attach PDFs or documents with Joindre — they are indexed here when you send. Or pick a folder on Home for the agent to work in.",
+          "Aucun fichier. Joignez un PDF ou un document avec Joindre — il sera indexé ici à l'envoi. Ou choisissez un dossier sur l'accueil.")
     }
 
     // MARK: - Preview
 
     static var preview: String { t("Preview", "Aperçu") }
     static var previewEmpty: String {
-        t("Select a file from the workspace or wait for the agent to generate output.",
-          "Sélectionnez un fichier ou attendez la sortie de l'agent.")
+        t("Click an attached file chip or a workspace file on the left to preview it here. The agent's output also appears here.",
+          "Cliquez sur une pièce jointe ou un fichier de l'espace de travail (à gauche) pour l'afficher ici. La sortie de l'agent apparaît aussi ici.")
+    }
+    static var previewAttachment: String {
+        t("Click to preview in the Preview panel", "Cliquer pour afficher dans Aperçu")
+    }
+    static func attachmentsCopyPartial(_ detail: String) -> String {
+        t("Some attachments could not be copied: \(detail)", "Certaines pièces jointes n'ont pas pu être copiées : \(detail)")
+    }
+    static var documentContextHeader: String {
+        t("Document excerpts attached for this message:", "Extraits de documents joints pour ce message :")
+    }
+    static var attachmentIndexed: String {
+        t("Indexed — text will be sent to the model", "Indexé — le texte sera envoyé au modèle")
+    }
+    static var documentIndexed: String {
+        t("Indexed document", "Document indexé")
+    }
+    static var documentIndexing: String {
+        t("Indexing…", "Indexation…")
     }
     static var openInApp: String { t("Open in default app", "Ouvrir dans l'app par défaut") }
     static var quickLook: String { t("Quick Look", "Coup d'œil") }
@@ -856,15 +877,14 @@ enum L10n {
     static var chatOnlyPresetContext: String {
         t(
             """
-            You are in chat-only mode. You cannot execute tools, read files, run shell commands, or use MCP servers. \
-            Answer from the conversation context only. If the user asks for actions that require tools, explain politely \
-            that you are in chat-only mode on this model and cannot perform those actions.
+            You are in chat-only mode. You cannot execute tools, run shell commands, or use MCP servers. \
+            When the user message includes document excerpts (between --- filename --- markers), answer from that content. \
+            If no document text is included and the user asks about file contents, say you need them to attach the file or use a tool-capable model.
             """,
             """
-            Tu es en mode conversation seule. Tu ne peux pas exécuter d'outils, lire des fichiers, lancer de commandes shell \
-            ni utiliser de serveurs MCP. Réponds uniquement à partir du contexte de la conversation. Si l'utilisateur \
-            demande des actions nécessitant des outils, explique poliment que tu es en mode chat seul sur ce modèle et \
-            que tu ne peux pas les réaliser.
+            Tu es en mode conversation seule. Tu ne peux pas exécuter d'outils, lancer de commandes shell ni utiliser de serveurs MCP. \
+            Quand le message inclut des extraits de documents (entre marqueurs --- nom de fichier ---), réponds à partir de ce contenu. \
+            Sans texte de document inclus, dis qu'il faut joindre le fichier ou utiliser un modèle compatible outils.
             """
         )
     }
@@ -891,16 +911,20 @@ enum L10n {
 
     // MARK: - Errors (backend + local)
 
-    static func localizeError(_ raw: String) -> String {
+    static func localizeError(_ raw: String, providerPlatform: String? = nil) -> String {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return raw }
 
         let lower = trimmed.lowercased()
+        if (lower.contains("avec ollama") || lower.contains("with ollama") || lower.contains("qwen3.6"))
+            && providerPlatform?.lowercased() != "ollama" {
+            return providerRejectedError(platform: providerPlatform)
+        }
         if lower.contains("model provider rejected the request") {
-            return providerRejectedError
+            return providerRejectedError(platform: providerPlatform)
         }
         if lower.contains("provider rejected") || lower.contains("rejected the request") {
-            return providerRejectedError
+            return providerRejectedError(platform: providerPlatform)
         }
         if lower.contains("model was not found") || lower.contains("model not found") {
             return t("The selected model was not found. Choose an available model and retry.",
@@ -915,6 +939,12 @@ enum L10n {
                      "Le contexte est trop volumineux pour ce modèle. Réduisez le message ou l'historique.")
         }
         if lower.contains("tool schema") || lower.contains("invalid tool") {
+            if providerPlatform?.lowercased() != "ollama" {
+                return t(
+                    "The provider rejected an MCP tool schema. Citadel curates schemas automatically — try fewer MCP servers (avoid Chrome DevTools on cloud) or retry.",
+                    "Le fournisseur a rejeté un schéma d'outil MCP. Citadel filtre les schémas — essayez moins de serveurs MCP (évitez Chrome DevTools en cloud) ou réessayez."
+                )
+            }
             return t("The model rejected a tool definition. Try a model with tool support (e.g. qwen3.6).",
                      "Le modèle a rejeté une définition d'outil. Essayez un modèle compatible outils (ex. qwen3.6).")
         }
@@ -929,16 +959,47 @@ enum L10n {
         return trimmed
     }
 
-    static var providerRejectedError: String {
-        t(
-            "The model provider rejected the request. For Ollama, use a model with tool support (e.g. qwen3.6:latest). Simpler models like Gemma may fail when tools or MCP are enabled.",
-            "Le fournisseur a rejeté la requête. Avec Ollama, utilisez un modèle compatible outils (ex. qwen3.6:latest). Les modèles simples comme Gemma échouent souvent avec les outils ou MCP activés."
+    static func providerRejectedError(platform: String? = nil) -> String {
+        if platform?.lowercased() == "ollama" {
+            return t(
+                "The model provider rejected the request. For Ollama, use a model with tool support (e.g. qwen3.6:latest). Simpler models like Gemma may fail when tools or MCP are enabled.",
+                "Le fournisseur a rejeté la requête. Avec Ollama, utilisez un modèle compatible outils (ex. qwen3.6:latest). Les modèles simples comme Gemma échouent souvent avec les outils ou MCP activés."
+            )
+        }
+        return t(
+            "The cloud provider rejected the request. Citadel curates MCP tool schemas (Cursor-style), but some servers still expose incompatible definitions. The model (GPT, Claude, Gemini…) is usually fine.",
+            "Le fournisseur cloud a rejeté la requête. Citadel filtre les schémas MCP (style Cursor), mais certains serveurs exposent encore des définitions incompatibles. Le modèle (GPT, Claude, Gemini…) est en général OK."
         )
     }
 
-    static var providerRejectedHint: String {
-        t("Suggestion: switch to qwen3.6 or disable extra MCP servers, then retry.",
-          "Suggestion : passez à qwen3.6 ou désactivez les serveurs MCP, puis réessayez.")
+    static func providerRejectedHint(platform: String? = nil, mcpCount: Int = 0) -> String {
+        if platform?.lowercased() == "ollama" {
+            return t(
+                "Suggestion: switch to qwen3.6 or disable extra MCP servers, then retry.",
+                "Suggestion : passez à qwen3.6 ou désactivez les serveurs MCP, puis réessayez."
+            )
+        }
+        if mcpCount > 0 {
+            return t(
+                "Suggestion: disable heavy MCP servers (e.g. Chrome DevTools) or set MCP · 0, then retry. Citadel auto-retries without MCP when needed.",
+                "Suggestion : désactivez les serveurs MCP lourds (ex. Chrome DevTools) ou passez MCP · 0, puis réessayez. Citadel réessaie sans MCP si besoin."
+            )
+        }
+        return t(
+            "Check the API key, model name, and billing on the provider side.",
+            "Vérifiez la clé API, le nom du modèle et la facturation côté fournisseur."
+        )
+    }
+
+    static var providerRejectedError: String { providerRejectedError(platform: nil) }
+
+    static var providerRejectedHint: String { providerRejectedHint(platform: nil, mcpCount: 0) }
+
+    static func mcpCuratedDropNotice(_ serverNames: String) -> String {
+        t(
+            "Some MCP servers were skipped for this cloud model (incompatible or too many tools): \(serverNames).",
+            "Certains serveurs MCP ont été ignorés pour ce modèle cloud (schémas incompatibles ou trop d'outils) : \(serverNames)."
+        )
     }
 
     // MARK: - Fortress (network)
@@ -1342,7 +1403,12 @@ enum L10n {
     static var now: String { t("now", "maintenant") }
 
     /// User-facing status line (localized errors + hints).
-    static func statusLine(_ raw: String?, chatOnly: Bool = false) -> String? {
+    static func statusLine(
+        _ raw: String?,
+        chatOnly: Bool = false,
+        providerPlatform: String? = nil,
+        mcpCount: Int = 0
+    ) -> String? {
         guard let raw, !raw.isEmpty else { return nil }
         if chatOnly {
             let lower = raw.lowercased()
@@ -1354,11 +1420,16 @@ enum L10n {
                 return nil
             }
         }
-        let localized = localizeError(raw)
-        if localized == providerRejectedError, !chatOnly {
-            return localized + "\n" + providerRejectedHint
+        let localized = localizeError(raw, providerPlatform: providerPlatform)
+        let rejected = providerRejectedError(platform: providerPlatform)
+        if localized == rejected, !chatOnly {
+            var line = localized + "\n" + providerRejectedHint(platform: providerPlatform, mcpCount: mcpCount)
+            if !raw.lowercased().contains(localized.lowercased()) {
+                line += "\n" + raw
+            }
+            return line
         }
-        if localized == providerRejectedError, chatOnly {
+        if localized == rejected, chatOnly {
             return nil
         }
         return localized

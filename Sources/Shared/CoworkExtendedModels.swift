@@ -424,6 +424,38 @@ struct CoworkMcpOAuthLoginResponse: Decodable {
     let error: String?
 }
 
+// MARK: - FS copy (attachment ingest)
+
+struct CoworkFSCopyRequest: Encodable {
+    let filePaths: [String]
+    let workspace: String
+    var sourceRoot: String?
+
+    enum CodingKeys: String, CodingKey {
+        case workspace
+        case filePaths = "file_paths"
+        case sourceRoot = "source_root"
+    }
+}
+
+struct CoworkFSCopyResult: Decodable {
+    let copiedFiles: [String]?
+    let failedFiles: [CoworkFSCopyFailure]?
+
+    enum CodingKeys: String, CodingKey {
+        case copiedFiles = "copied_files"
+        case failedFiles = "failed_files"
+    }
+}
+
+struct CoworkFSCopyFailure: Decodable {
+    let path: String
+    let reason: String?
+    let error: String?
+
+    var message: String { reason ?? error ?? "copy failed" }
+}
+
 // MARK: - Snapshot
 
 struct CoworkFSSnapshotPathRequest: Encodable {
