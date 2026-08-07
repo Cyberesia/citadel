@@ -9,8 +9,9 @@ extension CoworkState {
         do {
             try await client.resetConversation(id: id, keepWorkspace: keepWorkspace)
             messages = []
-            liveStreamSegments = [:]
+            clearLiveStreamSegments()
             thinkingParsers = [:]
+            resetAnswerTypewriters()
             lastTokenUsage = nil
             conversationUsage = CoworkConversationUsageStats()
             await loadMessages(for: id)

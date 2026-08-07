@@ -9,8 +9,8 @@ struct CoworkConversationView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            if let notice = cowork.toolsDisabledNotice {
-                CoworkInfoBanner(message: notice)
+            if cowork.toolsDisabledNotice != nil {
+                CoworkToolsDisabledBanner()
                     .padding(.horizontal, 16)
                     .padding(.bottom, 8)
             }
@@ -42,12 +42,18 @@ struct CoworkConversationView: View {
                 CoworkPreviewPanel()
                     .layoutPriority(1)
             }
-            CoworkConfirmationSheet()
+            // Permission card is hosted globally in CitadelShellView so it survives tab switches.
             composer
         }
         .onAppear {
             if let id = cowork.activeConversationID {
                 Task {
+                    // Avoid clobbering an in-flight direct chat: detail refresh is enough while streaming.
+                    if cowork.isStreaming || cowork.isSending {
+                        await cowork.loadConversationDetail(id)
+                        await cowork.refreshConfirmations()
+                        return
+                    }
                     await cowork.loadConversationDetail(id)
                     await cowork.loadMessages(for: id)
                     await cowork.refreshWorkspace()
@@ -85,10 +91,15 @@ struct CoworkConversationView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 titleView
-                if cowork.isStreaming {
-                    Text(L10n.agentWorking)
-                        .font(.ps(10))
-                        .foregroundStyle(PrismTheme.accentSecondary)
+                if cowork.isStreaming || cowork.activeConfirmation != nil {
+                    PrismRollingShimmerText(
+                        text: cowork.agentActivityMessage,
+                        font: .ps(10),
+                        color: PrismTheme.accentSecondary,
+                        lineLimit: 1,
+                        shimmer: true
+                    )
+                    .frame(maxWidth: 320, alignment: .leading)
                 }
             }
 
@@ -242,14 +253,11 @@ struct CoworkConversationView: View {
     }
 
     private func scrollToBottom(proxy: ScrollViewProxy) {
+        // No animation while streaming — animated scroll every tick destroys FPS vs Murmura.
         if let streamID = streamingOnlyIDs.last {
-            withAnimation(PrismMotion.quick) {
-                proxy.scrollTo("stream-\(streamID)", anchor: .bottom)
-            }
+            proxy.scrollTo("stream-\(streamID)", anchor: .bottom)
         } else if let last = displayMessages.last {
-            withAnimation(PrismMotion.quick) {
-                proxy.scrollTo(last.stableID, anchor: .bottom)
-            }
+            proxy.scrollTo(last.stableID, anchor: .bottom)
         }
     }
 
@@ -312,7 +320,7 @@ struct CoworkConversationView: View {
                     rawText: message.textBody,
                     isStreaming: isLive,
                     segment: segment,
-                    supportsImplicitLeadingThinking: cowork.supportsImplicitLeadingThinking,
+                    supportsImplicitLeadingThinking: false,
                     onPersistThinkingExpanded: { expanded in
                         cowork.setThinkingCardExpanded(msgID: msgID, expanded: expanded)
                     }
@@ -332,9 +340,9 @@ struct CoworkConversationView: View {
             CoworkAssistantMessageContent(
                 msgID: msgID,
                 rawText: "",
-                isStreaming: true,
+                isStreaming: cowork.isStreaming || cowork.liveStreamSegments[msgID] != nil,
                 segment: cowork.liveStreamSegments[msgID],
-                supportsImplicitLeadingThinking: cowork.supportsImplicitLeadingThinking,
+                supportsImplicitLeadingThinking: false,
                 onPersistThinkingExpanded: { expanded in
                     cowork.setThinkingCardExpanded(msgID: msgID, expanded: expanded)
                 }

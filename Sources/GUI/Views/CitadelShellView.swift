@@ -8,6 +8,7 @@ struct CitadelShellView: View {
     @EnvironmentObject var fortress: FortressViewModel
     @EnvironmentObject var router: CitadelShellRouter
     @AppStorage("citadel.locale") private var localeRaw = CitadelLocale.current.rawValue
+    @AppStorage("citadel.fortress.summaryBarVisible") private var summaryBarVisible = true
     @State private var palette: ExtractedPalette = .defaultPalette
 
     var body: some View {
@@ -27,11 +28,46 @@ struct CitadelShellView: View {
                 }
 
                 if router.section == .fortress && router.fortressMode == .activity {
-                    FortressSummaryBar(vm: fortress)
-                        .environmentObject(state)
+                    if summaryBarVisible {
+                        FortressSummaryBar(vm: fortress, onHide: { summaryBarVisible = false })
+                            .environmentObject(state)
+                            .zIndex(100)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else {
+                        Button {
+                            summaryBarVisible = true
+                        } label: {
+                            Label(L10n.showSummaryBar, systemImage: "eye.fill")
+                                .labelStyle(.titleAndIcon)
+                                .font(.ps(11, weight: .semibold))
+                                .foregroundStyle(PrismTheme.textSecondary)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 10)
+                                .prismGlass(cornerRadius: 999, padding: 0)
+                        }
+                        .buttonStyle(PrismHandButtonStyle())
+                        .padding(.bottom, 16)
+                        .help(L10n.showSummaryBar)
+                        .accessibilityLabel(L10n.showSummaryBar)
                         .zIndex(100)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                }
+
+                if cowork.activeConfirmation != nil {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
+                        CoworkConfirmationSheet()
+                            .environmentObject(cowork)
+                            .environmentObject(router)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                    .zIndex(300)
+                    .animation(.spring(response: 0.34, dampingFraction: 0.86), value: cowork.activeConfirmation?.callID)
                 }
             }
+            .animation(.easeInOut(duration: 0.22), value: summaryBarVisible)
             .onAppear {
                 updatePalette()
             }
@@ -218,6 +254,10 @@ struct CitadelShellView: View {
         }
         .sheet(isPresented: $cowork.showMcpSheet) {
             CoworkMcpSettingsView(isModal: true)
+                .environmentObject(cowork)
+        }
+        .sheet(isPresented: $cowork.showModelSwitchSheet) {
+            CoworkModelSwitchSheet()
                 .environmentObject(cowork)
         }
         .sheet(isPresented: $cowork.showKeepHelp) {

@@ -13,11 +13,16 @@ final class CoworkState: ObservableObject {
     @Published var providers: [CoworkProvider] = []
     @Published var conversations: [CoworkConversation] = []
     @Published var messages: [CoworkMessage] = []
-    @Published var liveStreamSegments: [String: CoworkLiveStreamSegment] = [:]
+    /// Live stream segments — not @Published; UI refreshes via `streamTick` (throttled) for Murmura-class FPS.
+    private(set) var liveStreamSegments: [String: CoworkLiveStreamSegment] = [:]
+    /// Reasoning kept after stream end so the card collapses instead of disappearing.
+    @Published var archivedThinkingByMsgID: [String: CoworkArchivedThinking] = [:]
     /// Tool calls streamed live over WebSocket, keyed by msg_id (rendered before the persisted message exists).
     @Published var liveToolCalls: [String: [CoworkNormalizedToolCall]] = [:]
     @Published var liveToolOrder: [String] = []
     @Published private(set) var streamTick = 0
+    private var lastStreamUIPublish = Date.distantPast
+    private var streamUIFlushTask: Task<Void, Never>?
 
     @Published var selectedAssistantID: String = "cowork"
     @Published var selectedProviderID: String?
@@ -46,9 +51,11 @@ final class CoworkState: ObservableObject {
     /// Increment to move keyboard focus into the active composer (Murmura-style).
     @Published var composerFocusGeneration = 0
     @Published var mlxRuntimeInstallMessage: String?
+    @Published private(set) var isBootstrapComplete = false
     @Published var showProviderSheet = false
     @Published var showProvidersManager = false
     @Published var showMcpSheet = false
+    @Published var showModelSwitchSheet = false
 
     @Published var attachmentPaths: [String] = []
     @Published var composerAttachments: [String] = []
@@ -65,6 +72,8 @@ final class CoworkState: ObservableObject {
     @Published var selectedPreviewID: String?
     @Published var pendingConfirmations: [CoworkConfirmation] = []
     @Published var activeConfirmation: CoworkConfirmation?
+    /// Survives `closeConversation()` so Allow/Deny still works after leaving the chat.
+    @Published private(set) var confirmationAnchorConversationID: String?
 
     @Published var lastTokenUsage: CoworkTokenUsage?
     @Published var conversationUsage = CoworkConversationUsageStats()
@@ -101,12 +110,121 @@ final class CoworkState: ObservableObject {
 
     private static let persistedProviderIDKey = "cowork.selectedProviderID"
     private static let persistedModelIDKey = "cowork.selectedModelID"
+    private static let mcpUserConfiguredKey = "cowork.mcp.userConfigured"
+    private static let modelPickerTabKey = "cowork.modelPickerTab"
+    private var mlxWarmGeneration = 0
+
+    var isCloudModelSelection: Bool {
+        guard let providerID = selectedProviderID else { return false }
+        return cloudProviders.contains { $0.id == providerID }
+    }
+
+    /// True when cloud is active in memory or was the last persisted home-screen choice.
+    var prefersCloudModelSelection: Bool {
+        if isCloudModelSelection { return true }
+        return persistedPrefersCloudModel()
+    }
+
+    private func persistedPrefersCloudModel() -> Bool {
+        if UserDefaults.standard.string(forKey: Self.modelPickerTabKey) == CoworkModelPickerTab.cloud.rawValue {
+            return true
+        }
+        guard let providerID = UserDefaults.standard.string(forKey: Self.persistedProviderIDKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+              !providerID.isEmpty else {
+            return false
+        }
+        return cloudProviders.contains { $0.id == providerID }
+    }
+
+    /// Background MLX warm/sync must not run or overwrite selection while cloud is preferred.
+    func shouldDeferLocalMLXActivation() -> Bool {
+        prefersCloudModelSelection
+    }
+
+    func waitForBootstrapIfNeeded() async {
+        if isBootstrapComplete { return }
+        for _ in 0..<120 {
+            if isBootstrapComplete { return }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+    }
+
+    private func cancelInFlightMLXWarm() {
+        mlxWarmGeneration += 1
+        mlxRuntimeInstallMessage = nil
+    }
+
+    /// Agent tool/MCP pipeline only when the user enabled MCP or Skills.
+    /// Otherwise Prefer Murmura-style direct chat (Ollama `think: true` / cloud HTTP).
+    func shouldUseAgentToolPipeline(mcpIDs: [String]? = nil, skillIDs: [String]? = nil) -> Bool {
+        guard activeModelSupportsTools else { return false }
+        let mcp = mcpIDs ?? effectiveMcpIDs
+        let skills = skillIDs ?? effectiveSkillIDs
+        return !mcp.isEmpty || !skills.isEmpty
+    }
+
+    private func isLocalMLXProvider(_ provider: CoworkProvider) -> Bool {
+        let base = provider.baseURL.lowercased()
+        return base.contains(":8765") || base.contains("mlx")
+    }
+
+    private func conversationUsesMLX(_ conversation: CoworkConversation?) -> Bool {
+        guard let ref = conversation?.model,
+              let provider = providers.first(where: { $0.id == ref.providerID }) else {
+            return false
+        }
+        return isLocalMLXProvider(provider)
+    }
+
+    func markMcpUserConfigured() {
+        UserDefaults.standard.set(true, forKey: Self.mcpUserConfiguredKey)
+    }
+
+    /// Cloud BYOK without MCP/skills — bypasses CoworkCore ACP agent (required for gpt-5.6-luna and other SOTA models).
+    var usesDirectCloudChat: Bool {
+        guard !shouldUseAgentToolPipeline() else { return false }
+        return isCloudModelSelection || isCloudConversation(activeConversation)
+    }
+
+    /// Local Ollama without MCP/skills — Murmura-style `/api/chat` + `think: true` (live reasoning).
+    var usesDirectOllamaChat: Bool {
+        guard !shouldUseAgentToolPipeline() else { return false }
+        guard !usesDirectCloudChat else { return false }
+        if conversationUsesMLX(activeConversation) || isLocalMLXModelSelection { return false }
+        let provider = activeConversation.flatMap { conv in
+            conv.model.flatMap { ref in providers.first { $0.id == ref.providerID } }
+        } ?? selectedProvider
+        guard let provider else { return false }
+        let platform = provider.platform.lowercased()
+        let base = provider.baseURL.lowercased()
+        if platform == "ollama" { return true }
+        if platform == "custom", base.contains("11434") || base.contains("1234") { return true }
+        return false
+    }
+
+    var supportsImplicitLeadingThinking: Bool {
+        let model = (activeConversation?.model?.model ?? resolvedModelID)?.lowercased() ?? ""
+        guard !model.isEmpty else { return false }
+        return model.contains("qwen3")
+            || model.contains("deepseek-r1")
+            || model.contains("reasoning")
+    }
+
+    private func isCloudConversation(_ conversation: CoworkConversation?) -> Bool {
+        guard let providerID = conversation?.model?.providerID else { return false }
+        return cloudProviders.contains { $0.id == providerID }
+    }
 
     let lifecycle = CoworkCoreLifecycle()
     private let webSocket = CoworkWebSocketClient()
     private var cancellables = Set<AnyCancellable>()
     private var webSocketHandlersRegistered = false
     var thinkingParsers: [String: CoworkThinkingTagStreamParser] = [:]
+    private let streamCoalescer = CoworkStreamDeltaCoalescer()
+    /// Murmura-style answer typewriter: pending chars drain into `liveStreamSegments` at 4/7ms.
+    private var answerTypewriterQueues: [String: String] = [:]
+    private var answerTypewriterTasks: [String: Task<Void, Never>] = [:]
 
     init() {
         lifecycle.$status
@@ -138,6 +256,21 @@ final class CoworkState: ObservableObject {
                 Task { await self?.bootstrap() }
             }
             .store(in: &cancellables)
+
+        voiceScribe.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+    }
+
+    /// Merge live/final dictation into the composer. `existing` is the pre-dictation base.
+    static func appendDictationTranscript(to existing: String, transcript: String) -> String {
+        let trimmed = transcript.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return existing }
+        if existing.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return trimmed }
+        return existing + (existing.hasSuffix("\n") ? "" : "\n") + trimmed
     }
 
     var client: CoworkCoreClient? {
@@ -146,8 +279,10 @@ final class CoworkState: ObservableObject {
     }
 
     var selectedProvider: CoworkProvider? {
-        guard let selectedProviderID else { return providers.first }
-        return providers.first { $0.id == selectedProviderID } ?? providers.first
+        if let selectedProviderID {
+            return providers.first { $0.id == selectedProviderID }
+        }
+        return providers.first
     }
 
     var selectedAssistant: CoworkAssistant? {
@@ -156,8 +291,11 @@ final class CoworkState: ObservableObject {
             ?? assistants.first
     }
 
-    /// Model the home composer will send with (respects Ollama vs MLX backend preference).
+    /// Model the home composer will send with (respects cloud vs Ollama vs MLX).
     var resolvedHomeModelID: String? {
+        if isCloudModelSelection {
+            return selectedModelID
+        }
         if preferredLocalBackend == .mlx {
             let stored = preferredMLXRepoID.trimmingCharacters(in: .whitespacesAndNewlines)
             if !stored.isEmpty { return stored }
@@ -185,7 +323,7 @@ final class CoworkState: ObservableObject {
 
     /// Keeps `selectedProviderID` / `selectedModelID` aligned with the Ollama vs MLX picker.
     func syncLocalBackendSelection() async {
-        if isCloudModelSelection { return }
+        if shouldDeferLocalMLXActivation() { return }
         guard let model = resolvedHomeModelID else { return }
 
         if preferredLocalBackend == .mlx {
@@ -210,8 +348,13 @@ final class CoworkState: ObservableObject {
         }
 
         selectedModelID = model
-        if let existing = providers.first(where: { $0.models.contains(model) }) {
+        if let existing = providers.first(where: { Self.isOllamaEndpoint($0.baseURL) }) {
             selectedProviderID = existing.id
+            if !existing.models.contains(model) {
+                await selectOllamaModel(model)
+            } else {
+                persistModelSelection()
+            }
             return
         }
         if ollamaReachable || ollamaChatModels.contains(where: { $0.name == model }) {
@@ -241,17 +384,26 @@ final class CoworkState: ObservableObject {
 
     /// Preloads MLX weights when the home screen uses Native MLX.
     func warmMLXChatModelIfNeeded() async {
+        await waitForBootstrapIfNeeded()
+        guard !shouldDeferLocalMLXActivation() else { return }
         guard preferredLocalBackend == .mlx, let repoID = resolvedHomeModelID else { return }
         guard await CoworkMLXHubSnapshot.localSnapshotDirectory(repoID: repoID) != nil else { return }
+
+        mlxWarmGeneration += 1
+        let generation = mlxWarmGeneration
         mlxRuntimeInstallMessage = L10n.mlxWarmingUp
         do {
             try await CoworkMLXServerBridge.startIfNeeded(repoID: repoID) { message in
+                guard generation == self.mlxWarmGeneration, !self.shouldDeferLocalMLXActivation() else { return }
                 self.mlxRuntimeInstallMessage = message ?? L10n.mlxWarmingUp
             }
-            try? await ensureCoreReady()
-            try? await activateMLXModel(repoID)
+            guard generation == mlxWarmGeneration, !shouldDeferLocalMLXActivation() else {
+                mlxRuntimeInstallMessage = nil
+                return
+            }
             mlxRuntimeInstallMessage = nil
         } catch {
+            guard generation == mlxWarmGeneration else { return }
             mlxRuntimeInstallMessage = nil
         }
     }
@@ -343,8 +495,12 @@ final class CoworkState: ObservableObject {
 
     func bootstrap() async {
         guard let client else { return }
+        isBootstrapComplete = false
         isLoadingCatalog = true
-        defer { isLoadingCatalog = false }
+        defer {
+            isLoadingCatalog = false
+            isBootstrapComplete = true
+        }
 
         registerWebSocketHandlers()
         webSocket.connect(url: client.webSocketURL)
@@ -373,13 +529,16 @@ final class CoworkState: ObservableObject {
             conversations = try await conversationList.items
             mcpServers = try await mcpList
             statusMessage = nil
-            applyMcpDefaultsForSelectedProvider()
 
             restorePersistedModelSelection()
             if selectedProviderID == nil {
                 selectedProviderID = providers.first?.id
+            }
+            // Never clobber a restored Ollama tag (e.g. qwen3.6:27b) with provider.models.first.
+            if selectedModelID == nil || selectedModelID?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
                 selectedModelID = providers.first?.models.first
             }
+            applyMcpDefaultsForSelectedProvider()
             if !assistants.contains(where: { $0.id == selectedAssistantID }),
                let cowork = assistants.first(where: { $0.id == "cowork" }) {
                 selectedAssistantID = cowork.id
@@ -389,7 +548,11 @@ final class CoworkState: ObservableObject {
             await refreshOllamaModels()
             await refreshSkills()
             await refreshMLXModelsAsync()
-            await syncLocalBackendSelection()
+            if !shouldDeferLocalMLXActivation() {
+                await syncLocalBackendSelection()
+            } else {
+                persistModelSelection()
+            }
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -419,6 +582,10 @@ final class CoworkState: ObservableObject {
         composerFocusGeneration += 1
     }
 
+    func requestModelSwitch() {
+        showModelSwitchSheet = true
+    }
+
     var activeModelLabel: String {
         activeModelDisplay.alias
     }
@@ -440,7 +607,15 @@ final class CoworkState: ObservableObject {
             )
         }
 
-        // Home composer — follow the Ollama / MLX tab, not a stale provider id.
+        // Home composer — cloud selection wins over a stale MLX backend preference.
+        if isCloudModelSelection, let id = selectedModelID {
+            return CoworkUserFacing.modelDisplay(
+                providerID: selectedProviderID,
+                rawModel: id,
+                providers: providers
+            )
+        }
+
         if preferredLocalBackend == .mlx {
             let repo = preferredMLXRepoID
             return CoworkUserFacing.modelDisplay(
@@ -477,6 +652,21 @@ final class CoworkState: ObservableObject {
             providers: providers,
             ollamaModels: ollamaChatModels
         )
+    }
+
+    /// Native MLX OpenAI shim on :8765 — chat-only by design (no tool schemas).
+    var isActiveModelNativeMLX: Bool {
+        if inferredModelPickerTab == .mlx { return true }
+        if let providerID = resolvedProviderID,
+           let provider = providers.first(where: { $0.id == providerID }) {
+            let base = provider.baseURL.lowercased()
+            if base.contains(":8765") || base.contains("mlx") { return true }
+        }
+        if let model = resolvedModelID,
+           mlxInstalledModels.contains(where: { $0.id == model }) {
+            return true
+        }
+        return false
     }
 
     var effectiveMcpIDs: [String] {
@@ -537,8 +727,19 @@ final class CoworkState: ObservableObject {
     }
 
     var toolsDisabledNotice: String? {
-        guard !activeModelSupportsTools, resolvedModelID != nil else { return nil }
-        return L10n.chatOnlyModeNotice
+        guard resolvedModelID != nil else { return nil }
+        if !activeModelSupportsTools {
+            return isActiveModelNativeMLX ? L10n.chatOnlyMLXNotice : L10n.chatOnlyModeNotice
+        }
+        if !shouldUseAgentToolPipeline() {
+            return L10n.chatOnlyEnableToolsNotice
+        }
+        return nil
+    }
+
+    var toolsDisabledNoticeOffersModelSwitch: Bool {
+        guard resolvedModelID != nil else { return false }
+        return !activeModelSupportsTools
     }
 
     /// Applies tool-capable or chat-only assistant snapshot so CoworkCore stops wiring tools for plain LLMs.
@@ -550,7 +751,7 @@ final class CoworkState: ObservableObject {
         let locale = CitadelLocale.current.rawValue
 
         do {
-            if activeModelSupportsTools {
+            if activeModelSupportsTools, shouldUseAgentToolPipeline() {
                 let mcp = effectiveMcpIDs
                 let skills = effectiveSkillIDs
                 let updated = try await client.updateConversation(
@@ -562,13 +763,13 @@ final class CoworkState: ObservableObject {
                             conversationOverrides: CoworkConversationOverrides(
                                 model: resolvedModelID,
                                 permission: agentPermissionMode,
-                                mcpIDs: mcp.isEmpty ? nil : mcp,
-                                skillIDs: skills.isEmpty ? nil : skills
+                                mcpIDs: mcp,
+                                skillIDs: skills
                             )
                         ),
                         extra: CoworkConversationExtra(
-                            selectedMcpServerIDs: mcp.isEmpty ? nil : mcp,
-                            skillIDs: skills.isEmpty ? nil : skills
+                            selectedMcpServerIDs: mcp,
+                            skillIDs: skills
                         ),
                         mergeExtra: true
                     )
@@ -589,16 +790,268 @@ final class CoworkState: ObservableObject {
                                 skillIDs: [],
                                 disabledBuiltinSkillIDs: disabledSkills
                             )
-                        )
+                        ),
+                        extra: CoworkConversationExtra(
+                            selectedMcpServerIDs: [],
+                            skillIDs: [],
+                            presetContext: L10n.chatOnlyPresetContext,
+                            enabledSkills: [],
+                            excludeBuiltinSkills: disabledSkills,
+                            excludeAutoInjectSkills: disabledSkills
+                        ),
+                        mergeExtra: true
                     )
                 )
                 activeConversation = updated
                 statusMessage = nil
-                try? await client.ensureRuntime(conversationID: conversationID)
+                try await client.ensureRuntime(conversationID: conversationID)
             }
         } catch {
             statusMessage = L10n.localizeError(error.localizedDescription)
         }
+    }
+
+    /// Applies chat-only or tool-capable runtime config, then ensures CoworkCore rebuilt the session.
+    func prepareConversationRuntimeBeforeSend(conversationID: String) async {
+        await applyToolCapabilityProfile()
+        try? await client?.ensureRuntime(conversationID: conversationID)
+    }
+
+    private func cloudChatHistory(for conversationID: String) -> [CoworkCloudDirectChat.Turn] {
+        messages
+            .filter { $0.conversationID == conversationID || $0.conversationID == nil }
+            .filter { !$0.isTips && !$0.isToolMessage && !$0.isThinking && $0.hidden != true }
+            .compactMap { msg -> CoworkCloudDirectChat.Turn? in
+                let text = msg.textBody.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !text.isEmpty else { return nil }
+                let role = msg.isUser ? "user" : "assistant"
+                return CoworkCloudDirectChat.Turn(role: role, content: text)
+            }
+    }
+
+    /// Sends via provider HTTP API (no ACP agent). Used for cloud SOTA models in conversation-only mode.
+    func sendViaDirectCloudChat(
+        conversationID: String,
+        text: String,
+        provider: CoworkProvider,
+        model: String,
+        preStampedUserID: String? = nil
+    ) async throws {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        if preStampedUserID == nil {
+            messages.append(CoworkMessage(
+                localID: UUID().uuidString,
+                conversationID: conversationID,
+                position: "right",
+                text: trimmed
+            ))
+        }
+        persistDirectChatTranscript(conversationID: conversationID)
+
+        isStreaming = true
+        statusMessage = nil
+        defer {
+            isStreaming = false
+            activeTurnID = nil
+        }
+
+        let history = cloudChatHistory(for: conversationID).filter { $0.role == "user" || $0.role == "assistant" }
+        let prior = history.dropLast()
+        let response = try await CoworkCloudDirectChat.complete(
+            provider: provider,
+            model: model,
+            history: Array(prior),
+            userMessage: trimmed,
+            systemPrompt: L10n.chatOnlyPresetContext
+        )
+
+        let assistantID = UUID().uuidString
+        messages.append(CoworkMessage(
+            localID: assistantID,
+            conversationID: conversationID,
+            position: "left",
+            text: response
+        ))
+        persistDirectChatTranscript(conversationID: conversationID)
+    }
+
+    /// Sends via Ollama `/api/chat` with `think: true` (Murmura path) — live reasoning + answer stream.
+    func sendViaDirectOllamaChat(
+        conversationID: String,
+        text: String,
+        provider: CoworkProvider,
+        model: String,
+        preStampedUserID: String? = nil,
+        preStampedUserText: String? = nil
+    ) async throws {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let userVisible = (preStampedUserText ?? trimmed).trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if preStampedUserID == nil {
+            messages.append(CoworkMessage(
+                localID: UUID().uuidString,
+                conversationID: conversationID,
+                position: "right",
+                text: userVisible
+            ))
+            persistDirectChatTranscript(conversationID: conversationID)
+        } else if trimmed != userVisible,
+                  let idx = messages.firstIndex(where: { $0.msgID == preStampedUserID }) {
+            // Enrichment added document context — keep bubble label as the typed prompt.
+            _ = idx
+            persistDirectChatTranscript(conversationID: conversationID)
+        } else {
+            persistDirectChatTranscript(conversationID: conversationID)
+        }
+
+        let msgID = UUID().uuidString
+        resetAnswerTypewriter(msgID: msgID)
+        streamCoalescer.reset(msgID: msgID)
+        thinkingParsers[msgID] = CoworkThinkingTagStreamParser(
+            supportsImplicitLeadingThinking: false
+        )
+        liveStreamSegments[msgID] = CoworkLiveStreamSegment()
+        isStreaming = true
+        statusMessage = nil
+        activeTurnID = msgID
+
+        let history: [(role: String, content: String)] = messages
+            .filter { $0.conversationID == conversationID || $0.conversationID == nil }
+            .filter { !$0.isTips && !$0.isToolMessage && !$0.isThinking && $0.hidden != true }
+            .compactMap { msg in
+                let body = msg.textBody.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !body.isEmpty else { return nil }
+                return (msg.isUser ? "user" : "assistant", body)
+            }
+        // Replace last user turn with enriched content for the model, keep UI bubble as typed text.
+        var prior = Array(history.dropLast())
+        prior.append((role: "user", content: trimmed))
+
+        do {
+            try await CoworkOllamaChatStream.streamResponse(
+                baseURL: provider.baseURL,
+                model: model,
+                messages: prior,
+                systemPrompt: L10n.chatOnlyPresetContext
+            ) { [weak self] delta in
+                guard let self else { return }
+                // Murmura: coalesce before parser/UI so 27B doesn’t reparse markdown every token.
+                self.streamCoalescer.enqueue(
+                    msgID: msgID,
+                    piece: delta,
+                    preferFastFlush: self.shouldPreferFastStreamFlush(msgID: msgID)
+                ) { [weak self] merged in
+                    self?.applyStreamTextChunk(msgID: msgID, chunk: merged)
+                }
+            }
+        } catch {
+            await streamCoalescer.flush(msgID: msgID) { [weak self] merged in
+                self?.applyStreamTextChunk(msgID: msgID, chunk: merged)
+            }
+            finalizeDirectOllamaTurn(msgID: msgID, conversationID: conversationID)
+            isStreaming = false
+            activeTurnID = nil
+            throw error
+        }
+
+        await streamCoalescer.flush(msgID: msgID) { [weak self] merged in
+            self?.applyStreamTextChunk(msgID: msgID, chunk: merged)
+        }
+        finalizeDirectOllamaTurn(msgID: msgID, conversationID: conversationID)
+        isStreaming = false
+        activeTurnID = nil
+        requestComposerFocus()
+    }
+
+    /// Persist the live segment into `messages` without dropping a reply that only lived in thinking.
+    private func finalizeDirectOllamaTurn(msgID: String, conversationID: String) {
+        flushAnswerTypewriter(msgID: msgID)
+
+        if var parser = thinkingParsers.removeValue(forKey: msgID) {
+            let remainder = parser.flush()
+            var segment = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
+            if !remainder.thinking.isEmpty { segment.thinking += remainder.thinking }
+            if !remainder.answer.isEmpty { segment.answer += remainder.answer }
+            segment.isThinkingActive = false
+            segment.thinkingFinishedAt = segment.thinkingFinishedAt ?? Date()
+            liveStreamSegments[msgID] = segment
+        } else if var segment = liveStreamSegments[msgID] {
+            segment.isThinkingActive = false
+            segment.thinkingFinishedAt = segment.thinkingFinishedAt ?? Date()
+            liveStreamSegments[msgID] = segment
+        }
+
+        var answer = (liveStreamSegments[msgID]?.answer ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let thinking = (liveStreamSegments[msgID]?.thinking ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Some Ollama reasoning models emit the entire reply on the thinking channel.
+        // Promote a best-effort final reply so the bubble does not vanish.
+        if answer.isEmpty, !thinking.isEmpty {
+            answer = Self.extractLikelyFinalReply(from: thinking) ?? thinking
+            if var segment = liveStreamSegments[msgID] {
+                segment.answer = answer
+                liveStreamSegments[msgID] = segment
+            }
+        }
+        if !thinking.isEmpty {
+            archiveThinkingIfNeeded(msgID: msgID)
+        }
+
+        if !answer.isEmpty {
+            if let idx = messages.firstIndex(where: { $0.msgID == msgID }) {
+                messages[idx] = CoworkMessage(
+                    localID: msgID,
+                    conversationID: conversationID,
+                    position: "left",
+                    text: answer
+                )
+            } else {
+                messages.append(CoworkMessage(
+                    localID: msgID,
+                    conversationID: conversationID,
+                    position: "left",
+                    text: answer
+                ))
+            }
+        }
+
+        liveStreamSegments.removeValue(forKey: msgID)
+        resetAnswerTypewriter(msgID: msgID)
+        streamCoalescer.reset(msgID: msgID)
+        persistDirectChatTranscript(conversationID: conversationID)
+        publishStreamUI(urgent: true)
+    }
+
+    /// Pull the user-facing draft out of a verbose reasoning dump when Ollama left `content` empty.
+    private static func extractLikelyFinalReply(from thinking: String) -> String? {
+        let markers = [
+            "Final Output Generation",
+            "Draft Response",
+            "I'll output this refined version",
+            "Final plan:",
+            "Final answer:",
+        ]
+        let lower = thinking.lowercased()
+        var bestEnd: String.Index?
+        for marker in markers {
+            if let range = lower.range(of: marker.lowercased()) {
+                if bestEnd == nil || range.upperBound > bestEnd! {
+                    bestEnd = range.upperBound
+                }
+            }
+        }
+        guard let bestEnd else { return nil }
+        if let blank = thinking.range(of: "\n\n", range: bestEnd..<thinking.endIndex) {
+            let candidate = String(thinking[blank.upperBound...]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if candidate.count >= 40 { return candidate }
+        }
+        let tail = String(thinking[bestEnd...]).trimmingCharacters(in: .whitespacesAndNewlines)
+        return tail.count >= 40 ? tail : nil
     }
 
     func chatOnlyCreateOverrides(model: String) -> CoworkConversationOverrides {
@@ -651,11 +1104,6 @@ final class CoworkState: ObservableObject {
         return mlxInstalledModels.first?.id ?? CoworkMLXModelCatalog.defaultRepoID
     }
 
-    private var isCloudModelSelection: Bool {
-        guard let providerID = selectedProviderID else { return false }
-        return cloudProviders.contains { $0.id == providerID }
-    }
-
     func persistModelSelection() {
         if let providerID = selectedProviderID {
             UserDefaults.standard.set(providerID, forKey: Self.persistedProviderIDKey)
@@ -679,9 +1127,10 @@ final class CoworkState: ObservableObject {
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         if !storedProvider.isEmpty,
-           let provider = providers.first(where: { $0.id == storedProvider }),
-           provider.models.contains(storedModel) {
+           providers.contains(where: { $0.id == storedProvider }) {
             selectedProviderID = storedProvider
+            // Always restore the model id — Ollama provider.models often lists only one tag,
+            // so `contains` would wrongly drop qwen3.6:27b in favor of whatever was last registered.
             selectedModelID = storedModel
             return
         }
@@ -689,41 +1138,64 @@ final class CoworkState: ObservableObject {
         if let provider = providers.first(where: { $0.models.contains(storedModel) }) {
             selectedProviderID = provider.id
             selectedModelID = storedModel
+            return
         }
+
+        // Provider list may lag behind Ollama tags — still restore the model id.
+        selectedModelID = storedModel
     }
 
     var mlxRuntimeAvailable: Bool {
         CoworkMLXServerBridge.isMLXAvailable()
     }
 
-    var supportsImplicitLeadingThinking: Bool {
-        selectedModelID?.localizedCaseInsensitiveContains("qwen3.5") == true
+    private var isLocalMLXModelSelection: Bool {
+        if conversationUsesMLX(activeConversation) { return true }
+        if let provider = selectedProvider, isLocalMLXProvider(provider) { return true }
+        return false
     }
 
     func setThinkingCardExpanded(msgID: String, expanded: Bool) {
-        guard var segment = liveStreamSegments[msgID] else { return }
-        segment.thinkingCardExpanded = expanded
-        liveStreamSegments[msgID] = segment
+        if var segment = liveStreamSegments[msgID] {
+            segment.thinkingCardExpanded = expanded
+            liveStreamSegments[msgID] = segment
+            return
+        }
+        guard var archived = archivedThinkingByMsgID[msgID] else { return }
+        archived.cardExpanded = expanded
+        archivedThinkingByMsgID[msgID] = archived
     }
 
     func closeConversation() {
+        if !pendingConfirmations.isEmpty || activeConfirmation != nil {
+            confirmationAnchorConversationID = activeConversationID
+                ?? activeConfirmation?.conversationID
+                ?? pendingConfirmations.first?.conversationID
+                ?? confirmationAnchorConversationID
+        }
         activeConversationID = nil
         activeConversation = nil
         messages = []
-        liveStreamSegments = [:]
+        clearLiveStreamSegments()
+        archivedThinkingByMsgID = [:]
         liveToolCalls = [:]
         liveToolOrder = []
         thinkingParsers = [:]
+        resetAnswerTypewriters()
+        streamCoalescer.resetAll()
         workspaceEntries = []
         previewItems = []
         selectedPreviewID = nil
-        pendingConfirmations = []
-        activeConfirmation = nil
+        // Keep pendingConfirmations / activeConfirmation — permission cards must survive tab switches.
         composerAttachments = []
         isStreaming = false
-        activeTurnID = nil
+        // Keep activeTurnID so Stop can still cancel after reopen / from the global card.
         lastTokenUsage = nil
         conversationUsage = CoworkConversationUsageStats()
+        restorePersistedModelSelection()
+        if prefersCloudModelSelection {
+            cancelInFlightMLXWarm()
+        }
     }
 
     func loadConversationDetail(_ id: String) async {
@@ -765,13 +1237,21 @@ final class CoworkState: ObservableObject {
         guard let client else { return }
         do {
             let page = try await client.listMessages(conversationID: conversationID)
-            messages = page.items
+            let transcript = CoworkDirectChatStore.load(conversationID: conversationID)
+            let local = CoworkDirectChatStore.coworkMessages(from: transcript)
+            messages = CoworkDirectChatStore.merge(server: page.items, local: local)
+            for (msgID, archived) in CoworkDirectChatStore.archivedThinking(from: transcript) {
+                if archivedThinkingByMsgID[msgID] == nil {
+                    archivedThinkingByMsgID[msgID] = archived
+                }
+            }
             hasMoreMessages = page.hasMore == true
             if !isStreaming {
-                liveStreamSegments = [:]
+                clearLiveStreamSegments()
                 liveToolCalls = [:]
                 liveToolOrder = []
                 thinkingParsers = [:]
+                resetAnswerTypewriters()
             }
             if let tip = page.items.last(where: { $0.isTips })?.errorMessage ?? page.items.last(where: { $0.isTips })?.textBody,
                !tip.isEmpty,
@@ -783,6 +1263,19 @@ final class CoworkState: ObservableObject {
         } catch {
             statusMessage = error.localizedDescription
         }
+    }
+
+    /// Snapshot direct-chat turns so view reloads / turn-complete hooks cannot erase them.
+    private func persistDirectChatTranscript(conversationID: String) {
+        CoworkDirectChatStore.save(
+            conversationID: conversationID,
+            messages: messages.filter {
+                ($0.conversationID == conversationID || $0.conversationID == nil)
+                    && !$0.isTips
+                    && !$0.isToolMessage
+            },
+            thinkingByMsgID: archivedThinkingByMsgID
+        )
     }
 
     func loadOlderMessages() async {
@@ -820,6 +1313,17 @@ final class CoworkState: ObservableObject {
             selectedProviderID = providerID
             selectedModelID = model
             statusMessage = nil
+            persistModelSelection()
+            if cloudProviders.contains(where: { $0.id == providerID }) {
+                cancelInFlightMLXWarm()
+                UserDefaults.standard.set(CoworkModelPickerTab.cloud.rawValue, forKey: Self.modelPickerTabKey)
+            } else if let provider = providers.first(where: { $0.id == providerID }) {
+                if isLocalMLXProvider(provider) {
+                    UserDefaults.standard.set(CoworkModelPickerTab.mlx.rawValue, forKey: Self.modelPickerTabKey)
+                } else if Self.isOllamaEndpoint(provider.baseURL) {
+                    UserDefaults.standard.set(CoworkModelPickerTab.ollama.rawValue, forKey: Self.modelPickerTabKey)
+                }
+            }
             await applyToolCapabilityProfile()
             await refreshConversations()
         } catch {
@@ -976,8 +1480,9 @@ final class CoworkState: ObservableObject {
         return raw
     }
 
-    /// MCP defaults: curated safe subset for cloud BYOK; all enabled servers for local Ollama.
+    /// MCP defaults: curated safe subset for cloud BYOK on first use only; never override an explicit user choice.
     func applyMcpDefaultsForSelectedProvider() {
+        guard !UserDefaults.standard.bool(forKey: Self.mcpUserConfiguredKey) else { return }
         guard let provider = selectedProvider else { return }
         let profile = CoworkModelToolSupport.mcpToolProfile(platform: provider.platform)
         if CoworkModelToolSupport.prefersCuratedMcp(platform: provider.platform) {
@@ -1003,43 +1508,48 @@ final class CoworkState: ObservableObject {
         }
 
         isSending = true
-        defer { isSending = false }
 
         do {
             try await ensureCoreReady()
         } catch {
             statusMessage = L10n.coreNotReady
+            isSending = false
             return
         }
 
         guard let client else {
             statusMessage = L10n.coreNotReady
+            isSending = false
             return
         }
 
         await syncLocalBackendSelection()
 
-        if preferredLocalBackend == .mlx {
+        if preferredLocalBackend == .mlx, !shouldDeferLocalMLXActivation() {
             let target = resolvedHomeModelID ?? ""
             do {
                 try await ensureMLXReadyForSend(repoID: target)
             } catch CoworkMLXBridgeError.modelNotInstalled {
                 statusMessage = L10n.mlxModelNotInstalled
+                isSending = false
                 return
             } catch {
                 statusMessage = L10n.localizeError(
                     CoworkMLXModelLibrary.enrichedLoadErrorMessage(error.localizedDescription)
                 )
+                isSending = false
                 return
             }
         }
 
         guard let provider = selectedProvider, let model = resolvedHomeModelID else {
             statusMessage = L10n.selectModelFirst
+            isSending = false
             return
         }
         guard let assistant = selectedAssistant else {
             statusMessage = L10n.noAssistant
+            isSending = false
             return
         }
 
@@ -1047,40 +1557,37 @@ final class CoworkState: ObservableObject {
 
         do {
             if availableSkills.isEmpty { await refreshSkills() }
-            if !retryWithoutMcp, activeModelSupportsTools {
+            if !retryWithoutMcp, shouldUseAgentToolPipeline() {
                 await prepareMcpSelectionForSend()
             }
             let workspace = workspacePath.trimmingCharacters(in: .whitespacesAndNewlines)
             let mcpIDs = retryWithoutMcp ? [] : effectiveMcpIDs
             let skillIDs = effectiveSkillIDs
-            let supportsTools = CoworkModelToolSupport.supportsTools(
-                modelID: model,
-                providerID: provider.id,
-                providers: providers,
-                ollamaModels: ollamaChatModels
-            )
+            let useTools = !retryWithoutMcp && shouldUseAgentToolPipeline(mcpIDs: mcpIDs, skillIDs: skillIDs)
+            let attachmentPathsToSend = attachmentPaths
+            let fileRefs = useTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
             let request = CoworkCreateConversationRequest(
                 name: String(text.prefix(80)),
                 model: CoworkProviderModelRef(providerID: provider.id, model: model),
                 assistant: CoworkAssistantRef(
                     id: assistant.id,
                     locale: CitadelLocale.current.rawValue,
-                    conversationOverrides: supportsTools
+                    conversationOverrides: useTools
                         ? CoworkConversationOverrides(
                             model: model,
                             permission: agentPermissionMode,
-                            mcpIDs: mcpIDs.isEmpty ? nil : mcpIDs,
-                            skillIDs: skillIDs.isEmpty ? nil : skillIDs
+                            mcpIDs: mcpIDs,
+                            skillIDs: skillIDs
                         )
                         : chatOnlyCreateOverrides(model: model)
                 ),
-                extra: supportsTools
+                extra: useTools
                     ? CoworkConversationExtra(
                         workspace: workspace.isEmpty ? nil : workspace,
                         customWorkspace: !workspace.isEmpty,
                         defaultFiles: attachmentPaths.isEmpty ? nil : attachmentPaths,
-                        selectedMcpServerIDs: mcpIDs.isEmpty ? nil : mcpIDs,
-                        skillIDs: skillIDs.isEmpty ? nil : skillIDs
+                        selectedMcpServerIDs: mcpIDs,
+                        skillIDs: skillIDs
                     )
                     : chatOnlyCreateExtra(
                         workspace: workspace.isEmpty ? nil : workspace,
@@ -1089,29 +1596,91 @@ final class CoworkState: ObservableObject {
                     )
             )
             let conversation = try await client.createConversation(request)
-            let attachmentPathsToSend = attachmentPaths
-            let enriched = await enrichMessageWithDocuments(text, attachmentPaths: attachmentPathsToSend)
-            let fileRefs = activeModelSupportsTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
+            // Open the session + stamp the user bubble before enrichment/stream.
             promptText = ""
             attachmentPaths = []
             indexedAttachmentPaths = []
-            await refreshConversations()
+            messages = [
+                CoworkMessage(
+                    localID: UUID().uuidString,
+                    conversationID: conversation.id,
+                    position: "right",
+                    text: text
+                )
+            ]
             activeConversationID = conversation.id
             activeConversation = conversation
+            persistDirectChatTranscript(conversationID: conversation.id)
+            persistModelSelection()
+            await refreshConversations()
             await loadConversationDetail(conversation.id)
+            isSending = false
+
+            let enriched = await enrichMessageWithDocuments(text, attachmentPaths: attachmentPathsToSend)
             if !attachmentPathsToSend.isEmpty {
                 await ingestAttachments(attachmentPathsToSend)
             }
+
+            if usesDirectCloudChat {
+                await prepareConversationRuntimeBeforeSend(conversationID: conversation.id)
+                try await sendViaDirectCloudChat(
+                    conversationID: conversation.id,
+                    text: enriched,
+                    provider: provider,
+                    model: model,
+                    preStampedUserID: messages.first(where: \.isUser)?.msgID
+                )
+                await refreshConversations()
+                return
+            }
+
+            if usesDirectOllamaChat {
+                try await sendViaDirectOllamaChat(
+                    conversationID: conversation.id,
+                    text: enriched,
+                    provider: provider,
+                    model: model,
+                    preStampedUserID: messages.first(where: \.isUser)?.msgID,
+                    preStampedUserText: text
+                )
+                await refreshConversations()
+                return
+            }
+
+            isSending = true
+            await prepareConversationRuntimeBeforeSend(conversationID: conversation.id)
             let result = try await client.sendMessage(conversationID: conversation.id, input: enriched, files: fileRefs)
             activeTurnID = result.turnID
             statusMessage = nil
+            isSending = false
             isStreaming = true
             await loadMessages(for: conversation.id)
             await refreshWorkspace()
         } catch {
+            isSending = false
             let raw = error.localizedDescription
-            if !retryWithoutMcp, Self.isStaleToolRejection(raw), !effectiveMcpIDs.isEmpty {
+            if !retryWithoutMcp,
+               isCloudModelSelection,
+               let provider = selectedProvider,
+               let model = resolvedHomeModelID,
+               let conversationID = activeConversationID {
+                do {
+                    try await sendViaDirectCloudChat(
+                        conversationID: conversationID,
+                        text: text,
+                        provider: provider,
+                        model: model,
+                        preStampedUserID: messages.first(where: \.isUser)?.msgID
+                    )
+                    return
+                } catch {
+                    statusMessage = L10n.localizeError(error.localizedDescription, providerPlatform: provider.platform)
+                    return
+                }
+            }
+            if !retryWithoutMcp, Self.isStaleToolRejection(raw), shouldUseAgentToolPipeline() {
                 selectedMcpIDs = []
+                selectedSkillIDs = []
                 await applyToolCapabilityProfile()
                 if activeConversationID != nil {
                     await sendInConversation(text, retryWithoutMcp: true)
@@ -1132,21 +1701,88 @@ final class CoworkState: ObservableObject {
             pendingCommands.append(trimmed)
             return
         }
+
+        let useDirectOllama = usesDirectOllamaChat
+        let useDirectCloud = usesDirectCloudChat
+
+        // Stamp the user bubble immediately — don't wait on runtime/MCP/enrichment.
+        let stampedUserID: String? = (useDirectOllama || useDirectCloud) ? UUID().uuidString : nil
+        if let stampedUserID {
+            messages.append(CoworkMessage(
+                localID: stampedUserID,
+                conversationID: conversationID,
+                position: "right",
+                text: trimmed
+            ))
+            persistDirectChatTranscript(conversationID: conversationID)
+        }
+
         isSending = true
-        defer { isSending = false }
         do {
             await ensureConversationProvider()
-            if preferredLocalBackend == .mlx, let mlxModel = resolvedHomeModelID {
+            if conversationUsesMLX(activeConversation),
+               let mlxModel = activeConversation?.model?.model {
                 try await ensureMLXReadyForSend(repoID: mlxModel)
             }
-            if !retryWithoutMcp, activeModelSupportsTools {
+            if !retryWithoutMcp, shouldUseAgentToolPipeline() {
                 await prepareMcpSelectionForSend()
             }
-            await applyToolCapabilityProfile()
-            try? await client.ensureRuntime(conversationID: conversationID)
+            if !useDirectOllama && !useDirectCloud {
+                await prepareConversationRuntimeBeforeSend(conversationID: conversationID)
+            }
+
+            if useDirectCloud {
+                let ref = activeConversation?.model
+                let provider = ref.flatMap { r in providers.first { $0.id == r.providerID } } ?? selectedProvider
+                let model = ref?.model ?? selectedModelID
+                guard let provider, let model else {
+                    statusMessage = L10n.selectModelFirst
+                    isSending = false
+                    return
+                }
+                isSending = false
+                try await sendViaDirectCloudChat(
+                    conversationID: conversationID,
+                    text: trimmed,
+                    provider: provider,
+                    model: model,
+                    preStampedUserID: stampedUserID
+                )
+                return
+            }
+
+            if useDirectOllama {
+                let ref = activeConversation?.model
+                let provider = ref.flatMap { r in providers.first { $0.id == r.providerID } } ?? selectedProvider
+                let model = ref?.model ?? selectedModelID
+                guard let provider, let model else {
+                    statusMessage = L10n.selectModelFirst
+                    isSending = false
+                    return
+                }
+                let attachmentPathsToSend = composerAttachments
+                // Clear sending before enrichment/stream so the banner doesn't stick on "Sending…".
+                isSending = false
+                let enriched = await enrichMessageWithDocuments(trimmed, attachmentPaths: attachmentPathsToSend)
+                composerAttachments = []
+                indexedAttachmentPaths = []
+                if !attachmentPathsToSend.isEmpty {
+                    await ingestAttachments(attachmentPathsToSend)
+                }
+                try await sendViaDirectOllamaChat(
+                    conversationID: conversationID,
+                    text: enriched,
+                    provider: provider,
+                    model: model,
+                    preStampedUserID: stampedUserID,
+                    preStampedUserText: trimmed
+                )
+                return
+            }
+
             let attachmentPathsToSend = composerAttachments
             let enriched = await enrichMessageWithDocuments(trimmed, attachmentPaths: attachmentPathsToSend)
-            let fileRefs = activeModelSupportsTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
+            let fileRefs = shouldUseAgentToolPipeline() ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
             composerAttachments = []
             indexedAttachmentPaths = []
             if !attachmentPathsToSend.isEmpty {
@@ -1155,13 +1791,33 @@ final class CoworkState: ObservableObject {
             let result = try await client.sendMessage(conversationID: conversationID, input: enriched, files: fileRefs)
             activeTurnID = result.turnID
             statusMessage = nil
+            isSending = false
             isStreaming = true
             await loadMessages(for: conversationID)
             await refreshWorkspace()
         } catch {
+            isSending = false
             let raw = error.localizedDescription
-            if !retryWithoutMcp, Self.isStaleToolRejection(raw), !effectiveMcpIDs.isEmpty {
+            if !retryWithoutMcp,
+               let provider = selectedProvider,
+               let model = activeConversation?.model?.model ?? selectedModelID,
+               isCloudConversation(activeConversation) {
+                do {
+                    try await sendViaDirectCloudChat(
+                        conversationID: conversationID,
+                        text: trimmed,
+                        provider: provider,
+                        model: model
+                    )
+                    return
+                } catch {
+                    statusMessage = L10n.localizeError(error.localizedDescription, providerPlatform: provider.platform)
+                    return
+                }
+            }
+            if !retryWithoutMcp, Self.isStaleToolRejection(raw), shouldUseAgentToolPipeline() {
                 selectedMcpIDs = []
+                selectedSkillIDs = []
                 await applyToolCapabilityProfile()
                 await sendInConversation(trimmed, retryWithoutMcp: true)
                 return
@@ -1171,7 +1827,11 @@ final class CoworkState: ObservableObject {
     }
 
     func stopGeneration() async {
-        guard let client, let conversationID = activeConversationID, let turnID = activeTurnID else { return }
+        let conversationID = activeConversationID
+            ?? activeConfirmation?.conversationID
+            ?? pendingConfirmations.first?.conversationID
+            ?? confirmationAnchorConversationID
+        guard let client, let conversationID, let turnID = activeTurnID else { return }
         do {
             try await client.cancelTurn(conversationID: conversationID, turnID: turnID)
             isStreaming = false
@@ -1186,6 +1846,17 @@ final class CoworkState: ObservableObject {
         do {
             try await client.deleteConversation(id: id)
             if activeConversationID == id { closeConversation() }
+            if confirmationAnchorConversationID == id
+                || activeConfirmation?.conversationID == id
+                || pendingConfirmations.contains(where: { $0.conversationID == id }) {
+                pendingConfirmations.removeAll { $0.conversationID == id || $0.conversationID == nil }
+                if activeConfirmation?.conversationID == id {
+                    activeConfirmation = pendingConfirmations.first
+                }
+                if confirmationAnchorConversationID == id {
+                    confirmationAnchorConversationID = activeConfirmation?.conversationID
+                }
+            }
             await refreshConversations()
         } catch {
             statusMessage = error.localizedDescription
@@ -1251,7 +1922,24 @@ final class CoworkState: ObservableObject {
             let models = try await CoworkOllamaModelsAPI.fetchInstalledModels(baseURL: "http://127.0.0.1:11434")
             ollamaChatModels = models.filter { !$0.isEmbedding }
             ollamaReachable = true
-            if selectedModelID == nil, let first = ollamaChatModels.first {
+
+            let persisted = UserDefaults.standard.string(forKey: Self.persistedModelIDKey)?
+                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let pickerTab = UserDefaults.standard.string(forKey: Self.modelPickerTabKey)
+
+            // Re-assert persisted Ollama selection after tags load (do not fall back to first model).
+            if pickerTab != CoworkModelPickerTab.cloud.rawValue,
+               pickerTab != CoworkModelPickerTab.mlx.rawValue,
+               !persisted.isEmpty,
+               ollamaChatModels.contains(where: { $0.name == persisted }) {
+                if activeConversationID == nil {
+                    await selectOllamaModel(persisted)
+                } else if selectedModelID != persisted, isCloudModelSelection {
+                    // Conversation owns the model; keep picker tab local without forcing a swap.
+                    selectedModelID = activeConversation?.model?.model ?? selectedModelID
+                }
+            } else if selectedModelID == nil, activeConversationID == nil, !isCloudModelSelection,
+                      let first = ollamaChatModels.first {
                 await selectOllamaModel(first.name)
             }
         } catch {
@@ -1264,9 +1952,28 @@ final class CoworkState: ObservableObject {
         UserDefaults.standard.set(CoworkLocalLLMBackend.ollama.rawValue, forKey: "cowork.localLLMBackend")
         UserDefaults.standard.set(CoworkModelPickerTab.ollama.rawValue, forKey: "cowork.modelPickerTab")
         selectedModelID = name
+        // Persist immediately so a later refresh/repair cannot fall back to models.first.
+        persistModelSelection()
         guard let client else { return }
-        if let existing = providers.first(where: { $0.models.contains(name) && $0.baseURL.contains("11434") }) {
+
+        if let existing = providers.first(where: { Self.isOllamaEndpoint($0.baseURL) }) {
             selectedProviderID = existing.id
+            var models = existing.models
+            if let idx = models.firstIndex(of: name) {
+                models.remove(at: idx)
+            }
+            models.insert(name, at: 0)
+            if models != existing.models {
+                do {
+                    _ = try await client.updateProvider(
+                        id: existing.id,
+                        CoworkUpdateProviderRequest(models: models)
+                    )
+                    providers = try await client.listProviders()
+                } catch {
+                    statusMessage = L10n.localizeError(error.localizedDescription)
+                }
+            }
         } else {
             do {
                 try await addProvider(
@@ -1285,16 +1992,20 @@ final class CoworkState: ObservableObject {
         if activeConversationID != nil, let providerID = selectedProviderID {
             await switchActiveConversationModel(providerID: providerID, model: name)
         }
-        applyMcpDefaultsForSelectedProvider()
         persistModelSelection()
     }
 
+    private static func isOllamaEndpoint(_ baseURL: String) -> Bool {
+        let base = baseURL.lowercased()
+        return base.contains("11434") || base.contains("/ollama")
+    }
+
     func selectCloudModel(providerID: String, model: String) async {
-        UserDefaults.standard.set(CoworkModelPickerTab.cloud.rawValue, forKey: "cowork.modelPickerTab")
+        cancelInFlightMLXWarm()
+        UserDefaults.standard.set(CoworkModelPickerTab.cloud.rawValue, forKey: Self.modelPickerTabKey)
         selectedProviderID = providerID
         selectedModelID = model
         statusMessage = nil
-        applyMcpDefaultsForSelectedProvider()
         if activeConversationID != nil {
             await switchActiveConversationModel(providerID: providerID, model: model)
         }
@@ -1332,9 +2043,10 @@ final class CoworkState: ObservableObject {
 
     /// Starts the MLX server for `repoID` and points selection at a provider that lists it.
     /// Throws instead of silently leaving a stale (e.g. Ollama) selection in place.
-    func activateMLXModel(_ repoID: String) async throws {
+    func activateMLXModel(_ repoID: String, updateSelection: Bool = true) async throws {
         guard let client else { throw CoworkCoreError.notConnected }
         try await CoworkMLXServerBridge.startIfNeeded(repoID: repoID) { message in
+            guard updateSelection, !self.shouldDeferLocalMLXActivation() else { return }
             self.mlxRuntimeInstallMessage = message
         }
         let normalized = CoworkOllamaModelsAPI.normalizedChatBaseURL(CoworkMLXServerBridge.chatBaseURL())
@@ -1350,6 +2062,14 @@ final class CoworkState: ObservableObject {
                 )
                 providers = try await client.listProviders()
             }
+            guard updateSelection else {
+                mlxRuntimeInstallMessage = nil
+                return
+            }
+            guard !shouldDeferLocalMLXActivation() else {
+                mlxRuntimeInstallMessage = nil
+                return
+            }
             selectedProviderID = existing.id
             selectedModelID = repoID
             statusMessage = nil
@@ -1357,6 +2077,12 @@ final class CoworkState: ObservableObject {
             persistModelSelection()
             return
         }
+        if updateSelection, shouldDeferLocalMLXActivation() {
+            mlxRuntimeInstallMessage = nil
+            return
+        }
+        let previousProviderID = selectedProviderID
+        let previousModelID = selectedModelID
         try await addProvider(
             preset: .custom,
             name: "Native MLX",
@@ -1365,9 +2091,15 @@ final class CoworkState: ObservableObject {
             modelID: repoID,
             resolvedBaseURL: normalized
         )
+        if updateSelection, shouldDeferLocalMLXActivation() {
+            selectedProviderID = previousProviderID
+            selectedModelID = previousModelID
+        }
         statusMessage = nil
         mlxRuntimeInstallMessage = nil
-        persistModelSelection()
+        if updateSelection, !shouldDeferLocalMLXActivation() {
+            persistModelSelection()
+        }
     }
 
     func repairProviders() async {
@@ -1394,9 +2126,13 @@ final class CoworkState: ObservableObject {
                     CoworkUpdateProviderRequest(baseURL: normalized)
                 )
             }
-            if !provider.models.isEmpty, selectedProviderID == nil {
+            if !provider.models.isEmpty,
+               selectedProviderID == nil,
+               !persistedPrefersCloudModel() {
                 selectedProviderID = provider.id
-                selectedModelID = provider.models.first
+                if selectedModelID == nil || selectedModelID?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
+                    selectedModelID = provider.models.first
+                }
             }
         }
         for id in deleteIDs {
@@ -1895,12 +2631,30 @@ final class CoworkState: ObservableObject {
         }
     }
 
-    func refreshConfirmations() async {
-        guard let client, let conversationID = activeConversationID else { return }
+    func refreshConfirmations(for conversationID: String? = nil) async {
+        guard let client else { return }
+        let targetID = conversationID
+            ?? activeConversationID
+            ?? activeConfirmation?.conversationID
+            ?? pendingConfirmations.first?.conversationID
+            ?? confirmationAnchorConversationID
+        guard let targetID else { return }
         do {
-            pendingConfirmations = try await client.listConfirmations(conversationID: conversationID)
-            if activeConfirmation == nil {
-                activeConfirmation = pendingConfirmations.first
+            let listed = try await client.listConfirmations(conversationID: targetID)
+            let anchored = listed.map { $0.withConversationID(targetID) }
+            pendingConfirmations = anchored
+            if let active = activeConfirmation,
+               anchored.contains(where: { $0.callID == active.callID }) {
+                activeConfirmation = anchored.first(where: { $0.callID == active.callID }) ?? anchored.first
+            } else if activeConfirmation == nil {
+                activeConfirmation = anchored.first
+            } else if anchored.isEmpty {
+                activeConfirmation = nil
+            }
+            if !anchored.isEmpty {
+                confirmationAnchorConversationID = targetID
+            } else if confirmationAnchorConversationID == targetID {
+                confirmationAnchorConversationID = nil
             }
         } catch {
             statusMessage = error.localizedDescription
@@ -1908,8 +2662,14 @@ final class CoworkState: ObservableObject {
     }
 
     func respondToConfirmation(option: CoworkConfirmationOption, alwaysAllow: Bool = false) async {
-        guard let client, let confirmation = activeConfirmation,
-              let conversationID = activeConversationID else { return }
+        guard let client, let confirmation = activeConfirmation else { return }
+        let conversationID = confirmation.conversationID
+            ?? activeConversationID
+            ?? confirmationAnchorConversationID
+        guard let conversationID else {
+            statusMessage = L10n.permissionSessionMissing
+            return
+        }
         let msgID = confirmation.msgID ?? confirmation.id
         do {
             try await client.confirmAction(
@@ -1921,9 +2681,26 @@ final class CoworkState: ObservableObject {
             )
             pendingConfirmations.removeAll { $0.callID == confirmation.callID }
             activeConfirmation = pendingConfirmations.first
+            if pendingConfirmations.isEmpty {
+                confirmationAnchorConversationID = activeConversationID
+            }
+            // Resume streaming indicator if the turn is still live after Allow.
+            if activeTurnID != nil {
+                isStreaming = true
+            }
+            await refreshConfirmations(for: conversationID)
         } catch {
             statusMessage = error.localizedDescription
         }
+    }
+
+    /// Opens the session that owns the active permission prompt (from the global card).
+    func openConfirmationConversation() async {
+        let id = activeConfirmation?.conversationID
+            ?? pendingConfirmations.first?.conversationID
+            ?? confirmationAnchorConversationID
+        guard let id else { return }
+        await openConversation(id)
     }
 
     func onTurnCompleted() async {
@@ -1932,8 +2709,10 @@ final class CoworkState: ObservableObject {
         if let conversationID = activeConversationID {
             await loadMessages(for: conversationID)
             await refreshWorkspace()
-            await refreshConfirmations()
+            await refreshConfirmations(for: conversationID)
             await refreshFileChanges()
+        } else if let anchor = confirmationAnchorConversationID {
+            await refreshConfirmations(for: anchor)
         }
         if let next = pendingCommands.first {
             pendingCommands.removeFirst()
@@ -1953,23 +2732,51 @@ final class CoworkState: ObservableObject {
     }
 
     private func handleConfirmationEvent(_ data: Data) {
-        guard let confirmation = try? JSONDecoder.cowork.decode(CoworkConfirmation.self, from: data) else { return }
+        guard var confirmation = CoworkConfirmation.decodeFlexible(from: data) else { return }
+        let anchor = confirmation.conversationID
+            ?? activeConversationID
+            ?? confirmationAnchorConversationID
+        confirmation = confirmation.withConversationID(anchor)
+        if let anchor {
+            confirmationAnchorConversationID = anchor
+        }
         if let idx = pendingConfirmations.firstIndex(where: { $0.callID == confirmation.callID }) {
             pendingConfirmations[idx] = confirmation
         } else {
             pendingConfirmations.append(confirmation)
         }
         activeConfirmation = confirmation
+        // Permission wait is still an in-flight agent turn.
+        isStreaming = true
         CitadelDeskCompanionController.shared.showConfirmPulse()
     }
 
     private func handleConfirmationRemoved(_ data: Data) {
-        struct RemovePayload: Decodable { let id: String?; let callID: String?; enum CodingKeys: String, CodingKey { case id; case callID = "call_id" } }
+        struct RemovePayload: Decodable {
+            let id: String?
+            let callID: String?
+            enum CodingKeys: String, CodingKey {
+                case id
+                case callID = "call_id"
+                case callId
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                id = try c.decodeIfPresent(String.self, forKey: .id)
+                callID = try c.decodeIfPresent(String.self, forKey: .callID)
+                    ?? c.decodeIfPresent(String.self, forKey: .callId)
+            }
+        }
         guard let payload = try? JSONDecoder.cowork.decode(RemovePayload.self, from: data) else { return }
         let key = payload.callID ?? payload.id
         guard let key else { return }
         pendingConfirmations.removeAll { $0.callID == key || $0.id == key }
-        if activeConfirmation?.callID == key { activeConfirmation = pendingConfirmations.first }
+        if activeConfirmation?.callID == key || activeConfirmation?.id == key {
+            activeConfirmation = pendingConfirmations.first
+        }
+        if pendingConfirmations.isEmpty, activeConversationID == nil {
+            confirmationAnchorConversationID = nil
+        }
     }
 
     private func handlePreviewOpen(_ data: Data) {
@@ -1982,47 +2789,63 @@ final class CoworkState: ObservableObject {
     }
 
     private func applyStream(_ message: CoworkWSResponseMessage) {
-        guard message.conversationID == activeConversationID,
-              let msgID = message.msgID else { return }
+        guard let msgID = message.msgID else { return }
+        let belongsToActive = message.conversationID == activeConversationID
+        let anchorID = confirmationAnchorConversationID
+            ?? activeConfirmation?.conversationID
+            ?? pendingConfirmations.first?.conversationID
+        let belongsToBackgroundAnchor = activeConversationID == nil
+            && message.conversationID != nil
+            && message.conversationID == anchorID
+
+        // Chat closed but turn still waiting on permissions — keep confirmation queue in sync.
+        if belongsToBackgroundAnchor && !belongsToActive {
+            switch message.type {
+            case "start", "tool_group", "tool_call", "acp_tool_call":
+                isStreaming = true
+                if message.type != "start" {
+                    Task { @MainActor [weak self] in
+                        await self?.refreshConfirmations(for: message.conversationID)
+                    }
+                }
+            case "finish":
+                Task { @MainActor [weak self] in
+                    await self?.refreshConfirmations(for: message.conversationID)
+                }
+            default:
+                break
+            }
+            return
+        }
+
+        guard belongsToActive else { return }
 
         switch message.type {
         case "start":
+            streamCoalescer.reset(msgID: msgID)
+            resetAnswerTypewriter(msgID: msgID)
             isStreaming = true
             thinkingParsers[msgID] = CoworkThinkingTagStreamParser(
-                supportsImplicitLeadingThinking: supportsImplicitLeadingThinking
+                supportsImplicitLeadingThinking: false
             )
             liveStreamSegments[msgID] = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
         case "content", "text":
             guard let chunk = message.textChunk, !chunk.isEmpty else { return }
             if message.replace == true {
+                streamCoalescer.reset(msgID: msgID)
+                resetAnswerTypewriter(msgID: msgID)
                 thinkingParsers[msgID] = CoworkThinkingTagStreamParser(
-                    supportsImplicitLeadingThinking: supportsImplicitLeadingThinking
+                    supportsImplicitLeadingThinking: false
                 )
                 liveStreamSegments[msgID] = CoworkLiveStreamSegment()
             }
-            var parser = thinkingParsers[msgID] ?? CoworkThinkingTagStreamParser(
-                supportsImplicitLeadingThinking: supportsImplicitLeadingThinking
-            )
-            let parsed = parser.process(chunk)
-            thinkingParsers[msgID] = parser
-
-            var segment = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
-            if !parsed.answer.isEmpty {
-                segment.answer += parsed.answer
+            streamCoalescer.enqueue(
+                msgID: msgID,
+                piece: chunk,
+                preferFastFlush: shouldPreferFastStreamFlush(msgID: msgID)
+            ) { [weak self] merged in
+                self?.applyStreamTextChunk(msgID: msgID, chunk: merged)
             }
-            if !parsed.thinking.isEmpty {
-                segment.thinking += parsed.thinking
-            }
-            if parsed.didStartThinking {
-                segment.isThinkingActive = true
-                segment.thinkingFinishedAt = nil
-            }
-            if parsed.didFinishThinking {
-                segment.isThinkingActive = false
-                segment.thinkingFinishedAt = Date()
-            }
-            liveStreamSegments[msgID] = segment
-            streamTick += 1
             isStreaming = true
         case "tool_group", "tool_call", "acp_tool_call":
             guard let data = message.data else { return }
@@ -2046,33 +2869,183 @@ final class CoworkState: ObservableObject {
             liveToolCalls[msgID] = merged
             streamTick += 1
             isStreaming = true
+            // Tool prompts often arrive as stream tool_call before/without a clean WS confirmation.add.
+            // Resync the REST confirmation queue so the permission card appears during the first turn.
+            if calls.contains(where: { $0.status == .pending || $0.status == .running }) {
+                let conversationID = message.conversationID ?? activeConversationID
+                Task { @MainActor [weak self] in
+                    await self?.refreshConfirmations(for: conversationID)
+                }
+            }
         case "finish":
-            captureTokenUsage(from: message)
-            if var parser = thinkingParsers[msgID] {
-                let remainder = parser.flush()
-                thinkingParsers.removeValue(forKey: msgID)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                await self.streamCoalescer.flush(msgID: msgID) { merged in
+                    self.applyStreamTextChunk(msgID: msgID, chunk: merged)
+                }
+                self.completeStreamFinish(msgID: msgID, message: message)
+            }
+        default:
+            break
+        }
+    }
+
+    private func applyStreamTextChunk(msgID: String, chunk: String) {
+        guard !chunk.isEmpty else { return }
+        var parser = thinkingParsers[msgID] ?? CoworkThinkingTagStreamParser(
+            supportsImplicitLeadingThinking: false
+        )
+        let parsed = parser.process(chunk)
+        thinkingParsers[msgID] = parser
+
+        guard !parsed.answer.isEmpty
+            || !parsed.thinking.isEmpty
+            || parsed.didStartThinking
+            || parsed.didFinishThinking
+        else { return }
+
+        var segment = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
+        // Append immediately (Murmura). Per-glyph typewriter + full markdown reparse made 27B feel like 10s/word.
+        if !parsed.thinking.isEmpty {
+            segment.thinking += parsed.thinking
+        }
+        if !parsed.answer.isEmpty {
+            segment.answer += parsed.answer
+        }
+        if parsed.didStartThinking {
+            segment.isThinkingActive = true
+            segment.thinkingFinishedAt = nil
+        }
+        if parsed.didFinishThinking {
+            segment.isThinkingActive = false
+            segment.thinkingFinishedAt = Date()
+        } else if !segment.thinking.isEmpty && segment.answer.isEmpty {
+            segment.isThinkingActive = true
+            segment.thinkingFinishedAt = nil
+        }
+        liveStreamSegments[msgID] = segment
+        let urgent = !parsed.answer.isEmpty || parsed.didFinishThinking || parsed.didStartThinking
+        publishStreamUI(urgent: urgent)
+    }
+
+    private func publishStreamUI(urgent: Bool) {
+        let now = Date()
+        if urgent || now.timeIntervalSince(lastStreamUIPublish) >= 0.08 {
+            streamUIFlushTask?.cancel()
+            streamUIFlushTask = nil
+            lastStreamUIPublish = now
+            streamTick += 1
+            return
+        }
+        guard streamUIFlushTask == nil else { return }
+        streamUIFlushTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 80_000_000)
+            guard let self, !Task.isCancelled else { return }
+            self.lastStreamUIPublish = Date()
+            self.streamTick += 1
+            self.streamUIFlushTask = nil
+        }
+    }
+
+    func clearLiveStreamSegments() {
+        liveStreamSegments = [:]
+        streamUIFlushTask?.cancel()
+        streamUIFlushTask = nil
+        streamTick += 1
+    }
+
+    private func enqueueAnswerTypewriter(msgID: String, piece: String) {
+        guard !piece.isEmpty else { return }
+        var segment = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
+        segment.answer += piece
+        if segment.isThinkingActive {
+            segment.isThinkingActive = false
+            segment.thinkingFinishedAt = segment.thinkingFinishedAt ?? Date()
+        }
+        liveStreamSegments[msgID] = segment
+        publishStreamUI(urgent: true)
+    }
+
+    private func flushAnswerTypewriter(msgID: String) {
+        answerTypewriterTasks[msgID]?.cancel()
+        answerTypewriterTasks[msgID] = nil
+        guard let remainder = answerTypewriterQueues.removeValue(forKey: msgID), !remainder.isEmpty else { return }
+        var segment = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
+        segment.answer += remainder
+        liveStreamSegments[msgID] = segment
+        publishStreamUI(urgent: true)
+    }
+
+    func resetAnswerTypewriter(msgID: String) {
+        answerTypewriterTasks[msgID]?.cancel()
+        answerTypewriterTasks.removeValue(forKey: msgID)
+        answerTypewriterQueues.removeValue(forKey: msgID)
+    }
+
+    func resetAnswerTypewriters() {
+        for task in answerTypewriterTasks.values {
+            task.cancel()
+        }
+        answerTypewriterTasks.removeAll()
+        answerTypewriterQueues.removeAll()
+    }
+
+    private func shouldPreferFastStreamFlush(msgID: String) -> Bool {
+        guard let segment = liveStreamSegments[msgID] else { return true }
+        if segment.isThinkingActive { return true }
+        if !segment.thinking.isEmpty && segment.answer.isEmpty { return true }
+        return false
+    }
+
+    private func archiveThinkingIfNeeded(msgID: String) {
+        guard let segment = liveStreamSegments[msgID] else { return }
+        let trimmed = segment.thinking.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        archivedThinkingByMsgID[msgID] = CoworkArchivedThinking(
+            text: trimmed,
+            finishedAt: segment.thinkingFinishedAt ?? Date(),
+            cardExpanded: segment.thinkingCardExpanded
+        )
+    }
+
+    private func completeStreamFinish(msgID: String, message: CoworkWSResponseMessage) {
+        captureTokenUsage(from: message)
+        if var parser = thinkingParsers[msgID] {
+            let remainder = parser.flush()
+            thinkingParsers.removeValue(forKey: msgID)
+            if !remainder.thinking.isEmpty {
                 var segment = liveStreamSegments[msgID] ?? CoworkLiveStreamSegment()
-                if !remainder.answer.isEmpty { segment.answer += remainder.answer }
-                if !remainder.thinking.isEmpty { segment.thinking += remainder.thinking }
+                segment.thinking += remainder.thinking
                 if segment.isThinkingActive {
                     segment.isThinkingActive = false
                     segment.thinkingFinishedAt = Date()
                 }
                 liveStreamSegments[msgID] = segment
             }
-            isStreaming = false
-            if let conversationID = activeConversationID {
-                Task {
-                    await loadMessages(for: conversationID)
-                    liveStreamSegments.removeValue(forKey: msgID)
-                    thinkingParsers.removeValue(forKey: msgID)
-                    requestComposerFocus()
-                }
-            } else {
+            if !remainder.answer.isEmpty {
+                enqueueAnswerTypewriter(msgID: msgID, piece: remainder.answer)
+            }
+        }
+        // Ensure any pending typewriter chars land before we mark the turn finished.
+        flushAnswerTypewriter(msgID: msgID)
+        if var segment = liveStreamSegments[msgID], segment.isThinkingActive {
+            segment.isThinkingActive = false
+            segment.thinkingFinishedAt = Date()
+            liveStreamSegments[msgID] = segment
+        }
+        archiveThinkingIfNeeded(msgID: msgID)
+        streamCoalescer.reset(msgID: msgID)
+        isStreaming = false
+        if let conversationID = activeConversationID {
+            Task {
+                await loadMessages(for: conversationID)
+                liveStreamSegments.removeValue(forKey: msgID)
+                thinkingParsers.removeValue(forKey: msgID)
+                resetAnswerTypewriter(msgID: msgID)
                 requestComposerFocus()
             }
-        default:
-            break
+        } else {
+            requestComposerFocus()
         }
     }
 }

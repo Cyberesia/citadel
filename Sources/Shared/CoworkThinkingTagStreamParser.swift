@@ -1,7 +1,7 @@
 import Foundation
 
 /// Splits model output into visible answer text vs chain-of-thought hidden in XML-style tags.
-/// Handles Qwen / MLX variants: think and redacted_thinking tags.
+/// Handles Qwen / MLX / Ollama variants: `<think>`, `<redacted_thinking>`, and Murmura-wrapped thinking.
 struct CoworkThinkingTagStreamParser {
     private var pending = ""
     private var mode: Mode = .answer
@@ -15,8 +15,9 @@ struct CoworkThinkingTagStreamParser {
     }
 
     private static let tagPairs: [(open: String, close: String)] = [
-        ("<\("think")>", "</\("think")>"),
         ("<think>", "</think>"),
+        ("<redacted_thinking>", "</redacted_thinking>"),
+        ("<|redacted_thinking|>", "<|end_of_thought|>"),
     ]
 
     init(supportsImplicitLeadingThinking: Bool = false) {
@@ -63,15 +64,15 @@ struct CoworkThinkingTagStreamParser {
                 }
 
             case .thinking:
-                let closeTag = activeCloseTag ?? Self.tagPairs[0].close
-                if let range = pending.range(of: closeTag, options: [.caseInsensitive]) {
-                    thinking += String(pending[..<range.lowerBound])
-                    pending.removeSubrange(..<range.upperBound)
+                let closeCandidates = activeCloseTag.map { [$0] } ?? Self.tagPairs.map(\.close)
+                if let (closeRange, _) = Self.earliestTag(in: pending, tags: closeCandidates) {
+                    thinking += String(pending[..<closeRange.lowerBound])
+                    pending.removeSubrange(..<closeRange.upperBound)
                     mode = .answer
                     activeCloseTag = nil
                     didFinishThinking = true
                 } else {
-                    let keep = Self.trailingTagPrefixLength(in: pending, tags: [closeTag])
+                    let keep = Self.trailingTagPrefixLength(in: pending, tags: closeCandidates)
                     let outputEnd = pending.index(pending.endIndex, offsetBy: -keep)
                     thinking += String(pending[..<outputEnd])
                     pending.removeSubrange(..<outputEnd)
@@ -93,9 +94,7 @@ struct CoworkThinkingTagStreamParser {
         case .answer:
             return (pending, "")
         case .thinking:
-            if supportsImplicitLeadingThinking {
-                return (pending, "")
-            }
+            // Keep unfinished reasoning in the thinking pane (never dump it into the answer).
             return ("", pending)
         }
     }
@@ -117,15 +116,23 @@ struct CoworkThinkingTagStreamParser {
     }
 
     private static func earliestOpenTag(in text: String) -> (Range<String.Index>, String)? {
+        guard let hit = earliestTag(in: text, tags: tagPairs.map(\.open)) else { return nil }
+        let open = String(text[hit.range])
+        let close = tagPairs.first(where: { $0.open.compare(open, options: .caseInsensitive) == .orderedSame })?.close
+            ?? tagPairs[0].close
+        return (hit.range, close)
+    }
+
+    private static func earliestTag(in text: String, tags: [String]) -> (range: Range<String.Index>, tag: String)? {
         var best: (Range<String.Index>, String)?
-        for pair in tagPairs {
-            if let range = text.range(of: pair.open, options: [.caseInsensitive]) {
+        for tag in tags {
+            if let range = text.range(of: tag, options: [.caseInsensitive]) {
                 if best == nil || range.lowerBound < best!.0.lowerBound {
-                    best = (range, pair.close)
+                    best = (range, tag)
                 }
             }
         }
-        return best
+        return best.map { (range: $0.0, tag: $0.1) }
     }
 
     private static func trailingTagPrefixLength(in text: String, tags: [String]) -> Int {
@@ -152,4 +159,11 @@ struct CoworkLiveStreamSegment: Equatable {
     var isThinkingActive = false
     var thinkingFinishedAt: Date?
     var thinkingCardExpanded: Bool?
+}
+
+/// Reasoning preserved after stream finish so the card can collapse instead of vanishing.
+struct CoworkArchivedThinking: Equatable {
+    var text: String
+    var finishedAt: Date
+    var cardExpanded: Bool?
 }

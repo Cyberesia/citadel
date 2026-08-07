@@ -25,7 +25,7 @@ struct CoworkSkillsPicker: View {
                 popoverContent
                     .prismPopoverChrome(width: 400, maxHeight: 440)
             }
-            .help(cowork.activeModelSupportsTools ? L10n.skillsHelp : L10n.toolsDisabledSkillsHelp)
+            .help(cowork.activeModelSupportsTools ? L10n.skillsHelp : skillsDisabledHelp)
         }
     }
 
@@ -33,9 +33,17 @@ struct CoworkSkillsPicker: View {
     private var popoverContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             if !cowork.activeModelSupportsTools {
-                Text(L10n.toolsDisabledSkillsHelp)
+                Text(skillsDisabledHelp)
                     .font(.ps(10))
                     .foregroundStyle(PrismTheme.textSecondary)
+                if cowork.isActiveModelNativeMLX {
+                    Button(L10n.switchModelForTools) {
+                        showPopover = false
+                        cowork.requestModelSwitch()
+                    }
+                    .buttonStyle(PrismHandButtonStyle())
+                    .font(.ps(10, weight: .semibold))
+                }
             } else {
                 Text(L10n.sessionSkillsPickerHelp)
                     .font(.ps(10))
@@ -65,8 +73,14 @@ struct CoworkSkillsPicker: View {
     }
 
     private var skillsLabel: String {
-        guard cowork.activeModelSupportsTools else { return L10n.skillsOff }
+        guard cowork.activeModelSupportsTools else {
+            return cowork.isActiveModelNativeMLX ? L10n.skillsOffMLX : L10n.skillsOff
+        }
         return L10n.skillsCount(cowork.selectedSkillIDs.count)
+    }
+
+    private var skillsDisabledHelp: String {
+        cowork.isActiveModelNativeMLX ? L10n.toolsDisabledSkillsMLXHelp : L10n.toolsDisabledSkillsHelp
     }
 
     private func toggleSkill(_ name: String) {

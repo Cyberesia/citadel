@@ -82,6 +82,18 @@ enum L10n {
     // MARK: - Session
 
     static var agentWorking: String { t("Agent working…", "Agent en cours…") }
+    static func agentNamedWorking(_ name: String) -> String {
+        t("\(name) is working…", "\(name) travaille…")
+    }
+    static func agentRunningTool(_ tool: String) -> String {
+        t("Running \(tool)…", "Exécute \(tool)…")
+    }
+    static func agentWorkingOn(_ detail: String) -> String {
+        t("Working on \(detail)…", "En cours : \(detail)…")
+    }
+    static func agentWaitingPermission(_ detail: String) -> String {
+        t("Waiting for permission: \(detail)", "En attente d’autorisation : \(detail)")
+    }
     static var stop: String { t("Stop", "Arrêter") }
     static var back: String { t("Back", "Retour") }
     static var resetSession: String { t("Reset session", "Réinitialiser la session") }
@@ -112,7 +124,16 @@ enum L10n {
 
     static var voiceScribe: String { t("Voice Scribe", "Dictée vocale") }
     static var voiceListening: String { t("Listening…", "Écoute…") }
-    static var voiceTapToSpeak: String { t("Tap to dictate", "Appuyer pour dicter") }
+    static var voiceTapToSpeak: String {
+        t("Click mic to dictate", "Cliquer sur le micro pour dicter")
+    }
+    static var voiceTapToFinish: String {
+        t("Click mic again to transcribe", "Cliquer à nouveau pour transcrire")
+    }
+    static var voiceTranscriptionEmpty: String {
+        t("No speech detected. Try again closer to the microphone.",
+          "Aucune parole détectée. Réessayez plus près du micro.")
+    }
     static var voicePermissionDenied: String {
         t("Voice Scribe needs microphone and speech recognition access.",
           "La dictée vocale nécessite l'accès au micro et à la reconnaissance vocale.")
@@ -120,6 +141,10 @@ enum L10n {
     static var voiceBackendUnavailable: String {
         t("Keep is not ready — start a session before using voice dictation, or enable Speech access in System Settings.",
           "Keep n'est pas prêt — ouvrez une session avant la dictée, ou autorisez Parole et Micro dans Réglages système.")
+    }
+    static var voiceOnDeviceUnsupported: String {
+        t("On-device dictation is not available for this language on this Mac. Install the language in System Settings → Keyboard → Dictation.",
+          "La dictée locale n'est pas disponible pour cette langue sur ce Mac. Installez la langue dans Réglages système → Clavier → Dictée.")
     }
 
     // MARK: - Desk companion
@@ -159,6 +184,11 @@ enum L10n {
 
     static var permissionRequired: String { t("Permission required", "Autorisation requise") }
     static var alwaysAllow: String { t("Always allow", "Toujours autoriser") }
+    static var openPermissionSession: String { t("Open session", "Ouvrir la session") }
+    static var permissionSessionMissing: String {
+        t("Can't resolve which session owns this permission prompt. Re-open the chat and try again.",
+          "Impossible de trouver la session de cette demande d’autorisation. Rouvrez le chat et réessayez.")
+    }
     static func pendingConfirmations(_ count: Int) -> String {
         t("\(count) pending confirmation\(count > 1 ? "s" : "")",
           "\(count) confirmation\(count > 1 ? "s" : "") en attente")
@@ -254,6 +284,7 @@ enum L10n {
     static var renameSession: String { t("Rename session", "Renommer la session") }
     static var renameEllipsis: String { t("Rename…", "Renommer…") }
     static var thinkingLabel: String { t("Thinking", "Réflexion") }
+    static var thinkingFinished: String { t("Thinking finished", "Réflexion terminée") }
     static var assistantResponding: String { t("Assistant is responding", "L'assistant répond") }
     static var providersSubtitle: String {
         t("Connect cloud APIs or local runtimes (Ollama, LM Studio).",
@@ -874,11 +905,39 @@ enum L10n {
     static var chatOnly: String { t("Chat only", "Chat seul") }
     static var toolsAvailable: String { t("Tools", "Outils") }
     static var mcpOff: String { t("MCP · off", "MCP · désactivé") }
+    static var mcpOffMLX: String { t("MCP · MLX (chat only)", "MCP · MLX (chat seul)") }
     static var skillsOff: String { t("Skills · off", "Compétences · désactivées") }
+    static var skillsOffMLX: String { t("Skills · MLX (chat only)", "Compétences · MLX (chat seul)") }
     static var chatOnlyModeNotice: String {
         t(
             "Conversation mode — this model answers without tools (files, shell, MCP unavailable).",
             "Mode conversation — ce modèle répond sans outils (fichiers, shell, MCP indisponibles)."
+        )
+    }
+    static var chatOnlyMLXNotice: String {
+        t(
+            "Conversation mode — Native MLX is chat-only (no tools). Switch to Ollama or a cloud model that supports tools, then enable MCP or Skills.",
+            "Mode conversation — MLX natif = chat seul (sans outils). Passez à Ollama ou un modèle cloud compatible outils, puis activez MCP ou Compétences."
+        )
+    }
+    static var chatOnlyEnableToolsNotice: String {
+        t(
+            "Conversation mode — enable MCP tools or Skills using the chips above to use files, shell, and integrations.",
+            "Mode conversation — activez MCP ou Compétences via les puces ci-dessus pour fichiers, shell et intégrations."
+        )
+    }
+    static var mlxChatOnlyHint: String {
+        t(
+            "Native MLX is chat-only — no files, shell, or MCP. Switch to Ollama or a cloud model that supports tools.",
+            "MLX natif = chat seul — pas de fichiers, shell ni MCP. Passez à Ollama ou un modèle cloud compatible outils."
+        )
+    }
+    static var switchModelForTools: String { t("Switch model…", "Changer de modèle…") }
+    static var switchModelSheetTitle: String { t("Switch model", "Changer de modèle") }
+    static var switchModelSheetDetail: String {
+        t(
+            "Pick a tool-capable model, then enable MCP or Skills in the session chips.",
+            "Choisissez un modèle compatible outils, puis activez MCP ou Compétences via les puces de session."
         )
     }
     static var chatOnlyPresetContext: String {
@@ -902,12 +961,28 @@ enum L10n {
         )
     }
     static var toolsDisabledMcpHelp: String {
-        t("MCP tools require a model with tool support (e.g. qwen3.6).",
-          "Les outils MCP nécessitent un modèle compatible outils (ex. qwen3.6).")
+        t(
+            "MCP tools require a tool-capable model (Ollama with Qwen, or a cloud model).",
+            "Les outils MCP exigent un modèle compatible outils (Ollama avec Qwen, ou modèle cloud)."
+        )
+    }
+    static var toolsDisabledMcpMLXHelp: String {
+        t(
+            "Native MLX is chat-only — no files, shell, or MCP. Switch to Ollama or a cloud model that supports tools.",
+            "MLX natif = chat seul — pas de fichiers, shell ni MCP. Passez à Ollama ou un modèle cloud compatible outils."
+        )
     }
     static var toolsDisabledSkillsHelp: String {
-        t("Agent skills require a model with tool support.",
-          "Les compétences nécessitent un modèle compatible outils.")
+        t(
+            "Skills require a tool-capable model (Ollama or cloud).",
+            "Les compétences exigent un modèle compatible outils (Ollama ou cloud)."
+        )
+    }
+    static var toolsDisabledSkillsMLXHelp: String {
+        t(
+            "Skills require a tool-capable model. Native MLX is chat-only — switch to Ollama or a cloud model that supports tools.",
+            "Les compétences exigent un modèle compatible outils. MLX natif = chat seul — passez à Ollama ou un modèle cloud compatible outils."
+        )
     }
     static var noMcpServers: String { t("No MCP servers", "Aucun serveur MCP") }
     static var manageMcp: String { t("Manage MCP tools…", "Gérer les outils MCP…") }
@@ -1036,6 +1111,8 @@ enum L10n {
     }
 
     static var localFortress: String { t("Watching locally", "Surveillance locale") }
+    static var hideSummaryBar: String { t("Hide", "Masquer") }
+    static var showSummaryBar: String { t("Show status bar", "Afficher la barre") }
     static var fortressDemo: String { t("Fortress demo", "Démo Fortress") }
     static var fortressIdle: String { t("Fortress idle", "Fortress inactif") }
     static var helperActive: String { t("Privileged helper on", "Assistant privilégié actif") }

@@ -55,8 +55,13 @@ enum CoworkCloudProviderDiscovery {
         let data = try await getJSON("\(base)/models", apiKey: apiKey, headerStyle: .bearer)
         guard let list = data["data"] as? [[String: Any]] else { return [] }
         return list.compactMap { row in
-            guard let id = row["id"] as? String,
-                  id.contains("gpt") || id.contains("o1") || id.contains("o3") || id.contains("o4") else { return nil }
+            guard let id = row["id"] as? String else { return nil }
+            let lower = id.lowercased()
+            guard lower.contains("gpt")
+                || lower.contains("o1")
+                || lower.contains("o3")
+                || lower.contains("o4")
+                || lower.contains("chatgpt") else { return nil }
             let option = CoworkModelOption.named(id: id, name: id)
             var model = CoworkCloudModelCatalog.enrich(option, platform: platform)
             if let ctx = positiveInt(row["context_length"]) ?? positiveInt(row["context_window"]) {

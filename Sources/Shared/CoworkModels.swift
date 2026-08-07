@@ -401,6 +401,26 @@ struct CoworkMessage: Identifiable, Decodable, Hashable {
             content = try c.decodeIfPresent(CoworkMessageContent.self, forKey: .content)
         }
     }
+
+    /// Local-only message for direct cloud chat turns (not persisted by CoworkCore).
+    init(
+        localID: String,
+        conversationID: String,
+        position: String,
+        type: String = "text",
+        text: String,
+        status: String = "finish"
+    ) {
+        id = localID
+        msgID = localID
+        self.type = type
+        self.position = position
+        self.conversationID = conversationID
+        createdAt = Date().timeIntervalSince1970 * 1000
+        self.status = status
+        hidden = false
+        content = CoworkMessageContent.local(text: text)
+    }
 }
 
 struct CoworkMessageContent: Decodable, Hashable {
@@ -484,6 +504,10 @@ struct CoworkMessageContent: Decodable, Hashable {
             text = json.stringValue
             type = nil; name = nil; status = nil; description = nil; callID = nil
         }
+    }
+
+    static func local(text: String) -> CoworkMessageContent {
+        CoworkMessageContent(json: .object(["content": .string(text), "text": .string(text)]))
     }
 }
 
@@ -946,6 +970,118 @@ struct CoworkConfirmation: Identifiable, Decodable, Hashable {
         case callID = "call_id"
         case conversationID = "conversation_id"
         case msgID = "msg_id"
+        case callId
+        case conversationId
+        case msgId
+        case confirmID = "confirm_id"
+        case content
+        case data
+        case confirmation
+    }
+
+    init(
+        id: String,
+        title: String?,
+        description: String,
+        callID: String,
+        conversationID: String?,
+        msgID: String?,
+        options: [CoworkConfirmationOption]
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.callID = callID
+        self.conversationID = conversationID
+        self.msgID = msgID
+        self.options = options
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+
+        let directCallID = try c.decodeIfPresent(String.self, forKey: .callID)
+            ?? c.decodeIfPresent(String.self, forKey: .callId)
+            ?? c.decodeIfPresent(String.self, forKey: .confirmID)
+
+        if directCallID == nil {
+            if let nested = try? c.decode(CoworkConfirmation.self, forKey: .confirmation) {
+                self = nested
+                return
+            }
+            if let nested = try? c.decode(CoworkConfirmation.self, forKey: .data) {
+                self = nested
+                return
+            }
+            if let nested = try? c.decode(CoworkConfirmation.self, forKey: .content) {
+                self = nested
+                return
+            }
+        }
+
+        let callID = try directCallID ?? c.decodeIfPresent(String.self, forKey: .id)
+        guard let callID, !callID.isEmpty else {
+            throw DecodingError.dataCorruptedError(forKey: .callID, in: c, debugDescription: "Missing call_id")
+        }
+
+        let id = (try c.decodeIfPresent(String.self, forKey: .id)).flatMap { $0.isEmpty ? nil : $0 } ?? callID
+        let title = try c.decodeIfPresent(String.self, forKey: .title)
+        let description = try c.decodeIfPresent(String.self, forKey: .description) ?? title ?? ""
+        let conversationID = try c.decodeIfPresent(String.self, forKey: .conversationID)
+            ?? c.decodeIfPresent(String.self, forKey: .conversationId)
+        let msgID = try c.decodeIfPresent(String.self, forKey: .msgID)
+            ?? c.decodeIfPresent(String.self, forKey: .msgId)
+        let options = try c.decodeIfPresent([CoworkConfirmationOption].self, forKey: .options) ?? []
+
+        self.init(
+            id: id,
+            title: title,
+            description: description,
+            callID: callID,
+            conversationID: conversationID,
+            msgID: msgID,
+            options: options
+        )
+    }
+
+    func withConversationID(_ conversationID: String?) -> CoworkConfirmation {
+        guard let conversationID, !conversationID.isEmpty else { return self }
+        if self.conversationID == conversationID { return self }
+        return CoworkConfirmation(
+            id: id,
+            title: title,
+            description: description,
+            callID: callID,
+            conversationID: conversationID,
+            msgID: msgID,
+            options: options
+        )
+    }
+
+    /// Best-effort parse for live WebSocket payloads (nested / alternate shapes).
+    static func decodeFlexible(from data: Data) -> CoworkConfirmation? {
+        if let direct = try? JSONDecoder.cowork.decode(CoworkConfirmation.self, from: data) {
+            return direct
+        }
+        guard let root = try? JSONSerialization.jsonObject(with: data) else { return nil }
+        let candidates: [Any] = {
+            if let obj = root as? [String: Any] {
+                if let nested = obj["confirmation"] ?? obj["data"] ?? obj["content"] ?? obj["payload"] {
+                    return [nested, obj]
+                }
+                return [obj]
+            }
+            if let arr = root as? [Any] { return arr }
+            return []
+        }()
+        for candidate in candidates {
+            guard JSONSerialization.isValidJSONObject(candidate),
+                  let piece = try? JSONSerialization.data(withJSONObject: candidate),
+                  let parsed = try? JSONDecoder.cowork.decode(CoworkConfirmation.self, from: piece)
+            else { continue }
+            return parsed
+        }
+        return nil
     }
 }
 
@@ -954,6 +1090,31 @@ struct CoworkConfirmationOption: Decodable, Hashable, Identifiable {
     let value: String
 
     var id: String { value }
+
+    enum CodingKeys: String, CodingKey {
+        case label, value, name, title, id, key
+    }
+
+    init(label: String, value: String) {
+        self.label = label
+        self.value = value
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let value = try c.decodeIfPresent(String.self, forKey: .value)
+            ?? c.decodeIfPresent(String.self, forKey: .id)
+            ?? c.decodeIfPresent(String.self, forKey: .key)
+            ?? ""
+        let label = try c.decodeIfPresent(String.self, forKey: .label)
+            ?? c.decodeIfPresent(String.self, forKey: .name)
+            ?? c.decodeIfPresent(String.self, forKey: .title)
+            ?? value
+        guard !value.isEmpty else {
+            throw DecodingError.dataCorruptedError(forKey: .value, in: c, debugDescription: "Missing option value")
+        }
+        self.init(label: label.isEmpty ? value : label, value: value)
+    }
 }
 
 struct CoworkConfirmRequest: Encodable {

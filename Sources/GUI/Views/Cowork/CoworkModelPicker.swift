@@ -38,13 +38,16 @@ struct CoworkModelPicker: View {
             }
             .buttonStyle(PrismHandButtonStyle())
             .popover(isPresented: $showPopover, arrowEdge: .bottom) {
-                pickerContent
+                CoworkModelPickerPanel(onDismiss: { showPopover = false })
                     .prismPopoverChrome(width: 340, maxHeight: 360)
             }
             .onAppear {
                 Task {
+                    await cowork.waitForBootstrapIfNeeded()
                     await cowork.refreshOllamaModels()
-                    await cowork.refreshMLXModelsAsync()
+                    if !cowork.shouldDeferLocalMLXActivation() {
+                        await cowork.refreshMLXModelsAsync()
+                    }
                 }
             }
             .onChange(of: cowork.selectedModelID) { _ in
@@ -59,7 +62,78 @@ struct CoworkModelPicker: View {
         }
     }
 
-    private var pickerContent: some View {
+    private var currentModelDisplay: CoworkUserFacing.ModelDisplay {
+        if cowork.prefersCloudModelSelection,
+           let model = cowork.selectedModelID {
+            return CoworkUserFacing.modelDisplay(
+                providerID: cowork.selectedProviderID,
+                rawModel: model,
+                providers: cowork.providers
+            )
+        }
+        if activeTab == .mlx || cowork.inferredModelPickerTab == .mlx {
+            let repoID = selectedMLXRepoID.isEmpty
+                ? (cowork.mlxInstalledModels.first?.id ?? CoworkMLXModelCatalog.defaultRepoID)
+                : selectedMLXRepoID
+            return CoworkUserFacing.modelDisplay(
+                providerID: "mlx",
+                rawModel: repoID,
+                providers: cowork.providers
+            )
+        }
+        if let model = cowork.selectedModelID {
+            return CoworkUserFacing.modelDisplay(
+                providerID: cowork.selectedProviderID,
+                rawModel: model,
+                providers: cowork.providers
+            )
+        }
+        return CoworkUserFacing.ModelDisplay(
+            alias: L10n.selectModel,
+            technical: nil,
+            provider: activeTab.label
+        )
+    }
+
+    private var tabIcon: String {
+        cowork.inferredModelPickerTab.iconName
+    }
+
+    private var statusColor: Color {
+        switch cowork.inferredModelPickerTab {
+        case .mlx:
+            return cowork.mlxInstalledModels.isEmpty ? .orange : .green
+        case .cloud:
+            return cowork.cloudProviders.isEmpty ? .orange : .green
+        case .ollama:
+            return cowork.ollamaReachable ? .green : .red
+        }
+    }
+
+    private var statusHelp: String {
+        switch cowork.inferredModelPickerTab {
+        case .mlx:
+            return L10n.mlxChatOnlyHint
+        case .cloud:
+            return cowork.cloudProviders.isEmpty ? L10n.noCloudProviders : L10n.cloudTab
+        case .ollama:
+            return cowork.ollamaReachable ? L10n.ollamaReachable : L10n.ollamaOffline
+        }
+    }
+}
+
+/// Shared model picker body for the home popover and the global switch-model sheet.
+struct CoworkModelPickerPanel: View {
+    @EnvironmentObject var cowork: CoworkState
+    @AppStorage("cowork.modelPickerTab") private var tabRaw = CoworkModelPickerTab.ollama.rawValue
+    @AppStorage("cowork.selectedMLXRepoID") private var selectedMLXRepoID = ""
+    var onDismiss: () -> Void = {}
+
+    private var activeTab: CoworkModelPickerTab {
+        CoworkModelPickerTab(rawValue: tabRaw) ?? .ollama
+    }
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             tabSegment
 
@@ -67,7 +141,13 @@ struct CoworkModelPicker: View {
             case .ollama:
                 ollamaList
             case .mlx:
-                mlxList
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.mlxChatOnlyHint)
+                        .font(.ps(10))
+                        .foregroundStyle(PrismTheme.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    mlxList
+                }
             case .cloud:
                 cloudList
             }
@@ -86,7 +166,7 @@ struct CoworkModelPicker: View {
             .buttonStyle(PrismHandButtonStyle())
 
             Button(L10n.manageProviders) {
-                showPopover = false
+                onDismiss()
                 DispatchQueue.main.async {
                     cowork.showProvidersManager = true
                 }
@@ -164,7 +244,7 @@ struct CoworkModelPicker: View {
                         chatOnly: !model.supportsTools
                     ) {
                         selectOllamaModel(model.name)
-                        showPopover = false
+                        onDismiss()
                     }
                 }
             }
@@ -174,7 +254,7 @@ struct CoworkModelPicker: View {
 
     private var mlxList: some View {
         CoworkMLXModelManagerContent {
-            showPopover = false
+            onDismiss()
         }
         .onAppear {
             CoworkMLXModelLibrary.shared.refreshInstalledByteSizes()
@@ -193,7 +273,7 @@ struct CoworkModelPicker: View {
                             .font(.ps(10))
                             .foregroundStyle(PrismTheme.textSecondary)
                         Button(L10n.addModelProvider) {
-                            showPopover = false
+                            onDismiss()
                             DispatchQueue.main.async {
                                 cowork.showProviderSheet = true
                             }
@@ -240,7 +320,7 @@ struct CoworkModelPicker: View {
                 ) {
                     Task {
                         await cowork.selectCloudModel(providerID: provider.id, model: model)
-                        showPopover = false
+                        onDismiss()
                     }
                 }
             }
@@ -289,57 +369,6 @@ struct CoworkModelPicker: View {
         .buttonStyle(PrismHandButtonStyle())
     }
 
-    private var currentModelDisplay: CoworkUserFacing.ModelDisplay {
-        if activeTab == .mlx || cowork.inferredModelPickerTab == .mlx {
-            let repoID = selectedMLXRepoID.isEmpty
-                ? (cowork.mlxInstalledModels.first?.id ?? CoworkMLXModelCatalog.defaultRepoID)
-                : selectedMLXRepoID
-            return CoworkUserFacing.modelDisplay(
-                providerID: "mlx",
-                rawModel: repoID,
-                providers: cowork.providers
-            )
-        }
-        if let model = cowork.selectedModelID {
-            return CoworkUserFacing.modelDisplay(
-                providerID: cowork.selectedProviderID,
-                rawModel: model,
-                providers: cowork.providers
-            )
-        }
-        return CoworkUserFacing.ModelDisplay(
-            alias: L10n.selectModel,
-            technical: nil,
-            provider: activeTab.label
-        )
-    }
-
-    private var tabIcon: String {
-        cowork.inferredModelPickerTab.iconName
-    }
-
-    private var statusColor: Color {
-        switch cowork.inferredModelPickerTab {
-        case .mlx:
-            return cowork.mlxInstalledModels.isEmpty ? .orange : .green
-        case .cloud:
-            return cowork.cloudProviders.isEmpty ? .orange : .green
-        case .ollama:
-            return cowork.ollamaReachable ? .green : .red
-        }
-    }
-
-    private var statusHelp: String {
-        switch cowork.inferredModelPickerTab {
-        case .mlx:
-            return cowork.mlxInstalledModels.isEmpty ? "No MLX models on disk" : "MLX weights found"
-        case .cloud:
-            return cowork.cloudProviders.isEmpty ? L10n.noCloudProviders : L10n.cloudTab
-        case .ollama:
-            return cowork.ollamaReachable ? L10n.ollamaReachable : L10n.ollamaOffline
-        }
-    }
-
     private func isOllamaSelected(_ name: String) -> Bool {
         cowork.inferredModelPickerTab == .ollama && cowork.selectedModelID == name
     }
@@ -351,5 +380,27 @@ struct CoworkModelPicker: View {
     private func selectOllamaModel(_ name: String) {
         tabRaw = CoworkModelPickerTab.ollama.rawValue
         Task { await cowork.selectOllamaModel(name) }
+    }
+}
+
+struct CoworkModelSwitchSheet: View {
+    @EnvironmentObject var cowork: CoworkState
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(L10n.switchModelSheetTitle)
+                    .font(.ps(16, weight: .bold))
+                Text(L10n.switchModelSheetDetail)
+                    .font(.ps(11))
+                    .foregroundStyle(PrismTheme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            CoworkModelPickerPanel(onDismiss: { dismiss() })
+        }
+        .padding(20)
+        .frame(minWidth: 380, minHeight: 440)
     }
 }

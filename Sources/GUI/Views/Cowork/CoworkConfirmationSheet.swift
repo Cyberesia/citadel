@@ -1,7 +1,10 @@
 import SwiftUI
 
+/// Global permission card — visible even when the chat is closed (Settings / Fortress / other Keep tabs).
 struct CoworkConfirmationSheet: View {
     @EnvironmentObject var cowork: CoworkState
+    @EnvironmentObject var router: CitadelShellRouter
+    var showsOpenSession: Bool = true
 
     var body: some View {
         if let confirmation = cowork.activeConfirmation {
@@ -54,12 +57,23 @@ struct CoworkConfirmationSheet: View {
                         .buttonStyle(PrismHandButtonStyle())
                         .font(.ps(10))
                     }
+                    if showsOpenSession, cowork.activeConversationID == nil {
+                        Button(L10n.openPermissionSession) {
+                            router.section = .cowork
+                            router.coworkMode = .sessions
+                            Task { await cowork.openConfirmationConversation() }
+                        }
+                        .buttonStyle(PrismHandButtonStyle())
+                        .font(.ps(10, weight: .semibold))
+                        .foregroundStyle(PrismTheme.accentSecondary)
+                    }
                 }
             }
             .padding(14)
             .prismGlass(cornerRadius: 16, padding: 0)
             .padding(.horizontal, 16)
             .padding(.bottom, 8)
+            .frame(maxWidth: 560)
         }
     }
 

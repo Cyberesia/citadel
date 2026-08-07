@@ -6,17 +6,26 @@ struct CoworkThinkingCard: View {
     let isThinking: Bool
     let collapseAfter: Date?
     let persistedExpanded: Bool?
+    /// When false, never auto-collapse (e.g. reply body still empty).
+    var allowsAutoCollapse: Bool = true
     var onPersistExpanded: (Bool) -> Void = { _ in }
     var onAutoCollapsed: () -> Void = {}
 
     @State private var isExpanded: Bool
-    @State private var shimmerPhase = false
+
+    private static let liveThinkingCap = 8_000
+
+    private var displayText: String {
+        guard isThinking, text.count > Self.liveThinkingCap else { return text }
+        return String(text.suffix(Self.liveThinkingCap))
+    }
 
     init(
         text: String,
         isThinking: Bool,
         collapseAfter: Date?,
         persistedExpanded: Bool?,
+        allowsAutoCollapse: Bool = true,
         onPersistExpanded: @escaping (Bool) -> Void = { _ in },
         onAutoCollapsed: @escaping () -> Void = {}
     ) {
@@ -24,20 +33,28 @@ struct CoworkThinkingCard: View {
         self.isThinking = isThinking
         self.collapseAfter = collapseAfter
         self.persistedExpanded = persistedExpanded
+        self.allowsAutoCollapse = allowsAutoCollapse
         self.onPersistExpanded = onPersistExpanded
         self.onAutoCollapsed = onAutoCollapsed
         _isExpanded = State(
             initialValue: Self.initialExpanded(
                 persisted: persistedExpanded,
                 isThinking: isThinking,
-                collapseAfter: collapseAfter
+                collapseAfter: collapseAfter,
+                allowsAutoCollapse: allowsAutoCollapse
             )
         )
     }
 
-    private static func initialExpanded(persisted: Bool?, isThinking: Bool, collapseAfter: Date?) -> Bool {
+    private static func initialExpanded(
+        persisted: Bool?,
+        isThinking: Bool,
+        collapseAfter: Date?,
+        allowsAutoCollapse: Bool
+    ) -> Bool {
         if let persisted { return persisted }
         if isThinking { return true }
+        if !allowsAutoCollapse { return true }
         guard let collapseAfter, !isThinking else { return true }
         return Date().timeIntervalSince(collapseAfter) <= 0.45
     }
@@ -61,14 +78,15 @@ struct CoworkThinkingCard: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(PrismTheme.accentSecondary)
                             .rotationEffect(.degrees(isExpanded && !isThinking ? 90 : 0))
-                        Text(isThinking ? "Reasoning…" : "Reasoning")
+                        Text(isThinking ? L10n.reasoningActive : L10n.thinkingFinished)
                             .font(.ps(10, weight: .semibold))
                             .foregroundStyle(PrismTheme.textSecondary)
                         Spacer(minLength: 8)
                     }
 
                     if isExpanded {
-                        Text(text)
+                        // Plain monospaced like Murmura — never markdown-reparse reasoning (kills 27B FPS).
+                        Text(displayText)
                             .font(.ps(10, design: .monospaced))
                             .foregroundStyle(PrismTheme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -83,32 +101,21 @@ struct CoworkThinkingCard: View {
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .fill(PrismTheme.surfaceMuted.opacity(0.42))
-                    .overlay {
-                        if isThinking {
-                            GeometryReader { proxy in
-                                LinearGradient(
-                                    colors: [.clear, PrismTheme.accentSecondary.opacity(0.16), .clear],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                                .frame(width: max(proxy.size.width * 0.45, 80))
-                                .offset(x: shimmerPhase ? proxy.size.width : -proxy.size.width * 0.45)
-                                .animation(
-                                    .linear(duration: 1.35).repeatForever(autoreverses: false),
-                                    value: shimmerPhase
-                                )
-                            }
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .allowsHitTesting(false)
-                        }
-                    }
             )
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
         .onAppear {
-            shimmerPhase = true
-            if isExpanded, persistedExpanded != true {
+            if isExpanded, allowsAutoCollapse, persistedExpanded != true {
+                scheduleCollapseIfNeeded(collapseAfter)
+            }
+        }
+        .onChange(of: isThinking) { _, newValue in
+            if newValue {
+                withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
+                    isExpanded = true
+                }
+            } else if isExpanded, allowsAutoCollapse, persistedExpanded != true {
                 scheduleCollapseIfNeeded(collapseAfter)
             }
         }
@@ -118,26 +125,25 @@ struct CoworkThinkingCard: View {
                 isExpanded = newValue
             }
         }
-        .onChange(of: isThinking) { _, newValue in
-            if newValue {
+        .onChange(of: collapseAfter) { _, newValue in
+            if isExpanded, allowsAutoCollapse, persistedExpanded != true, !isThinking {
+                scheduleCollapseIfNeeded(newValue)
+            }
+        }
+        .onChange(of: allowsAutoCollapse) { _, allowed in
+            if !allowed, !isThinking {
                 withAnimation(.spring(response: 0.28, dampingFraction: 0.86)) {
                     isExpanded = true
                 }
-                shimmerPhase = true
-            }
-        }
-        .onChange(of: collapseAfter) { _, newValue in
-            if isExpanded, persistedExpanded != true {
-                scheduleCollapseIfNeeded(newValue)
             }
         }
     }
 
     private func scheduleCollapseIfNeeded(_ finishedAt: Date?) {
-        guard isExpanded, persistedExpanded != true, !isThinking, let finishedAt else { return }
-        let delay = max(0, finishedAt.timeIntervalSinceNow)
+        guard allowsAutoCollapse, isExpanded, persistedExpanded != true, !isThinking, let finishedAt else { return }
+        let delay = max(0, finishedAt.timeIntervalSinceNow + 0.45)
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            guard isExpanded, persistedExpanded != true, !isThinking, collapseAfter == finishedAt else { return }
+            guard allowsAutoCollapse, isExpanded, persistedExpanded != true, !isThinking, collapseAfter == finishedAt else { return }
             withAnimation(.easeOut(duration: 0.2)) {
                 isExpanded = false
             }

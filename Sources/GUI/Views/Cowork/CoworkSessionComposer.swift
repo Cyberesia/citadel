@@ -4,6 +4,7 @@ import SwiftUI
 struct CoworkSessionComposer: View {
     @EnvironmentObject var cowork: CoworkState
     @Binding var text: String
+    @State private var dictationTextBase = ""
 
     var body: some View {
         VStack(spacing: 8) {
@@ -30,12 +31,11 @@ struct CoworkSessionComposer: View {
             )
 
             HStack(alignment: .bottom, spacing: 10) {
-                CoworkComposerAction(
-                    title: L10n.voiceScribe,
-                    systemImage: cowork.voiceScribe.isListening ? "mic.fill" : "mic",
-                    help: L10n.voiceTapToSpeak
-                ) {
-                    Task { await toggleVoice() }
+                VStack(alignment: .leading, spacing: 4) {
+                    CoworkVoiceDictationButton {
+                        Task { await toggleVoice() }
+                    }
+                    CoworkVoiceDictationStatus()
                 }
 
                 CoworkComposerAction(
@@ -93,6 +93,10 @@ struct CoworkSessionComposer: View {
         .padding(.horizontal, 14)
         .padding(.bottom, 14)
         .background(PrismTheme.surfaceMuted.opacity(0.35))
+        .onChange(of: cowork.voiceScribe.partialText) { _, partial in
+            guard cowork.voiceScribe.isListening else { return }
+            text = CoworkState.appendDictationTranscript(to: dictationTextBase, transcript: partial)
+        }
     }
 
     private var suggestions: [CoworkComposerSuggestion] {
@@ -116,23 +120,28 @@ struct CoworkSessionComposer: View {
 
     private func toggleVoice() async {
         if cowork.voiceScribe.isListening {
-            let transcript = await cowork.voiceScribe.stopAndTranscribe(client: cowork.client)
-            if !transcript.isEmpty {
-                text = transcript
+            let transcript = cowork.voiceScribe.stopAndGetTranscript()
+            if transcript.isEmpty {
+                cowork.statusMessage = cowork.voiceScribe.errorMessage ?? L10n.voiceTranscriptionEmpty
+            } else {
+                text = CoworkState.appendDictationTranscript(to: dictationTextBase, transcript: transcript)
             }
+            dictationTextBase = ""
             return
         }
-        guard await cowork.voiceScribe.requestAuthorization() else {
-            cowork.statusMessage = L10n.voicePermissionDenied
-            return
-        }
-        guard cowork.coreStatus == .running, cowork.client != nil else {
-            cowork.statusMessage = L10n.voiceBackendUnavailable
-            return
-        }
+        dictationTextBase = text
+        cowork.voiceScribe.armListeningUI()
         do {
-            try cowork.voiceScribe.startListening()
+            guard await cowork.voiceScribe.requestAuthorization() else {
+                cowork.voiceScribe.stopListening()
+                cowork.statusMessage = cowork.voiceScribe.errorMessage ?? L10n.voicePermissionDenied
+                dictationTextBase = ""
+                return
+            }
+            try await cowork.voiceScribe.startListening()
         } catch {
+            cowork.voiceScribe.stopListening()
+            dictationTextBase = ""
             cowork.statusMessage = error.localizedDescription
         }
         if let err = cowork.voiceScribe.errorMessage {

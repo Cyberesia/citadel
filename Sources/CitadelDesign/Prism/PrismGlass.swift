@@ -205,6 +205,150 @@ public struct PrismSelectableRow: View {
 
 // MARK: - Activity banner
 
+/// Status line with vertical roller swaps + soft shimmer (Keep activity / streaming).
+public struct PrismRollingShimmerText: View {
+    public let text: String
+    public var font: Font
+    public var color: Color
+    public var lineLimit: Int
+    public var shimmer: Bool
+
+    @State private var displayed: String
+    @State private var rollToken = 0
+    @State private var shimmerPhase = false
+    @State private var marqueePhase = false
+    @State private var textWidth: CGFloat = 0
+    @State private var containerWidth: CGFloat = 0
+
+    public init(
+        text: String,
+        font: Font = .system(size: 11, weight: .medium),
+        color: Color = PrismTheme.textPrimary,
+        lineLimit: Int = 1,
+        shimmer: Bool = true
+    ) {
+        self.text = text
+        self.font = font
+        self.color = color
+        self.lineLimit = lineLimit
+        self.shimmer = shimmer
+        _displayed = State(initialValue: text)
+    }
+
+    public var body: some View {
+        GeometryReader { proxy in
+            let needsMarquee = textWidth > proxy.size.width + 4
+            ZStack(alignment: .leading) {
+                rollerLine(displayed)
+                    .id(rollToken)
+                    .transition(
+                        .asymmetric(
+                            insertion: .move(edge: .bottom).combined(with: .opacity),
+                            removal: .move(edge: .top).combined(with: .opacity)
+                        )
+                    )
+                    .offset(x: needsMarquee && marqueePhase ? -(textWidth - proxy.size.width) : 0)
+                    .animation(
+                        needsMarquee
+                            ? .easeInOut(duration: max(2.4, Double(textWidth / 42))).repeatForever(autoreverses: true)
+                            : .default,
+                        value: marqueePhase
+                    )
+                    .background(
+                        Text(displayed)
+                            .font(font)
+                            .lineLimit(1)
+                            .fixedSize()
+                            .hidden()
+                            .background(
+                                GeometryReader { textProxy in
+                                    Color.clear.preference(key: PrismTextWidthKey.self, value: textProxy.size.width)
+                                }
+                            )
+                    )
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
+            .clipped()
+            .onAppear {
+                containerWidth = proxy.size.width
+                if shimmer { shimmerPhase = true }
+                if needsMarquee { marqueePhase = true }
+            }
+            .onChange(of: proxy.size.width) { _, width in
+                containerWidth = width
+                marqueePhase = textWidth > width + 4
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: lineHeight)
+        .onPreferenceChange(PrismTextWidthKey.self) { width in
+            textWidth = width
+            marqueePhase = width > containerWidth + 4
+        }
+        .onChange(of: text) { _, newValue in
+            guard newValue != displayed else { return }
+            withAnimation(.spring(response: 0.36, dampingFraction: 0.86)) {
+                displayed = newValue
+                rollToken &+= 1
+            }
+            marqueePhase = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                marqueePhase = textWidth > containerWidth + 4
+            }
+        }
+        .accessibilityLabel(text)
+    }
+
+    private var lineHeight: CGFloat { lineLimit >= 2 ? 32 : 16 }
+
+    @ViewBuilder
+    private func rollerLine(_ value: String) -> some View {
+        Text(value)
+            .font(font)
+            .foregroundStyle(color)
+            .lineLimit(lineLimit)
+            .multilineTextAlignment(.leading)
+            .fixedSize(horizontal: true, vertical: false)
+            .overlay {
+                if shimmer {
+                    GeometryReader { proxy in
+                        LinearGradient(
+                            colors: [
+                                .clear,
+                                Color.white.opacity(0.34),
+                                PrismTheme.accentSecondary.opacity(0.22),
+                                .clear,
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(width: max(proxy.size.width * 0.42, 56))
+                        .offset(x: shimmerPhase ? proxy.size.width : -proxy.size.width * 0.42)
+                        .animation(
+                            .linear(duration: 1.55).repeatForever(autoreverses: false),
+                            value: shimmerPhase
+                        )
+                        .blendMode(.plusLighter)
+                    }
+                    .mask(
+                        Text(value)
+                            .font(font)
+                            .lineLimit(lineLimit)
+                            .fixedSize(horizontal: true, vertical: false)
+                    )
+                    .allowsHitTesting(false)
+                }
+            }
+    }
+}
+
+private struct PrismTextWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 /// Inline loading banner with animated ring — use for background Keep operations.
 public struct PrismActivityBanner: View {
     public let icon: String
@@ -247,13 +391,14 @@ public struct PrismActivityBanner: View {
             }
             .onAppear { spin = true }
 
-            Text(message)
-                .font(.ps(compact ? 10 : 11, weight: .medium))
-                .foregroundStyle(PrismTheme.textPrimary)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-
-            Spacer(minLength: 0)
+            PrismRollingShimmerText(
+                text: message,
+                font: .ps(compact ? 10 : 11, weight: .medium),
+                color: PrismTheme.textPrimary,
+                lineLimit: 1,
+                shimmer: true
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.horizontal, compact ? 10 : 14)
         .padding(.vertical, compact ? 7 : 10)

@@ -67,7 +67,7 @@ enum CoworkCloudModelCatalog {
         if id.contains("gpt-4o") || id.contains("gpt-4-turbo") { return 128_000 }
         if id.contains("gpt-4") { return 8_192 }
         if id.contains("gpt-3.5") { return 16_384 }
-        if id.contains("o1") || id.contains("o3") || id.contains("o4") { return 200_000 }
+        if id.contains("gpt-5") || id.contains("o1") || id.contains("o3") || id.contains("o4") { return 200_000 }
         if id.contains("claude") { return 200_000 }
         if id.contains("gemini-2.5") || id.contains("gemini-3") { return 1_048_576 }
         if id.contains("gemini") { return 1_048_576 }

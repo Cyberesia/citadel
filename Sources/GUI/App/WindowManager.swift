@@ -23,6 +23,10 @@ final class WindowManager {
     // MARK: - Public windows
 
     func showMainWindow() {
+        // Menu-bar (.accessory) apps hide windows when mic/Speech TCC steals focus.
+        if NSApp.activationPolicy() != .regular {
+            NSApp.setActivationPolicy(.regular)
+        }
         if let existing = mainWindow ?? findMainWindow() {
             mainWindow = existing
             focus(existing)
@@ -87,6 +91,7 @@ final class WindowManager {
         window.minSize = minSize
         window.backgroundColor = .clear
         window.isOpaque = false
+        window.hidesOnDeactivate = false
         window.contentView = NSHostingView(rootView: content)
         window.setContentSize(defaultSize)
         window.setFrameAutosaveName(autosaveName)
@@ -99,6 +104,7 @@ final class WindowManager {
     }
 
     private func focus(_ window: NSWindow) {
+        window.hidesOnDeactivate = false
         if window.isMiniaturized {
             window.deminiaturize(nil)
         }

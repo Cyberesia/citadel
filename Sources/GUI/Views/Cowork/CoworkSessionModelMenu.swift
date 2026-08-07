@@ -8,6 +8,9 @@ struct CoworkSessionModelMenu: View {
         Menu {
             if !cowork.mlxInstalledModels.isEmpty {
                 Section("Native MLX (on-device)") {
+                    Text(L10n.mlxChatOnlyHint)
+                        .font(.ps(9))
+                        .foregroundStyle(.secondary)
                     ForEach(cowork.mlxInstalledModels, id: \.id) { model in
                         Button {
                             Task { await cowork.switchActiveConversationToMLX(model.id) }
@@ -47,7 +50,7 @@ struct CoworkSessionModelMenu: View {
                 Section(CoworkUserFacing.providerLabel(platform: provider.platform, name: provider.name, providerID: provider.id)) {
                     ForEach(provider.models, id: \.self) { model in
                         Button {
-                            Task { await cowork.switchActiveConversationModel(providerID: provider.id, model: model) }
+                            Task { await cowork.selectCloudModel(providerID: provider.id, model: model) }
                         } label: {
                             menuRow(
                                 title: CoworkUserFacing.modelLabel(providerID: provider.id, rawModel: model),
@@ -98,7 +101,10 @@ struct CoworkSessionModelMenu: View {
     }
 
     private func isCurrent(model: String) -> Bool {
-        cowork.activeConversation?.model?.model == model || cowork.selectedModelID == model
+        if let conversationModel = cowork.activeConversation?.model?.model {
+            return conversationModel == model
+        }
+        return cowork.selectedModelID == model
     }
 
     @ViewBuilder

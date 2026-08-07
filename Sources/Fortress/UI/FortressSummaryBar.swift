@@ -3,6 +3,7 @@ import SwiftUI
 struct FortressSummaryBar: View {
     @ObservedObject var vm: FortressViewModel
     @EnvironmentObject var state: AppState
+    var onHide: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 16) {
@@ -53,6 +54,22 @@ struct FortressSummaryBar: View {
                 .padding(.vertical, 5)
                 .background(PrismTheme.surface.opacity(0.4))
                 .clipShape(Capsule())
+
+            if let onHide {
+                Button(action: onHide) {
+                    Label(L10n.hideSummaryBar, systemImage: "chevron.down")
+                        .labelStyle(.titleAndIcon)
+                }
+                .buttonStyle(PrismHandButtonStyle())
+                .font(.ps(11, weight: .semibold))
+                .foregroundStyle(PrismTheme.textSecondary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(PrismTheme.surface.opacity(0.4))
+                .clipShape(Capsule())
+                .help(L10n.hideSummaryBar)
+                .accessibilityLabel(L10n.hideSummaryBar)
+            }
         }
         .font(.ps(11, weight: .medium))
         .foregroundStyle(PrismTheme.textPrimary)

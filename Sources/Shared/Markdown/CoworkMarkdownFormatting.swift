@@ -5,6 +5,15 @@ import Foundation
 /// GFM pipe tables are handled explicitly (Apple’s parser ignores them and flattens rows).
 enum CoworkMarkdownFormatting {
 
+    /// Chat prose fragment only (tables already split out by `CoworkGFMTableMarkdown`).
+    /// Prefer this over `nsAttributedFromMarkdownProcVerbalPDF` in chat — PDF glue is for export.
+    static func nsAttributedMarkdownFragmentOnly(_ fragment: String, baseFontSize: CGFloat = 12) -> NSAttributedString {
+        let trimmed = fragment.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return NSAttributedString(string: "") }
+        let prose = CoworkMarkdownProseNormalizer.softened(trimmed)
+        return nsAttributedMarkdownFragment(prose, baseFontSize: baseFontSize)
+    }
+
     /// Parsed markdown with a default body font where runs don’t specify one.
     static func nsAttributedFromMarkdown(_ markdown: String, baseFontSize: CGFloat = 12) -> NSAttributedString {
         let trimmed = markdown.trimmingCharacters(in: .whitespacesAndNewlines)

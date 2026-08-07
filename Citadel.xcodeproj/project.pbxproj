@@ -30,6 +30,7 @@
 		0F46F45B34082ABFB93F4D1F /* CoworkJSONValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ED277960917B610C9912C3B /* CoworkJSONValue.swift */; };
 		0F829D0A72A83FC7CDF5049E /* HelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1772C58DD4922B7468AEC15B /* HelperProtocol.swift */; };
 		0FBDB82F19C8C718971A71EB /* CitadelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C26E06CD937403670B049969 /* CitadelApp.swift */; };
+		100B19004CBA67CA49EE2F66 /* CoworkStreamDeltaCoalescer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0360960CF02471B232E1325A /* CoworkStreamDeltaCoalescer.swift */; };
 		104EE9B14A1CA9F5304A7960 /* CoworkMLXKleeFileDownloader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78777323C8E6DBBB365E2568 /* CoworkMLXKleeFileDownloader.swift */; };
 		10E063E09A526C2BDDB55D0F /* CrestPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31A81F7249208E67B2DF610C /* CrestPanelView.swift */; };
 		111A917D162FDEDBB56BE5EA /* RuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48B50BDDCA65F9D43F00F15 /* RuleStore.swift */; };
@@ -52,10 +53,12 @@
 		20917A88E9C74FF7064F64EB /* FilterSocketFlowMapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7DBFB1A562DCD08C758BAF0 /* FilterSocketFlowMapper.swift */; };
 		21C1A82AA72659E6395084C9 /* CoworkSkillsPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BC7048FBEB9FB3A743DB6A /* CoworkSkillsPicker.swift */; };
 		24A1E2DB8DAEEE79ACD73515 /* CoworkAgentSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5E4052640E4839EAB7EADEB /* CoworkAgentSettingsView.swift */; };
+		24D81E83C74D4425430FDDA9 /* CoworkDirectChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C6ABB58733451F05203BE1 /* CoworkDirectChatStore.swift */; };
 		259F644B27D47F8DFDD9863D /* CoworkCoreClient+Channels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933A282AC2F9024133F252A4 /* CoworkCoreClient+Channels.swift */; };
 		2621EECE4FDA8BFCE72225DF /* CoworkMLXHubCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B80D06F30C4E59B1034B6C49 /* CoworkMLXHubCache.swift */; };
 		26404463E0C3B75CB4629376 /* CoworkScheduledTasksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74BF581F1866A160D1C1F425 /* CoworkScheduledTasksView.swift */; };
 		27475644E1289FDC9EB8623E /* MLX in Frameworks */ = {isa = PBXBuildFile; productRef = E03D971DC77DF0D986EA0609 /* MLX */; };
+		27E822DE7B59A5B0B96EDEE8 /* CoworkCloudDirectChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1036DCCEAE0003AAADAEBD /* CoworkCloudDirectChat.swift */; };
 		28A8AF116BA02A62F53BBF96 /* CoworkModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99B986293DB032C04CE97F55 /* CoworkModels.swift */; };
 		28C46FD07FE16CFC9BDEA2BB /* SocketInventorySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B454C5974EB1FC1B76DDDE0 /* SocketInventorySource.swift */; };
 		295847BC4D5350988E7EF8A4 /* ProcessExecutableLookup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042F3281B000E4BA772BB39A /* ProcessExecutableLookup.swift */; };
@@ -63,6 +66,7 @@
 		2B15AD0B1EA3989AEB73CA40 /* CoworkWorkspaceSpotlightSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978A1A0ED90953D0DD3BA73 /* CoworkWorkspaceSpotlightSearch.swift */; };
 		2B49A7E566CD978273FA531E /* LsofSocketScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EFBD5A661FA7A9A1263FBF1 /* LsofSocketScanner.swift */; };
 		2B8A4419335745BC9AA7D9F3 /* FlowArc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1148B821421488A366A611D4 /* FlowArc.swift */; };
+		2BF1631795D31FA1C2145A1E /* CoworkDirectChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C6ABB58733451F05203BE1 /* CoworkDirectChatStore.swift */; };
 		2C412895C353E21128A4E26D /* CoworkMLXNativeRuntime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 862BD9EA5FD94370A62B0A90 /* CoworkMLXNativeRuntime.swift */; };
 		2C628788DFDED2D8FC731A3E /* LivingCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36ECE38DDB25060AB42B7B4C /* LivingCanvas.swift */; };
 		2F53D2A43542E0B539E1FBA0 /* CoworkThinkingTagStreamParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = EED69BFE47F87284D658667B /* CoworkThinkingTagStreamParser.swift */; };
@@ -88,6 +92,7 @@
 		393B66804D064C8187B4B016 /* CoworkAssistantEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 570E8ED522F22938356A5690 /* CoworkAssistantEditorView.swift */; };
 		39A11A33A27A3FD546382FFD /* CoworkCoreClient+Channels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 933A282AC2F9024133F252A4 /* CoworkCoreClient+Channels.swift */; };
 		39BCE37D102E26F14ACDBD95 /* CoworkDocumentContextParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879EC140F70B2AF1E8911E6A /* CoworkDocumentContextParser.swift */; };
+		3B2BF25B7C9AD3F1FDC16F0C /* CoworkCloudDirectChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1036DCCEAE0003AAADAEBD /* CoworkCloudDirectChat.swift */; };
 		3BED492BA2D59D1DEC88A5B7 /* SharedRuleBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04B45BC43CCD6701D5BB72DF /* SharedRuleBridge.swift */; };
 		3D219D2345FAB905FDB2B046 /* MonitorViewOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CFAD4C040BDDF5FF3CA878C /* MonitorViewOptions.swift */; };
 		3D79EA9702A04B455BDF536F /* CoworkToolCallNormalizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0924B984E5C87F96011D42B2 /* CoworkToolCallNormalizer.swift */; };
@@ -148,6 +153,7 @@
 		6264B2CF707DB7CB546D005C /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF895404BC13443EDD9F4720 /* Logger.swift */; };
 		633A11F9317CDE106FFB6252 /* RuleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48B50BDDCA65F9D43F00F15 /* RuleStore.swift */; };
 		64BDEC1FE08FF823364AE62C /* CoworkMcpCurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7871D353DB8F1E28EECEAF89 /* CoworkMcpCurator.swift */; };
+		64CC55165E5200072B8A06A0 /* CoworkStreamDeltaCoalescer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0360960CF02471B232E1325A /* CoworkStreamDeltaCoalescer.swift */; };
 		65074BAF442D5300A8189208 /* CoworkState+Providers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74CD1DD1257D4AC8488DE80F /* CoworkState+Providers.swift */; };
 		65E3556A1F23E88CDAE6DFFD /* SQLiteHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4207CDBBE0355B5449F9B091 /* SQLiteHandle.swift */; };
 		66740DE33C4171002E85455F /* GeoResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF2F8013CB5409F92F936E1F /* GeoResolver.swift */; };
@@ -161,6 +167,7 @@
 		6C948BD343F7D57C6075B3EB /* FortressFirewallBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = F53A7EF8464EAD4AB02FD5FD /* FortressFirewallBridge.swift */; };
 		6CC22694445EC6857BE3C51B /* LoginItemHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E6B29F4C50A05218A59FC60 /* LoginItemHelper.swift */; };
 		6D60BD9AB630E0826A580162 /* CoworkCloudProviderDiscovery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 901D166A408173B596E6FE8B /* CoworkCloudProviderDiscovery.swift */; };
+		6DF2F95BEEC4F69439B8FEE2 /* CoworkDirectChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C6ABB58733451F05203BE1 /* CoworkDirectChatStore.swift */; };
 		6E88A5D1ECCD3AE430EEAD77 /* CoworkAttachmentBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D45703B3C318BBD346E07B2 /* CoworkAttachmentBar.swift */; };
 		6EC732DCAADDCEAD8ECB85FB /* CoworkIndexableDocumentTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17E944D389DBBD6CA789FC1 /* CoworkIndexableDocumentTypes.swift */; };
 		6EE978432214673C4ACAB558 /* CoworkModelToolSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D540CC892AC5A8E1B33BCE8 /* CoworkModelToolSupport.swift */; };
@@ -190,6 +197,8 @@
 		7E5143BC293CE76B05EA8DDB /* CoworkChannelModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24448559F441C6EB2B48ECF /* CoworkChannelModels.swift */; };
 		7EDBC5313B3C631B9E7E90BC /* BreadcrumbBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512A1AF3C12A1F34F0C493A6 /* BreadcrumbBar.swift */; };
 		7F97E3B12B3C0BA06C9E2147 /* AppGroupJSONStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 579513832EA67D478D2E2F5B /* AppGroupJSONStore.swift */; };
+		808A38E9C3EBD7CD258696E1 /* CitadelMicrophoneRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCA5E893B5551FE3228FE343 /* CitadelMicrophoneRecorder.swift */; };
+		81676CA340BCB41BA6BE1762 /* CoworkOllamaChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054F5CD7EB5999E6802F61B5 /* CoworkOllamaChatStream.swift */; };
 		81B4585026539B97DE73D9B0 /* CoworkCoreClient+WebUI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72449E36D2CF598F89EB2A6F /* CoworkCoreClient+WebUI.swift */; };
 		827612AE714CCCB16E9C9B21 /* CoworkMLXModelManagerContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C731E03288278C2D0747DE8D /* CoworkMLXModelManagerContent.swift */; };
 		83A3DB5D7DE3D91FA9999471 /* PFCommandExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC675AF66EACF74F47CFA6B /* PFCommandExecutor.swift */; };
@@ -245,6 +254,7 @@
 		A92D5063FC15137EBD732694 /* CoworkMarkdownFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB03DBB4238FECC7A1350E92 /* CoworkMarkdownFormatting.swift */; };
 		A975E14C67B3E8CD8E55D61B /* FortressRulesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAC2E9E33AA7FB7AD7822623 /* FortressRulesView.swift */; };
 		AA2A03C0131B8FD606A40E40 /* FortressDemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E52D679D63BC23F275FF57 /* FortressDemoData.swift */; };
+		AA99925B7E3A6362D03622BA /* CitadelAppleSpeechEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3154C82DB737DA467A4D3073 /* CitadelAppleSpeechEngine.swift */; };
 		ABF0ED0B2588B72F51FD7749 /* CoworkBYOKCostControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B48BE1D2AA94A3DD8E46EC4F /* CoworkBYOKCostControlView.swift */; };
 		ABF13172F3B406C694A9D6A8 /* SystemExtensionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F81D074327352C74AE3D2E6 /* SystemExtensionManager.swift */; };
 		ACFFCBEABDB41C2ECC8090FB /* EarthMapTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 642FDE8495C68F7738C24524 /* EarthMapTexture.swift */; };
@@ -294,9 +304,11 @@
 		C52BA5E64EC8E298187296A3 /* PrismGlass.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4B17A27AB5025765FA294AA /* PrismGlass.swift */; };
 		C53461352565D0209BB07111 /* MenubarPopover.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85472F3F10D869AD61909F86 /* MenubarPopover.swift */; };
 		C7B318DCAF6A3BAE5A8DF646 /* NEFilterConfigurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E1EACEB9DB6850810E488F /* NEFilterConfigurator.swift */; };
+		C7DF04AB85C7D265CB15776A /* CoworkVoiceDictationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C70452A6FD491C7F5E8A0432 /* CoworkVoiceDictationButton.swift */; };
 		C87DEA7AC8AC190AD7D28D3B /* CoworkMLXBridgeError.swift in Sources */ = {isa = PBXBuildFile; fileRef = FADA2E837DE9F16A10526B42 /* CoworkMLXBridgeError.swift */; };
 		C8CF09D6C17BE58FBF80ACB1 /* CoworkMcpCurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7871D353DB8F1E28EECEAF89 /* CoworkMcpCurator.swift */; };
 		C96D5AD6C4A2F53EBE278FE7 /* FirewallRuleEvaluatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E954542305CFD7DDD1312E54 /* FirewallRuleEvaluatorTests.swift */; };
+		C9B6F926CA2EE5F04F611148 /* CoworkCloudDirectChat.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1036DCCEAE0003AAADAEBD /* CoworkCloudDirectChat.swift */; };
 		C9C9076519C3A657FBC4A9DA /* CoworkMarkdownMessageText.swift in Sources */ = {isa = PBXBuildFile; fileRef = F67125A07D0F7C1682D6351E /* CoworkMarkdownMessageText.swift */; };
 		CA7008CCDF47F3E7E958DB81 /* FirewallTelemetryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B7D6B07142856C387BA4D7 /* FirewallTelemetryModels.swift */; };
 		CB3F2118379CE4FC09DBF5FF /* CoworkWorkspaceSpotlightSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1978A1A0ED90953D0DD3BA73 /* CoworkWorkspaceSpotlightSearch.swift */; };
@@ -315,9 +327,11 @@
 		D3F4353798A6476F4C7E7986 /* CitadelVersionCompareTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF38AF6D056A6E1E94AA722 /* CitadelVersionCompareTests.swift */; };
 		D465C2FC812503E2FFE6F37F /* FortressToolbar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14EC3AD4417B7A577F810F8 /* FortressToolbar.swift */; };
 		D53CDA7503F262834BF1163A /* CoworkMLXKleeHuggingFaceAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19F10847F0BF32E48C0B27BA /* CoworkMLXKleeHuggingFaceAPI.swift */; };
+		D5FF85DA0871ED26BEA7615A /* CitadelMainWindowPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9059B6343612B4504A88AFC /* CitadelMainWindowPresenter.swift */; };
 		D67A9FB710FF435F225F045B /* FirewallTelemetryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0B7D6B07142856C387BA4D7 /* FirewallTelemetryModels.swift */; };
 		D685A4ECE1B4E114F3B0F842 /* ScrollWheelZoomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F082A6EAFF43BD2FFA0A119A /* ScrollWheelZoomView.swift */; };
 		D6F63D3FD5D9566601C8430A /* CoworkOllamaModelsAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E0DC43DB71A35A42421C364 /* CoworkOllamaModelsAPI.swift */; };
+		D713A2BE3290F97DD14745A8 /* CoworkOllamaChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054F5CD7EB5999E6802F61B5 /* CoworkOllamaChatStream.swift */; };
 		D7159F71CF0B525B497BD741 /* IPGeo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353AC80D2E664B00477E8F38 /* IPGeo.swift */; };
 		D788FCF100550AE05F9B992E /* CoworkChannelModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E24448559F441C6EB2B48ECF /* CoworkChannelModels.swift */; };
 		D83D8389899954DE04221E52 /* FirewallRuleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F07EC59031AA1E145DF2140 /* FirewallRuleModels.swift */; };
@@ -337,6 +351,7 @@
 		E13BCBD4136B2D2C4B568B7D /* HelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1772C58DD4922B7468AEC15B /* HelperProtocol.swift */; };
 		E24EAEC366423380B35330C0 /* FortressHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7ABCA7985B25C66319CF4072 /* FortressHelpView.swift */; };
 		E298D46A5151CAAAE7BDD4C3 /* CoworkShellMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840D54E5D5EAB5223110959 /* CoworkShellMode.swift */; };
+		E3306C0C164C28C81B77365E /* CoworkStreamDeltaCoalescer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0360960CF02471B232E1325A /* CoworkStreamDeltaCoalescer.swift */; };
 		E47B985868FC634EA0D5F8F6 /* LsofSocketScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EFBD5A661FA7A9A1263FBF1 /* LsofSocketScanner.swift */; };
 		E56F1F131C0C6E27367C9158 /* CoworkMcpBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C9E9172E87E347AECB88640 /* CoworkMcpBootstrap.swift */; };
 		E57A07E428CD57F7DF32D472 /* CoworkExtendedModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F285260EE552F866CACA0AE9 /* CoworkExtendedModels.swift */; };
@@ -349,6 +364,7 @@
 		E828281C22CDB84BFEDFF91B /* ProcessSigningIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10D9ACD9709A887399293B8A /* ProcessSigningIdentity.swift */; };
 		E905A4F4A1E86254440DDDBD /* GlobeSceneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2E4A8FB5ACC2FCD71D9DD30 /* GlobeSceneView.swift */; };
 		E9913A1D556EA6FB119296F2 /* KeepHelpCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DB81AEDCC107442F75C82B8 /* KeepHelpCatalog.swift */; };
+		EA37F32A46D312F7A4A49B58 /* CoworkOllamaChatStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 054F5CD7EB5999E6802F61B5 /* CoworkOllamaChatStream.swift */; };
 		EB80C424AE60EE23DA85AF0B /* CoworkCoreClient+Extended.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9A0C4DD17827DC02E51693C /* CoworkCoreClient+Extended.swift */; };
 		ED2A04EE7BF134C623441C1C /* CoworkTeamModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 706BF07572715E32939050F1 /* CoworkTeamModels.swift */; };
 		ED75291F6B12323B71150A41 /* CitadelIdentifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 587EA300420CBACB356759C4 /* CitadelIdentifiers.swift */; };
@@ -407,10 +423,12 @@
 		017E042F32C5FB81A3D5B8FB /* NetExt.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = NetExt.entitlements; sourceTree = "<group>"; };
 		01CF310A5193451C7D6CEAB5 /* CoworkUserFacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkUserFacing.swift; sourceTree = "<group>"; };
 		02BC4AE2B3EF1F626579B2E4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		0360960CF02471B232E1325A /* CoworkStreamDeltaCoalescer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkStreamDeltaCoalescer.swift; sourceTree = "<group>"; };
 		0373BAF3AF540CAA348114B2 /* FirewallEnums.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirewallEnums.swift; sourceTree = "<group>"; };
 		042F3281B000E4BA772BB39A /* ProcessExecutableLookup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessExecutableLookup.swift; sourceTree = "<group>"; };
 		04B45BC43CCD6701D5BB72DF /* SharedRuleBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRuleBridge.swift; sourceTree = "<group>"; };
 		04FCFF30803F917F8818445A /* PFManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PFManager.swift; sourceTree = "<group>"; };
+		054F5CD7EB5999E6802F61B5 /* CoworkOllamaChatStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkOllamaChatStream.swift; sourceTree = "<group>"; };
 		058CBE15AB7076F2FDC54802 /* CoworkToolCallBubble.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkToolCallBubble.swift; sourceTree = "<group>"; };
 		0924B984E5C87F96011D42B2 /* CoworkToolCallNormalizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkToolCallNormalizer.swift; sourceTree = "<group>"; };
 		0A5C2C2A591CCE69FF946F02 /* CoworkThinkingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkThinkingCard.swift; sourceTree = "<group>"; };
@@ -457,6 +475,7 @@
 		2F3C401D51936304CE3DD2FA /* DNSProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSProxy.swift; sourceTree = "<group>"; };
 		3005C45AE34A67B4846279E6 /* CoworkProviderExtraConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkProviderExtraConfigStore.swift; sourceTree = "<group>"; };
 		30E1EACEB9DB6850810E488F /* NEFilterConfigurator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NEFilterConfigurator.swift; sourceTree = "<group>"; };
+		3154C82DB737DA467A4D3073 /* CitadelAppleSpeechEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CitadelAppleSpeechEngine.swift; sourceTree = "<group>"; };
 		31A81F7249208E67B2DF610C /* CrestPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CrestPanelView.swift; sourceTree = "<group>"; };
 		33166DEA332DB7EBF9F4E15F /* CoworkKeepActivityOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkKeepActivityOverlay.swift; sourceTree = "<group>"; };
 		3326F9481E65AF740AE7D269 /* CoworkState+Remote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CoworkState+Remote.swift"; sourceTree = "<group>"; };
@@ -574,6 +593,7 @@
 		A640837F3318CB7CB20AAC6D /* CitadelGitHubReleaseChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CitadelGitHubReleaseChecker.swift; sourceTree = "<group>"; };
 		A7283FD3E2CBDB76E0445A9C /* BlocklistManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlocklistManager.swift; sourceTree = "<group>"; };
 		A755D08659A5D785CCEDF095 /* sign_and_notarize.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = sign_and_notarize.sh; sourceTree = "<group>"; };
+		A9059B6343612B4504A88AFC /* CitadelMainWindowPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CitadelMainWindowPresenter.swift; sourceTree = "<group>"; };
 		A9A0C4DD17827DC02E51693C /* CoworkCoreClient+Extended.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CoworkCoreClient+Extended.swift"; sourceTree = "<group>"; };
 		AB0C691E3B20BA516FEBE227 /* ConnectionAlert.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionAlert.swift; sourceTree = "<group>"; };
 		ACCDBECE1C220AD97FDB684B /* NettopRateSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NettopRateSampler.swift; sourceTree = "<group>"; };
@@ -599,13 +619,16 @@
 		C3C4469F851F04BDEABC11A2 /* RemoteHostResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteHostResolver.swift; sourceTree = "<group>"; };
 		C3DBE589ED31DA4C8D179C9D /* MapViewport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewport.swift; sourceTree = "<group>"; };
 		C4D426A9461FFE316CDA759A /* CoworkMLXOpenAIServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkMLXOpenAIServer.swift; sourceTree = "<group>"; };
+		C70452A6FD491C7F5E8A0432 /* CoworkVoiceDictationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkVoiceDictationButton.swift; sourceTree = "<group>"; };
 		C731E03288278C2D0747DE8D /* CoworkMLXModelManagerContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkMLXModelManagerContent.swift; sourceTree = "<group>"; };
 		C791FC8B139ED475C3720B0D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		C7DBFB1A562DCD08C758BAF0 /* FilterSocketFlowMapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilterSocketFlowMapper.swift; sourceTree = "<group>"; };
 		C81A26A8D27D5C9B565A870B /* RuleStoreRowMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RuleStoreRowMapping.swift; sourceTree = "<group>"; };
 		C99E980E5289E0D671EB4B11 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CA1BEEBDC2B73C4B37DED676 /* CoworkWaitingWaveform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkWaitingWaveform.swift; sourceTree = "<group>"; };
+		CC1036DCCEAE0003AAADAEBD /* CoworkCloudDirectChat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkCloudDirectChat.swift; sourceTree = "<group>"; };
 		CC82532478AFE30CD68A8215 /* DNSMessageCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DNSMessageCodec.swift; sourceTree = "<group>"; };
+		CCA5E893B5551FE3228FE343 /* CitadelMicrophoneRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CitadelMicrophoneRecorder.swift; sourceTree = "<group>"; };
 		CCFF83A5F320A8F93A2BDDF6 /* PrismMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrismMotion.swift; sourceTree = "<group>"; };
 		CE2C3C6CDDA947380A18BE80 /* Launchd.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Launchd.plist; sourceTree = "<group>"; };
 		CF88044EE4B2A0E029C6ED76 /* FortressShellMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FortressShellMode.swift; sourceTree = "<group>"; };
@@ -630,6 +653,7 @@
 		E5D0A940DCAF4D4C15715459 /* CoworkDocumentTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkDocumentTextExtractor.swift; sourceTree = "<group>"; };
 		E6F612CF3ECAE3FFE2EE024B /* HelperXPCSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelperXPCSession.swift; sourceTree = "<group>"; };
 		E7B73370A86C7546296AD2F7 /* Citadel.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Citadel.entitlements; sourceTree = "<group>"; };
+		E7C6ABB58733451F05203BE1 /* CoworkDirectChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkDirectChatStore.swift; sourceTree = "<group>"; };
 		E954542305CFD7DDD1312E54 /* FirewallRuleEvaluatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirewallRuleEvaluatorTests.swift; sourceTree = "<group>"; };
 		EC0ECA9837E1D7E33C499093 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		ECB62B2CCB6EB4ED61FCF5E1 /* CoworkMLXModelLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoworkMLXModelLibrary.swift; sourceTree = "<group>"; };
@@ -741,6 +765,8 @@
 		21ACCE0080C49E7954CE6B29 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				3154C82DB737DA467A4D3073 /* CitadelAppleSpeechEngine.swift */,
+				CCA5E893B5551FE3228FE343 /* CitadelMicrophoneRecorder.swift */,
 				C1B2B6DC7C22536E196AD551 /* CitadelVoiceScribe.swift */,
 			);
 			path = Services;
@@ -875,6 +901,7 @@
 			children = (
 				2515008AE17BB73C1B430C57 /* Crest */,
 				C26E06CD937403670B049969 /* CitadelApp.swift */,
+				A9059B6343612B4504A88AFC /* CitadelMainWindowPresenter.swift */,
 				D48358A81027E3CF28C4F53D /* CitadelShellRouter.swift */,
 				53BB58A6709117310E15C9B4 /* CitadelUpdateController.swift */,
 				0FA80F3AB79A5BFCFBD17C20 /* FilterPromptBridge.swift */,
@@ -1099,6 +1126,7 @@
 				FBD7860E0FB8E2E6655DC202 /* CitadelLocale.swift */,
 				24FAC7C9D7990BB97272EC61 /* CoworkBYOKTokenLimitsStore.swift */,
 				E24448559F441C6EB2B48ECF /* CoworkChannelModels.swift */,
+				CC1036DCCEAE0003AAADAEBD /* CoworkCloudDirectChat.swift */,
 				39B2020FFE8FEDA21C01C8CC /* CoworkCloudModelCatalog.swift */,
 				901D166A408173B596E6FE8B /* CoworkCloudProviderDiscovery.swift */,
 				44889A24AF5507D9392A6A5B /* CoworkCoreClient.swift */,
@@ -1108,6 +1136,7 @@
 				22532F4F24543064C7989DFF /* CoworkCoreClient+Teams.swift */,
 				72449E36D2CF598F89EB2A6F /* CoworkCoreClient+WebUI.swift */,
 				D8F69FA27E2F4E06ADA655DA /* CoworkCoreLifecycle.swift */,
+				E7C6ABB58733451F05203BE1 /* CoworkDirectChatStore.swift */,
 				879EC140F70B2AF1E8911E6A /* CoworkDocumentContextParser.swift */,
 				E5D0A940DCAF4D4C15715459 /* CoworkDocumentTextExtractor.swift */,
 				F285260EE552F866CACA0AE9 /* CoworkExtendedModels.swift */,
@@ -1120,8 +1149,10 @@
 				99B986293DB032C04CE97F55 /* CoworkModels.swift */,
 				6D540CC892AC5A8E1B33BCE8 /* CoworkModelToolSupport.swift */,
 				76556F004C6F0E585D7BBB0B /* CoworkOfficeOpenXMLExtractor.swift */,
+				054F5CD7EB5999E6802F61B5 /* CoworkOllamaChatStream.swift */,
 				6E0DC43DB71A35A42421C364 /* CoworkOllamaModelsAPI.swift */,
 				3005C45AE34A67B4846279E6 /* CoworkProviderExtraConfigStore.swift */,
+				0360960CF02471B232E1325A /* CoworkStreamDeltaCoalescer.swift */,
 				706BF07572715E32939050F1 /* CoworkTeamModels.swift */,
 				EED69BFE47F87284D658667B /* CoworkThinkingTagStreamParser.swift */,
 				0924B984E5C87F96011D42B2 /* CoworkToolCallNormalizer.swift */,
@@ -1209,6 +1240,7 @@
 				058CBE15AB7076F2FDC54802 /* CoworkToolCallBubble.swift */,
 				2E6F8EBCDEEC67FABFBAEDF3 /* CoworkUsageChip.swift */,
 				F6CC436F906C52CDADA167BA /* CoworkUserMessageContent.swift */,
+				C70452A6FD491C7F5E8A0432 /* CoworkVoiceDictationButton.swift */,
 				CA1BEEBDC2B73C4B37DED676 /* CoworkWaitingWaveform.swift */,
 				553EE0D5B5D2144DE17A2933 /* CoworkWorkspacePanel.swift */,
 				4E1FAD2A374D7AFBE1E70004 /* KeepHelpView.swift */,
@@ -1485,6 +1517,7 @@
 				5192B91EEE79B538C9C9B75B /* CitadelLocale.swift in Sources */,
 				04CA6D01B1A5AF49CBD954FF /* CoworkBYOKTokenLimitsStore.swift in Sources */,
 				7E5143BC293CE76B05EA8DDB /* CoworkChannelModels.swift in Sources */,
+				27E822DE7B59A5B0B96EDEE8 /* CoworkCloudDirectChat.swift in Sources */,
 				166652DFF05A404ABDF7350C /* CoworkCloudModelCatalog.swift in Sources */,
 				F6288BE4BB83D150BF7B9034 /* CoworkCloudProviderDiscovery.swift in Sources */,
 				259F644B27D47F8DFDD9863D /* CoworkCoreClient+Channels.swift in Sources */,
@@ -1494,6 +1527,7 @@
 				BB340DAAFB519E56052E27C0 /* CoworkCoreClient+WebUI.swift in Sources */,
 				E62D7789014211B10F548A42 /* CoworkCoreClient.swift in Sources */,
 				0AAAC3DAC3E064E6DC6A3919 /* CoworkCoreLifecycle.swift in Sources */,
+				2BF1631795D31FA1C2145A1E /* CoworkDirectChatStore.swift in Sources */,
 				57842CE683895249153A32C8 /* CoworkDocumentContextParser.swift in Sources */,
 				5F1F6567D5DD49FCFA2B4670 /* CoworkDocumentTextExtractor.swift in Sources */,
 				559B54C89CC9957EF63CE3BB /* CoworkExtendedModels.swift in Sources */,
@@ -1515,9 +1549,11 @@
 				5A1502F564766D7F5270C4F4 /* CoworkModelToolSupport.swift in Sources */,
 				37817BBD799BBB87BCC22074 /* CoworkModels.swift in Sources */,
 				B88677487EEE08A8BFB5D2DF /* CoworkOfficeOpenXMLExtractor.swift in Sources */,
+				EA37F32A46D312F7A4A49B58 /* CoworkOllamaChatStream.swift in Sources */,
 				D6F63D3FD5D9566601C8430A /* CoworkOllamaModelsAPI.swift in Sources */,
 				B2E503E20D2DD9DA62695D0A /* CoworkProcVerbalPDFGlue.swift in Sources */,
 				5EF8F94D68040D7D3F82CD83 /* CoworkProviderExtraConfigStore.swift in Sources */,
+				E3306C0C164C28C81B77365E /* CoworkStreamDeltaCoalescer.swift in Sources */,
 				ED2A04EE7BF134C623441C1C /* CoworkTeamModels.swift in Sources */,
 				2F53D2A43542E0B539E1FBA0 /* CoworkThinkingTagStreamParser.swift in Sources */,
 				767B8209877FAD7B70CD4DFB /* CoworkToolCallNormalizer.swift in Sources */,
@@ -1564,10 +1600,13 @@
 				7EDBC5313B3C631B9E7E90BC /* BreadcrumbBar.swift in Sources */,
 				DB3AE84655DD331A022A34F4 /* CitadelAgentProcess.swift in Sources */,
 				0FBDB82F19C8C718971A71EB /* CitadelApp.swift in Sources */,
+				AA99925B7E3A6362D03622BA /* CitadelAppleSpeechEngine.swift in Sources */,
 				FB0D866F0BB7CEDBC5D0975B /* CitadelDeskCompanion.swift in Sources */,
 				159DC56E270ECE79197F1369 /* CitadelGitHubReleaseChecker.swift in Sources */,
 				B1BD250381729BC08857D055 /* CitadelIdentifiers.swift in Sources */,
 				068CCC4FB7A7E34C946FAAD3 /* CitadelLocale.swift in Sources */,
+				D5FF85DA0871ED26BEA7615A /* CitadelMainWindowPresenter.swift in Sources */,
+				808A38E9C3EBD7CD258696E1 /* CitadelMicrophoneRecorder.swift in Sources */,
 				D31B06CCC58125CBED630649 /* CitadelNavSection.swift in Sources */,
 				A5F823A796D1989F6FFC42C2 /* CitadelShellNavBar.swift in Sources */,
 				941FC278E72C30066B5D6601 /* CitadelShellRouter.swift in Sources */,
@@ -1587,6 +1626,7 @@
 				A8514AF78FA931C250F481EC /* CoworkBYOKTokenLimitsStore.swift in Sources */,
 				D788FCF100550AE05F9B992E /* CoworkChannelModels.swift in Sources */,
 				0E1BA6177DB8CC9D6B0FC939 /* CoworkChatComposer.swift in Sources */,
+				3B2BF25B7C9AD3F1FDC16F0C /* CoworkCloudDirectChat.swift in Sources */,
 				379973C60CB1387F980A0045 /* CoworkCloudModelCatalog.swift in Sources */,
 				B50B30593873E18B9E32CBF6 /* CoworkCloudModelsManagerView.swift in Sources */,
 				92FE3DE73D397AA433F3D37F /* CoworkCloudProviderDiscovery.swift in Sources */,
@@ -1602,6 +1642,7 @@
 				F6084CF8872696B23E6F2970 /* CoworkCoreClient+WebUI.swift in Sources */,
 				79B3DD06914D2A0FEA430C33 /* CoworkCoreClient.swift in Sources */,
 				60154B15AB0811FE4C214915 /* CoworkCoreLifecycle.swift in Sources */,
+				24D81E83C74D4425430FDDA9 /* CoworkDirectChatStore.swift in Sources */,
 				0F08AC3938079510D1A4442E /* CoworkDocumentContextParser.swift in Sources */,
 				4388454A751C05197193E94D /* CoworkDocumentExcerptCard.swift in Sources */,
 				B6EDB4FDF694ECCF437779B5 /* CoworkDocumentTextExtractor.swift in Sources */,
@@ -1639,6 +1680,7 @@
 				B80F143DFD466CC11AC329B1 /* CoworkModelToolSupport.swift in Sources */,
 				613E8027FA29746DCFA515CA /* CoworkModels.swift in Sources */,
 				901A22D14FD52241679D5BB8 /* CoworkOfficeOpenXMLExtractor.swift in Sources */,
+				D713A2BE3290F97DD14745A8 /* CoworkOllamaChatStream.swift in Sources */,
 				52DDEE0D0BD636F4F1E1757A /* CoworkOllamaModelsAPI.swift in Sources */,
 				B8F6E100F7C783CF57FDD922 /* CoworkPlaceholder.swift in Sources */,
 				5055B4A2118F6AC672AE66B5 /* CoworkPreviewPanel.swift in Sources */,
@@ -1661,6 +1703,7 @@
 				C27481129274E0B8BAED29F5 /* CoworkState+Remote.swift in Sources */,
 				67AE14FA1B55F55060B1C8B5 /* CoworkState+Teams.swift in Sources */,
 				F31396B1C46796A5512AF10D /* CoworkState.swift in Sources */,
+				64CC55165E5200072B8A06A0 /* CoworkStreamDeltaCoalescer.swift in Sources */,
 				01A594034654ECD271BD68C5 /* CoworkTeamModels.swift in Sources */,
 				3080246D6133AED90C345A70 /* CoworkTeamWorkspaceView.swift in Sources */,
 				4AF5911CD72E55E819C450A9 /* CoworkTeamsView.swift in Sources */,
@@ -1671,6 +1714,7 @@
 				A095D80EFD6B36D09283FC31 /* CoworkUsageChip.swift in Sources */,
 				B1CA8A75E84E8B1CEA31C32B /* CoworkUserFacing.swift in Sources */,
 				31C145939500E2FD6D47F207 /* CoworkUserMessageContent.swift in Sources */,
+				C7DF04AB85C7D265CB15776A /* CoworkVoiceDictationButton.swift in Sources */,
 				F8DA71275051CCCF56067FFE /* CoworkWaitingWaveform.swift in Sources */,
 				4BC565FFFDB0792CBF258E85 /* CoworkWebSocketClient.swift in Sources */,
 				F1AA3179B6BA8D5916385510 /* CoworkWorkspaceDocumentMatcher.swift in Sources */,
@@ -1778,6 +1822,7 @@
 				B86B02F743005787C72D4641 /* CitadelLocale.swift in Sources */,
 				DB97175A3BA4AA35BE4D879A /* CoworkBYOKTokenLimitsStore.swift in Sources */,
 				CD0BC9B0D18EC2BA1FA6399F /* CoworkChannelModels.swift in Sources */,
+				C9B6F926CA2EE5F04F611148 /* CoworkCloudDirectChat.swift in Sources */,
 				61168F141EB73DD4F3EB10E3 /* CoworkCloudModelCatalog.swift in Sources */,
 				6D60BD9AB630E0826A580162 /* CoworkCloudProviderDiscovery.swift in Sources */,
 				39A11A33A27A3FD546382FFD /* CoworkCoreClient+Channels.swift in Sources */,
@@ -1787,6 +1832,7 @@
 				81B4585026539B97DE73D9B0 /* CoworkCoreClient+WebUI.swift in Sources */,
 				7E25331791A05E8443395540 /* CoworkCoreClient.swift in Sources */,
 				49FE0FA46A59EF0176F1E6A1 /* CoworkCoreLifecycle.swift in Sources */,
+				6DF2F95BEEC4F69439B8FEE2 /* CoworkDirectChatStore.swift in Sources */,
 				39BCE37D102E26F14ACDBD95 /* CoworkDocumentContextParser.swift in Sources */,
 				5BF7FEC8D2E76330A375D2FD /* CoworkDocumentTextExtractor.swift in Sources */,
 				E57A07E428CD57F7DF32D472 /* CoworkExtendedModels.swift in Sources */,
@@ -1808,9 +1854,11 @@
 				6EE978432214673C4ACAB558 /* CoworkModelToolSupport.swift in Sources */,
 				28A8AF116BA02A62F53BBF96 /* CoworkModels.swift in Sources */,
 				A6E715BE65EC52704F2E402F /* CoworkOfficeOpenXMLExtractor.swift in Sources */,
+				81676CA340BCB41BA6BE1762 /* CoworkOllamaChatStream.swift in Sources */,
 				F3C5EC7A400CC1A7C8E7E503 /* CoworkOllamaModelsAPI.swift in Sources */,
 				12CF5D05282ECAAEBFD65CE2 /* CoworkProcVerbalPDFGlue.swift in Sources */,
 				87A025E79F53495B2D21F1F9 /* CoworkProviderExtraConfigStore.swift in Sources */,
+				100B19004CBA67CA49EE2F66 /* CoworkStreamDeltaCoalescer.swift in Sources */,
 				5CF4D914CEED66CF29444942 /* CoworkTeamModels.swift in Sources */,
 				AF7CEC76D66FAAB27D04F05B /* CoworkThinkingTagStreamParser.swift in Sources */,
 				3D79EA9702A04B455BDF536F /* CoworkToolCallNormalizer.swift in Sources */,

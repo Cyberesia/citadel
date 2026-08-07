@@ -59,10 +59,80 @@ extension CoworkState {
         }
         if isSending {
             items.append(.init(id: "sending", icon: "paperplane", message: L10n.sendingMessage))
+        } else if activeConfirmation != nil || !pendingConfirmations.isEmpty {
+            items.append(.init(id: "confirm", icon: agentActivityIcon, message: agentActivityMessage))
         } else if isStreaming {
-            items.append(.init(id: "streaming", icon: "ellipsis.bubble", message: L10n.agentWorking))
+            items.append(.init(id: "streaming", icon: agentActivityIcon, message: agentActivityMessage))
         }
 
         return items
+    }
+
+    /// Live status for the activity banner / conversation header while streaming.
+    var agentActivityMessage: String {
+        _ = streamTick
+
+        if let confirmation = pendingConfirmations.first {
+            let detail = (confirmation.title?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
+                ?? confirmation.description.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !detail.isEmpty {
+                return L10n.agentWaitingPermission(Self.shortActivityDetail(detail))
+            }
+            return L10n.permissionRequired
+        }
+
+        if let tool = activeLiveToolCall {
+            if let description = tool.description?.trimmingCharacters(in: .whitespacesAndNewlines), !description.isEmpty {
+                return L10n.agentWorkingOn(Self.shortActivityDetail(description))
+            }
+            return L10n.agentRunningTool(Self.friendlyToolName(tool.name))
+        }
+
+        if liveStreamSegments.values.contains(where: { $0.isThinkingActive }) {
+            return L10n.reasoningActive
+        }
+
+        if let name = selectedAssistant?.displayName.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            return L10n.agentNamedWorking(name)
+        }
+
+        return L10n.agentWorking
+    }
+
+    var agentActivityIcon: String {
+        if pendingConfirmations.first != nil { return "hand.raised" }
+        if activeLiveToolCall != nil { return "wrench.and.screwdriver" }
+        if liveStreamSegments.values.contains(where: { $0.isThinkingActive }) { return "brain" }
+        return "ellipsis.bubble"
+    }
+
+    private var activeLiveToolCall: CoworkNormalizedToolCall? {
+        for msgID in liveToolOrder.reversed() {
+            let calls = liveToolCalls[msgID] ?? []
+            if let running = calls.last(where: { $0.status == .running || $0.status == .pending }) {
+                return running
+            }
+        }
+        return nil
+    }
+
+    private static func friendlyToolName(_ raw: String) -> String {
+        var name = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.hasPrefix("mcp__") {
+            name = String(name.dropFirst(5))
+        }
+        name = name.replacingOccurrences(of: "__", with: " · ")
+        name = name.replacingOccurrences(of: "_", with: " ")
+        return name.isEmpty ? "tool" : name
+    }
+
+    private static func shortActivityDetail(_ text: String) -> String {
+        let collapsed = text
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard collapsed.count > 72 else { return collapsed }
+        let end = collapsed.index(collapsed.startIndex, offsetBy: 69)
+        return String(collapsed[..<end]) + "…"
     }
 }

@@ -51,7 +51,7 @@ struct CoworkMcpPicker: View {
             popoverContent
                 .prismPopoverChrome(width: 360, maxHeight: 380)
         }
-        .help(cowork.activeModelSupportsTools ? L10n.mcpToolsLabel : L10n.toolsDisabledMcpHelp)
+        .help(cowork.activeModelSupportsTools ? L10n.mcpToolsLabel : mcpDisabledHelp)
         .disabled(!cowork.activeModelSupportsTools && enabledServers.isEmpty)
     }
 
@@ -59,9 +59,17 @@ struct CoworkMcpPicker: View {
     private var popoverContent: some View {
         VStack(alignment: .leading, spacing: 8) {
             if !cowork.activeModelSupportsTools {
-                Text(L10n.toolsDisabledMcpHelp)
+                Text(mcpDisabledHelp)
                     .font(.ps(10))
                     .foregroundStyle(PrismTheme.textSecondary)
+                if cowork.isActiveModelNativeMLX {
+                    Button(L10n.switchModelForTools) {
+                        showPopover = false
+                        cowork.requestModelSwitch()
+                    }
+                    .buttonStyle(PrismHandButtonStyle())
+                    .font(.ps(10, weight: .semibold))
+                }
             } else if enabledServers.isEmpty {
                 Text(L10n.noMcpServers)
                     .font(.ps(10))
@@ -99,11 +107,18 @@ struct CoworkMcpPicker: View {
     }
 
     private var mcpLabel: String {
-        guard cowork.activeModelSupportsTools else { return L10n.mcpOff }
+        guard cowork.activeModelSupportsTools else {
+            return cowork.isActiveModelNativeMLX ? L10n.mcpOffMLX : L10n.mcpOff
+        }
         return L10n.mcpCount(cowork.selectedEnabledMcpCount)
     }
 
+    private var mcpDisabledHelp: String {
+        cowork.isActiveModelNativeMLX ? L10n.toolsDisabledMcpMLXHelp : L10n.toolsDisabledMcpHelp
+    }
+
     private func toggleServer(_ id: String) {
+        cowork.markMcpUserConfigured()
         if cowork.selectedMcpIDs.contains(id) {
             cowork.selectedMcpIDs.remove(id)
         } else {

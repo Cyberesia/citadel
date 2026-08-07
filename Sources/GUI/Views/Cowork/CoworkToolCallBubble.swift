@@ -101,19 +101,43 @@ struct CoworkTipsBanner: View {
 
 struct CoworkInfoBanner: View {
     let message: String
+    var actionTitle: String? = nil
+    var action: (() -> Void)? = nil
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "info.circle.fill")
                 .foregroundStyle(PrismTheme.accentSecondary)
-            Text(message)
-                .font(.ps(11))
-                .foregroundStyle(PrismTheme.textPrimary)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(message)
+                    .font(.ps(11))
+                    .foregroundStyle(PrismTheme.textPrimary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let actionTitle, let action {
+                    Button(actionTitle, action: action)
+                        .buttonStyle(PrismHandButtonStyle())
+                        .font(.ps(10, weight: .semibold))
+                }
+            }
+            Spacer(minLength: 0)
         }
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(PrismTheme.accentSoft.opacity(0.45))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+struct CoworkToolsDisabledBanner: View {
+    @EnvironmentObject var cowork: CoworkState
+
+    var body: some View {
+        if let notice = cowork.toolsDisabledNotice {
+            CoworkInfoBanner(
+                message: notice,
+                actionTitle: cowork.toolsDisabledNoticeOffersModelSwitch ? L10n.switchModelForTools : nil,
+                action: cowork.toolsDisabledNoticeOffersModelSwitch ? { cowork.requestModelSwitch() } : nil
+            )
+        }
     }
 }

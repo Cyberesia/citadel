@@ -33,10 +33,13 @@ struct CoworkHomeView: View {
                 cowork.requestComposerFocus()
             }
             Task {
+                await cowork.waitForBootstrapIfNeeded()
                 await CoworkMLXModelLibrary.shared.refreshInstalledByteSizesAsync()
-                await cowork.refreshMLXModelsAsync()
-                await cowork.syncLocalBackendSelection()
-                await cowork.warmMLXChatModelIfNeeded()
+                if !cowork.shouldDeferLocalMLXActivation() {
+                    await cowork.refreshMLXModelsAsync()
+                    await cowork.syncLocalBackendSelection()
+                    await cowork.warmMLXChatModelIfNeeded()
+                }
             }
         }
     }
@@ -53,7 +56,7 @@ struct CoworkHomeView: View {
                     .font(.ps(11))
                     .foregroundStyle(PrismTheme.signalDeny)
                     .multilineTextAlignment(.center)
-            } else if let setup = cowork.mlxRuntimeInstallMessage {
+            } else if let setup = cowork.mlxRuntimeInstallMessage, !cowork.prefersCloudModelSelection {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text(setup)

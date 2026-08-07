@@ -24,6 +24,11 @@ struct CoworkMLXModelManagerContent: View {
                 mlxRuntimeBanner
             }
 
+            Text(L10n.mlxChatOnlyHint)
+                .font(.ps(10))
+                .foregroundStyle(PrismTheme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             Text(L10n.mlxManagerSubtitle)
                 .font(.ps(10))
                 .foregroundStyle(PrismTheme.textTertiary)
