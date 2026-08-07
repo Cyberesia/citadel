@@ -10,16 +10,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Murmura-style Keep streaming** — live markdown while the answer types out (typewriter), instead of raw `**markdown**` that snaps into format at the end.
+- **Response streaming optimisation (Murmura-style)** — delta coalescing + typewriter; live markdown on the answer while it types (no raw `**markdown**` snap at the end); throttled UI updates instead of per-token redraws.
+- **Live Ollama reasoning** — direct `/api/chat` stream with `think: true` so thinking appears immediately (no long blank wait).
+- **Retractable thinking cards** — stream live, then auto-collapse (expandable); plain text for thinking so large models stay smooth.
+- **GFM tables in chat** — bordered markdown tables in answers (not monospace/PDF-style columns).
 - **Global tool-permission card** — Allow/Deny prompts stay visible across Keep tabs and Fortress; survive leaving the chat; optional “Open session” when the conversation is closed.
 - **Collapsible Fortress status bar** — hide/show the bottom “Watching locally / Surveillance locale” bar so Activity summaries stay readable.
 - **Richer agent activity status** — banner/header show the live tool, permission wait, reasoning, or assistant name (with roller + shimmer), not only “Agent working…”.
-- **Clearer MLX → tools guidance** — copy points to Ollama or a cloud model that supports tools.
+- **Cloud direct chat** — SOTA / BYOK models (e.g. Luna) can answer without ACP/MCP injection blocking the turn.
+- **Clearer MLX → tools guidance** — banner/chips and copy point to Ollama or a cloud model that supports tools; “Switch model…” sheet.
 
 ### Fixed
 
 - **Permission prompts missing on the first turn** — resync confirmation queue on tool calls; do not wipe pending confirmations when switching Keep tabs.
 - **Allow/Deny after leaving chat** — responses resolve against the anchored conversation ID so tools are not stuck as “User denied”.
+- **Reply vanishing mid-stream** — implicit-thinking / coalescer edge cases no longer swallow the answer after it appears.
+- **Ollama model persistence** — last Ollama model (e.g. Qwen coding) stays selected instead of resetting to `latest`.
+- **Direct-chat transcript** — streamed answers persist across reload instead of wiping.
+- **Local dictation** — Apple Speech + mic recorder rewrite; mic turns red while recording / green when idle; phrases append instead of overwrite; clearer “click to dictate / click to transcribe”; main window restored after mic permission (no disappearing app).
 
 ## [0.1.2] - 2026-08-07
 
