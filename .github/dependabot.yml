@@ -1,0 +1,35 @@
+version: 2
+
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+    labels:
+      - dependencies
+      - github-actions
+
+  - package-ecosystem: swift
+    # Xcode-managed SPM: Package.resolved lives inside the .xcodeproj bundle.
+    # Dependabot discovers it from repo root — do not point at the nested swiftpm/ folder.
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: deps
+    labels:
+      - dependencies
+      - swiftpm
+    groups:
+      mlx:
+        patterns:
+          - "mlx-*"
+      huggingface:
+        patterns:
+          - "swift-huggingface"
+          - "swift-transformers"
+          - "swift-transformers-*"
