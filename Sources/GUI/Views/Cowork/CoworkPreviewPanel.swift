@@ -16,7 +16,7 @@ struct CoworkPreviewPanel: View {
                 emptyState
             }
         }
-        .frame(minWidth: 240, idealWidth: 280, maxWidth: 360)
+        .frame(minWidth: 240, idealWidth: 280, maxWidth: 360, maxHeight: .infinity)
         .background(PrismTheme.surfaceMuted.opacity(0.2))
     }
 
@@ -130,15 +130,31 @@ struct CoworkPreviewPanel: View {
             .padding(.horizontal, 12)
             .padding(.top, 8)
 
-            if isEditing, isTextEditable(item) {
-                TextEditor(text: $editDraft)
-                    .font(.ps(11, design: .monospaced))
-                    .scrollContentBackground(.hidden)
-                    .padding(8)
-                    .background(PrismTheme.surfaceMuted.opacity(0.35))
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .padding(12)
-            } else {
+            previewContent(item)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .frame(maxHeight: .infinity)
+        .onChange(of: cowork.selectedPreviewID) { _ in
+            isEditing = false
+        }
+    }
+
+    @ViewBuilder
+    private func previewContent(_ item: CoworkPreviewItem) -> some View {
+        if isEditing, isTextEditable(item) {
+            TextEditor(text: $editDraft)
+                .font(.ps(11, design: .monospaced))
+                .scrollContentBackground(.hidden)
+                .padding(8)
+                .background(PrismTheme.surfaceMuted.opacity(0.35))
+                .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .padding(12)
+        } else if item.contentType == .pdf,
+                  let data = Data(base64Encoded: item.content) {
+            CoworkPDFPreview(data: data)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+        } else {
             ScrollView {
                 Group {
                     switch item.contentType {
@@ -159,14 +175,9 @@ struct CoworkPreviewPanel: View {
                         CoworkHTMLPreview(html: item.content)
                             .frame(minHeight: 200)
                     case .pdf:
-                        if let data = Data(base64Encoded: item.content) {
-                            CoworkPDFPreview(data: data)
-                                .frame(minHeight: 240)
-                        } else {
-                            Text(L10n.pdfPreviewFailed)
-                                .font(.ps(11))
-                                .foregroundStyle(PrismTheme.textSecondary)
-                        }
+                        Text(L10n.pdfPreviewFailed)
+                            .font(.ps(11))
+                            .foregroundStyle(PrismTheme.textSecondary)
                     case .diff:
                         CoworkDiffPreview(oldText: item.diffOldText ?? "", newText: item.content)
                             .frame(minHeight: 200)
@@ -180,10 +191,6 @@ struct CoworkPreviewPanel: View {
                 }
                 .padding(12)
             }
-            }
-        }
-        .onChange(of: cowork.selectedPreviewID) { _ in
-            isEditing = false
         }
     }
 

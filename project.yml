@@ -90,11 +90,13 @@ targets:
       properties:
         CFBundleName: Citadel
         CFBundleDisplayName: Citadel
-        CFBundleShortVersionString: "0.1.1"
-        CFBundleVersion: "2"
+        CFBundleShortVersionString: "0.1.2"
+        CFBundleVersion: "3"
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true
         NSHumanReadableCopyright: "© 2026 Citadel contributors."
+        NSMicrophoneUsageDescription: "Citadel uses the microphone for voice dictation in Keep. Audio stays on your Mac unless you use a cloud transcription provider."
+        NSSpeechRecognitionUsageDescription: "Citadel uses on-device speech recognition for voice dictation in Keep."
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
         NSPrincipalClass: NSApplication
@@ -202,8 +204,8 @@ targets:
       properties:
         CFBundleName: CitadelNetExt
         CFBundleDisplayName: Citadel Network Extension
-        CFBundleShortVersionString: "0.1.1"
-        CFBundleVersion: "2"
+        CFBundleShortVersionString: "0.1.2"
+        CFBundleVersion: "3"
         CFBundlePackageType: SYSX
         LSMinimumSystemVersion: "13.0"
         NSSystemExtensionUsageDescription: "Citadel filters per-app network connections."

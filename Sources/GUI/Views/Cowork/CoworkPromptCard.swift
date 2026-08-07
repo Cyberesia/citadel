@@ -142,10 +142,17 @@ struct CoworkPromptCard: View {
             cowork.statusMessage = L10n.voicePermissionDenied
             return
         }
+        guard cowork.coreStatus == .running, cowork.client != nil else {
+            cowork.statusMessage = L10n.voiceBackendUnavailable
+            return
+        }
         do {
             try cowork.voiceScribe.startListening()
         } catch {
             cowork.statusMessage = L10n.localizeError(error.localizedDescription)
+        }
+        if let err = cowork.voiceScribe.errorMessage {
+            cowork.statusMessage = err
         }
     }
 }

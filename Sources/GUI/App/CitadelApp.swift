@@ -52,6 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             CitadelDeskCompanionController.shared.presentIfNeeded()
         }
+
+        Task { await CitadelUpdateController.shared.checkIfNeeded() }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

@@ -38,8 +38,8 @@ security find-identity -v -p codesigning
 ## Direct release
 
 ```bash
-export VERSION=0.1.1
-export BUILD_NUMBER=2
+export VERSION=0.1.2
+export BUILD_NUMBER=3
 # TEAM_ID is read from Scripts/signing.local.env
 # Optional — resolved automatically from the keychain if unset:
 # export CODESIGN_IDENTITY="Developer ID Application: Your Org (YOUR_TEAM_ID)"
@@ -162,6 +162,40 @@ Re-notarize after changing signatures if you redistribute the build.
 | `Scripts/build-signed.sh` | Local Debug install to `/Applications` |
 | `Scripts/sign_and_notarize.sh` | Older zip-notary path — prefer `package-direct.sh` |
 | `Scripts/make_dmg.sh` | Older DMG-only path — prefer `package-direct.sh` |
+
+## GitHub remotes (official + mirror)
+
+**Official releases:** [Cyberesia/citadel](https://github.com/Cyberesia/citadel) (public)  
+**Mirror:** [Sal-ix/citadel](https://github.com/Sal-ix/citadel) (private, same release history)
+
+Both remotes keep a **clean release history** — one commit per published version (`v0.1.0`, `v0.1.1`, …).  
+Do **not** push the full local dev history to GitHub; keep dev commits local (or on `backup/full-dev-history`).
+
+One-time setup:
+
+```bash
+git remote add cyberesia https://github.com/Cyberesia/citadel.git   # if missing
+# origin → Sal-ix/citadel (private mirror)
+```
+
+After tagging and building the notarized DMG:
+
+```bash
+VERSION=0.1.2 BUILD_NUMBER=3 ./Scripts/package-direct.sh
+
+# Squash the release tree onto main (one commit per version), then tag:
+git checkout "$VERSION_TREE_SHA" -- .
+git commit -m "Citadel v$VERSION"
+git tag -a "v$VERSION" -m "Citadel v$VERSION"
+
+git push origin main --force-with-lease && git push origin "v$VERSION" --force
+git push cyberesia main --force-with-lease && git push cyberesia "v$VERSION" --force
+
+gh release create "v$VERSION" .build/distribution/direct/Citadel.dmg \
+  --repo Cyberesia/citadel --title "Citadel v$VERSION" --notes-file CHANGELOG.md
+```
+
+Replace `$VERSION_TREE_SHA` with the commit that contains the built tree (e.g. local dev HEAD before squash).
 
 ## Notes
 

@@ -197,9 +197,9 @@ struct CoworkWorkspacePanel: View {
 
     private func isPreviewable(_ entry: CoworkFSEntry) -> Bool {
         let ext = (entry.name as NSString).pathExtension.lowercased()
-        let textTypes = ["md", "markdown", "txt", "json", "swift", "py", "js", "ts", "html", "css", "sh", "yml", "yaml", "xml", "csv"]
+        let textTypes = ["md", "markdown", "txt", "json", "swift", "py", "js", "ts", "html", "css", "sh", "yml", "yaml", "xml", "csv", "tsv", "pptx", "xlsx"]
         let imageTypes = ["png", "jpg", "jpeg", "gif", "webp", "svg"]
-        let docTypes = ["pdf"]
+        let docTypes = ["pdf", "docx", "doc", "rtf", "ppt", "xls"]
         return textTypes.contains(ext) || imageTypes.contains(ext) || docTypes.contains(ext)
     }
 

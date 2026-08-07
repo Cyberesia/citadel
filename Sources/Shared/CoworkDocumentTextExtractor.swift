@@ -27,6 +27,8 @@ enum CoworkDocumentTextExtractor {
             return extractFromRichFormat(url, type: .rtf)
         case "rtfd":
             return extractFromRichFormat(url, type: .rtfd)
+        case "pptx", "xlsx":
+            return CoworkOfficeOpenXMLExtractor.extractText(from: url)
         default:
             return extractFromPlainText(url)
         }

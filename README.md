@@ -187,7 +187,7 @@ Citadel ships as a signed macOS app (`.app` / `.dmg`). Build from source for dev
 
 ### `A` Download the latest release
 
-1. Open **[Releases][github-release-link]** and download the latest `Citadel.dmg` *(when published)*.
+1. Open **[Releases][github-release-link]** and download the latest `Citadel.dmg`.
 2. Drag **Citadel** to Applications.
 3. Launch from Applications or Spotlight — Citadel lives in the **menu bar** (no Dock icon by default).
 4. Complete [first-run permissions](#first-run-permissions) for full protection.

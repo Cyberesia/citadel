@@ -9,7 +9,15 @@ public enum AppConstants {
     public static let ipcMachServiceName = "group.com.citadel.firewall.ipc"
     public static let appGroup = "group.com.citadel.firewall"
     public static let teamID = "group"
-    public static let version = "0.1.1"
+    public static let version = "0.1.2"
+    public static let githubOwner = "Cyberesia"
+    public static let githubRepo = "citadel"
+    public static var githubReleasesURL: URL {
+        URL(string: "https://github.com/\(githubOwner)/\(githubRepo)/releases")!
+    }
+    public static var githubLatestReleaseAPIURL: URL {
+        URL(string: "https://api.github.com/repos/\(githubOwner)/\(githubRepo)/releases/latest")!
+    }
     public static let dnsProxyPort: UInt16 = 53
     public static let defaultDoHUpstream = "https://cloudflare-dns.com/dns-query"
 

@@ -99,6 +99,9 @@ final class CoworkState: ObservableObject {
     @Published var teamAssistantEligibility: [String: CoworkTeamAssistantEligibility] = [:]
     let voiceScribe = CitadelVoiceScribe()
 
+    private static let persistedProviderIDKey = "cowork.selectedProviderID"
+    private static let persistedModelIDKey = "cowork.selectedModelID"
+
     let lifecycle = CoworkCoreLifecycle()
     private let webSocket = CoworkWebSocketClient()
     private var cancellables = Set<AnyCancellable>()
@@ -182,6 +185,7 @@ final class CoworkState: ObservableObject {
 
     /// Keeps `selectedProviderID` / `selectedModelID` aligned with the Ollama vs MLX picker.
     func syncLocalBackendSelection() async {
+        if isCloudModelSelection { return }
         guard let model = resolvedHomeModelID else { return }
 
         if preferredLocalBackend == .mlx {
@@ -371,6 +375,7 @@ final class CoworkState: ObservableObject {
             statusMessage = nil
             applyMcpDefaultsForSelectedProvider()
 
+            restorePersistedModelSelection()
             if selectedProviderID == nil {
                 selectedProviderID = providers.first?.id
                 selectedModelID = providers.first?.models.first
@@ -644,6 +649,47 @@ final class CoworkState: ObservableObject {
         let stored = UserDefaults.standard.string(forKey: "cowork.selectedMLXRepoID") ?? ""
         if !stored.isEmpty { return stored }
         return mlxInstalledModels.first?.id ?? CoworkMLXModelCatalog.defaultRepoID
+    }
+
+    private var isCloudModelSelection: Bool {
+        guard let providerID = selectedProviderID else { return false }
+        return cloudProviders.contains { $0.id == providerID }
+    }
+
+    func persistModelSelection() {
+        if let providerID = selectedProviderID {
+            UserDefaults.standard.set(providerID, forKey: Self.persistedProviderIDKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.persistedProviderIDKey)
+        }
+        if let modelID = selectedModelID {
+            UserDefaults.standard.set(modelID, forKey: Self.persistedModelIDKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: Self.persistedModelIDKey)
+        }
+    }
+
+    /// Restores the last home-screen model choice saved before the previous app quit.
+    private func restorePersistedModelSelection() {
+        let storedModel = UserDefaults.standard.string(forKey: Self.persistedModelIDKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !storedModel.isEmpty else { return }
+
+        let storedProvider = UserDefaults.standard.string(forKey: Self.persistedProviderIDKey)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if !storedProvider.isEmpty,
+           let provider = providers.first(where: { $0.id == storedProvider }),
+           provider.models.contains(storedModel) {
+            selectedProviderID = storedProvider
+            selectedModelID = storedModel
+            return
+        }
+
+        if let provider = providers.first(where: { $0.models.contains(storedModel) }) {
+            selectedProviderID = provider.id
+            selectedModelID = storedModel
+        }
     }
 
     var mlxRuntimeAvailable: Bool {
@@ -1044,7 +1090,7 @@ final class CoworkState: ObservableObject {
             )
             let conversation = try await client.createConversation(request)
             let attachmentPathsToSend = attachmentPaths
-            let enriched = enrichMessageWithDocuments(text, attachmentPaths: attachmentPathsToSend)
+            let enriched = await enrichMessageWithDocuments(text, attachmentPaths: attachmentPathsToSend)
             let fileRefs = activeModelSupportsTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
             promptText = ""
             attachmentPaths = []
@@ -1099,7 +1145,7 @@ final class CoworkState: ObservableObject {
             await applyToolCapabilityProfile()
             try? await client.ensureRuntime(conversationID: conversationID)
             let attachmentPathsToSend = composerAttachments
-            let enriched = enrichMessageWithDocuments(trimmed, attachmentPaths: attachmentPathsToSend)
+            let enriched = await enrichMessageWithDocuments(trimmed, attachmentPaths: attachmentPathsToSend)
             let fileRefs = activeModelSupportsTools ? CoworkChatFileRef.localRefs(from: attachmentPathsToSend) : []
             composerAttachments = []
             indexedAttachmentPaths = []
@@ -1186,6 +1232,7 @@ final class CoworkState: ObservableObject {
         providers = try await client.listProviders()
         selectedProviderID = provider.id
         selectedModelID = modelID
+        persistModelSelection()
     }
 
     func discoverModels(preset: CoworkProviderPreset, baseURL: String, apiKey: String) async throws -> (models: [CoworkModelOption], fixedBaseURL: String?) {
@@ -1239,6 +1286,7 @@ final class CoworkState: ObservableObject {
             await switchActiveConversationModel(providerID: providerID, model: name)
         }
         applyMcpDefaultsForSelectedProvider()
+        persistModelSelection()
     }
 
     func selectCloudModel(providerID: String, model: String) async {
@@ -1250,6 +1298,7 @@ final class CoworkState: ObservableObject {
         if activeConversationID != nil {
             await switchActiveConversationModel(providerID: providerID, model: model)
         }
+        persistModelSelection()
     }
 
     /// Infers which picker tab matches the current provider/model selection.
@@ -1305,6 +1354,7 @@ final class CoworkState: ObservableObject {
             selectedModelID = repoID
             statusMessage = nil
             mlxRuntimeInstallMessage = nil
+            persistModelSelection()
             return
         }
         try await addProvider(
@@ -1317,6 +1367,7 @@ final class CoworkState: ObservableObject {
         )
         statusMessage = nil
         mlxRuntimeInstallMessage = nil
+        persistModelSelection()
     }
 
     func repairProviders() async {
@@ -1416,10 +1467,13 @@ final class CoworkState: ObservableObject {
     }
 
     /// Prepends extracted document text so chat-only models can answer (Murmura-style indexing).
-    func enrichMessageWithDocuments(_ text: String, attachmentPaths: [String]) -> String {
+    func enrichMessageWithDocuments(_ text: String, attachmentPaths: [String]) async -> String {
         var paths = attachmentPaths
-        let workspaceMatches = workspaceDocumentPaths(matching: text)
-        paths.append(contentsOf: workspaceMatches)
+        let workspace = activeConversation?.workspacePath ?? (workspacePath.isEmpty ? nil : workspacePath)
+        if let workspace, !workspace.isEmpty {
+            let workspaceMatches = await CoworkWorkspaceDocumentMatcher.matchingPaths(workspace: workspace, query: text)
+            paths.append(contentsOf: workspaceMatches)
+        }
         paths = Array(Set(paths))
 
         guard !paths.isEmpty else { return text }
@@ -1452,38 +1506,11 @@ final class CoworkState: ObservableObject {
         return CoworkDocumentContextParser.wrapDocumentBlocks(blocks, userText: text)
     }
 
-    /// Workspace PDF/DOCX files whose names match tokens in the user message (e.g. "sophie" → CV Sophie).
-    func workspaceDocumentPaths(matching query: String) -> [String] {
+    /// Workspace documents to inline: filename, Spotlight content, local text, then open questions.
+    func workspaceDocumentPaths(matching query: String) async -> [String] {
         let workspace = activeConversation?.workspacePath ?? (workspacePath.isEmpty ? nil : workspacePath)
         guard let workspace, !workspace.isEmpty else { return [] }
-        guard let entries = try? FileManager.default.contentsOfDirectory(atPath: workspace) else { return [] }
-
-        let docExtensions = Set(["pdf", "docx", "rtf", "rtfd", "txt", "md", "markdown"])
-        let docs = entries.compactMap { name -> String? in
-            let ext = (name as NSString).pathExtension.lowercased()
-            guard docExtensions.contains(ext) else { return nil }
-            return (workspace as NSString).appendingPathComponent(name)
-        }
-        guard !docs.isEmpty else { return [] }
-
-        let lower = query.lowercased()
-        let bulkCV = ["cv", "resume", "résumé", "curriculum", "candidat", "gens", "people"]
-            .contains(where: { lower.contains($0) })
-        if bulkCV {
-            return Array(docs.prefix(8))
-        }
-
-        let tokens = lower
-            .split(whereSeparator: { !$0.isLetter && !$0.isNumber })
-            .map(String.init)
-            .filter { $0.count >= 3 }
-
-        guard !tokens.isEmpty else { return [] }
-
-        return docs.filter { path in
-            let name = (path as NSString).lastPathComponent.lowercased()
-            return tokens.contains(where: { name.contains($0) })
-        }
+        return await CoworkWorkspaceDocumentMatcher.matchingPaths(workspace: workspace, query: query)
     }
 
     /// Copies picker attachments into the conversation workspace and refreshes the file list.
@@ -1755,56 +1782,96 @@ final class CoworkState: ObservableObject {
     }
 
     func openPreview(path: String, workspace: String?, title: String) async {
-        guard let client else { return }
-        let absolutePath: String
-        if let workspace, !workspace.isEmpty, !path.hasPrefix("/") {
-            absolutePath = (workspace as NSString).appendingPathComponent(path)
-        } else {
-            absolutePath = path
-        }
+        let resolvedWorkspace = workspace.flatMap { $0.isEmpty ? nil : $0 }
+            ?? (workspacePath.isEmpty ? nil : workspacePath)
+        let absolutePath = CoworkWorkspaceFileAccess.resolveAbsolutePath(relativePath: path, workspace: resolvedWorkspace)
         let ext = (absolutePath as NSString).pathExtension.lowercased()
         let imageExtensions = ["png", "jpg", "jpeg", "gif", "webp", "svg"]
         let textExtensions = ["md", "markdown", "txt", "json", "swift", "py", "js", "ts", "html", "css", "sh", "yml", "yaml", "xml", "csv"]
+        let documentExtensions = ["docx", "doc", "rtf"]
 
         do {
             if imageExtensions.contains(ext) {
-                let b64 = try await client.readImageBase64(path: path, workspace: workspace)
-                let item = CoworkPreviewItem(
+                var b64 = CoworkWorkspaceFileAccess.readBase64(at: absolutePath)
+                if b64 == nil, let client {
+                    b64 = try await client.readImageBase64(path: path, workspace: resolvedWorkspace)
+                }
+                guard let b64 else {
+                    statusMessage = L10n.imagePreviewFailed
+                    return
+                }
+                upsertPreview(CoworkPreviewItem(
                     id: absolutePath,
                     title: title,
                     path: absolutePath,
                     content: "",
                     contentType: .image,
                     imageBase64: b64
-                )
-                upsertPreview(item)
+                ))
                 return
             }
 
             if ext == "pdf" {
-                if let b64 = try await client.readFileBuffer(path: path, workspace: workspace) {
+                var b64 = CoworkWorkspaceFileAccess.readBase64(at: absolutePath)
+                if b64 == nil, let client {
+                    b64 = try await client.readFileBuffer(path: path, workspace: resolvedWorkspace)
+                }
+                guard let b64 else {
+                    statusMessage = L10n.pdfPreviewFailed
+                    return
+                }
+                upsertPreview(CoworkPreviewItem(
+                    id: absolutePath,
+                    title: title,
+                    path: absolutePath,
+                    content: b64,
+                    contentType: .pdf,
+                    imageBase64: nil
+                ))
+                return
+            }
+
+            if documentExtensions.contains(ext) {
+                if let text = CoworkWorkspaceFileAccess.readText(at: absolutePath), !text.isEmpty {
                     upsertPreview(CoworkPreviewItem(
                         id: absolutePath,
                         title: title,
                         path: absolutePath,
-                        content: b64,
-                        contentType: .pdf,
+                        content: text,
+                        contentType: .text,
                         imageBase64: nil
                     ))
+                } else {
+                    statusMessage = L10n.pdfPreviewFailed
                 }
                 return
             }
 
-            let text = try await client.readFile(path: path, workspace: workspace) ?? ""
+            var text = CoworkWorkspaceFileAccess.readText(at: absolutePath)
+            if text == nil, let client {
+                text = try await client.readFile(path: path, workspace: resolvedWorkspace)
+            }
+            let body = text ?? ""
             let type: CoworkPreviewContentType
             if ext == "html" || ext == "htm" { type = .html }
             else if ext == "md" || ext == "markdown" { type = .markdown }
             else if textExtensions.contains(ext) { type = .code }
             else { type = .text }
 
-            upsertPreview(CoworkPreviewItem(id: absolutePath, title: title, path: absolutePath, content: text, contentType: type, imageBase64: nil))
+            upsertPreview(CoworkPreviewItem(id: absolutePath, title: title, path: absolutePath, content: body, contentType: type, imageBase64: nil))
         } catch {
-            statusMessage = error.localizedDescription
+            if let local = CoworkWorkspaceFileAccess.readText(at: absolutePath), !local.isEmpty {
+                upsertPreview(CoworkPreviewItem(
+                    id: absolutePath,
+                    title: title,
+                    path: absolutePath,
+                    content: local,
+                    contentType: .text,
+                    imageBase64: nil
+                ))
+            } else {
+                statusMessage = error.localizedDescription
+            }
         }
     }
 

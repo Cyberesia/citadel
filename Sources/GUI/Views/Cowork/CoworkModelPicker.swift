@@ -42,11 +42,13 @@ struct CoworkModelPicker: View {
                     .prismPopoverChrome(width: 340, maxHeight: 360)
             }
             .onAppear {
-                tabRaw = cowork.inferredModelPickerTab.rawValue
                 Task {
                     await cowork.refreshOllamaModels()
                     await cowork.refreshMLXModelsAsync()
                 }
+            }
+            .onChange(of: cowork.selectedModelID) { _ in
+                tabRaw = cowork.inferredModelPickerTab.rawValue
             }
 
             if cowork.isLoadingOllamaModels {

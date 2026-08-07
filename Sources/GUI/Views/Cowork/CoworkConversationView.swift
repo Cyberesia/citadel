@@ -40,6 +40,7 @@ struct CoworkConversationView: View {
                 chatColumn
                 Divider().opacity(0.15)
                 CoworkPreviewPanel()
+                    .layoutPriority(1)
             }
             CoworkConfirmationSheet()
             composer

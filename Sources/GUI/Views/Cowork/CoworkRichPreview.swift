@@ -23,6 +23,7 @@ struct CoworkPDFPreview: View {
     var body: some View {
         if let doc = PDFDocument(data: data) {
             PDFKitView(document: doc)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             Text(L10n.pdfLoadFailed)
                 .font(.ps(11))
@@ -38,11 +39,15 @@ private struct PDFKitView: NSViewRepresentable {
         let view = PDFView()
         view.document = document
         view.autoScales = true
+        view.displayMode = .singlePageContinuous
+        view.displayDirection = .vertical
+        view.backgroundColor = .clear
         return view
     }
 
     func updateNSView(_ nsView: PDFView, context: Context) {
         nsView.document = document
+        nsView.autoScales = true
     }
 }
 

@@ -117,6 +117,10 @@ enum L10n {
         t("Voice Scribe needs microphone and speech recognition access.",
           "La dictée vocale nécessite l'accès au micro et à la reconnaissance vocale.")
     }
+    static var voiceBackendUnavailable: String {
+        t("Keep is not ready — start a session before using voice dictation, or enable Speech access in System Settings.",
+          "Keep n'est pas prêt — ouvrez une session avant la dictée, ou autorisez Parole et Micro dans Réglages système.")
+    }
 
     // MARK: - Desk companion
 
@@ -324,6 +328,9 @@ enum L10n {
     }
     static var documentIndexing: String {
         t("Indexing…", "Indexation…")
+    }
+    static func documentsIndexedCount(_ n: Int) -> String {
+        t("\(n) indexed documents — tap to expand", "\(n) documents indexés — toucher pour développer")
     }
     static var openInApp: String { t("Open in default app", "Ouvrir dans l'app par défaut") }
     static var quickLook: String { t("Quick Look", "Coup d'œil") }
@@ -1398,6 +1405,19 @@ enum L10n {
     static var aboutAttributions: String {
         t("Open-source attributions are listed in ATTRIBUTIONS.md and NOTICES.md.",
           "Les attributions open source sont listées dans ATTRIBUTIONS.md et NOTICES.md.")
+    }
+    static var updateChecking: String { t("Checking for updates…", "Recherche de mises à jour…") }
+    static var updateUpToDate: String { t("You’re on the latest release.", "Vous utilisez la dernière version.") }
+    static func updateAvailable(_ version: String) -> String {
+        t("Citadel \(version) is available.", "Citadel \(version) est disponible.")
+    }
+    static var checkForUpdates: String { t("Check for Updates", "Rechercher des mises à jour") }
+    static var downloadUpdate: String { t("Download Update", "Télécharger la mise à jour") }
+    static var updateLater: String { t("Later", "Plus tard") }
+    static var updateAlertTitle: String { t("Update Available", "Mise à jour disponible") }
+    static func updateAlertBody(_ version: String) -> String {
+        t("Citadel \(version) is available on GitHub. Download the latest DMG to update.",
+          "Citadel \(version) est disponible sur GitHub. Téléchargez le dernier DMG pour mettre à jour.")
     }
     static var fiveMinutesAgo: String { t("5 minutes ago", "Il y a 5 minutes") }
     static var now: String { t("now", "maintenant") }

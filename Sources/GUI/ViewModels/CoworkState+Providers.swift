@@ -121,6 +121,7 @@ extension CoworkState {
                 selectedModelID = created.models.contains(first) ? first : created.models.first
             }
         }
+        persistModelSelection()
     }
 
     func deleteProvider(_ id: String) async {
@@ -132,6 +133,7 @@ extension CoworkState {
             if selectedProviderID == id {
                 selectedProviderID = providers.first?.id
                 selectedModelID = providers.first?.models.first
+                persistModelSelection()
             }
         } catch {
             statusMessage = L10n.localizeError(error.localizedDescription)

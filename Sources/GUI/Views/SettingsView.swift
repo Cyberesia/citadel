@@ -3,6 +3,7 @@ import SwiftUI
 /// Settings for Fortress — general, DNS, blocklists, profiles, about.
 struct SettingsView: View {
     @EnvironmentObject var state: AppState
+    @ObservedObject private var updates = CitadelUpdateController.shared
     @State private var doh = AppConstants.defaultDoHUpstream
     @ObservedObject private var companion = CitadelDeskCompanionController.shared
     @AppStorage("citadel.locale") private var localeRaw = CitadelLocale.current.rawValue
@@ -63,6 +64,7 @@ struct SettingsView: View {
         .onAppear {
             state.refreshProfilesAndBlocklists()
             doh = UserDefaults.standard.string(forKey: "citadel.doh") ?? AppConstants.defaultDoHUpstream
+            Task { await updates.checkIfNeeded() }
         }
     }
 
@@ -353,6 +355,8 @@ struct SettingsView: View {
                 .foregroundStyle(PrismTheme.textSecondary)
                 .multilineTextAlignment(.center)
             Divider().padding(.vertical, 8)
+            updateSection
+            Divider().padding(.vertical, 8)
             Text(L10n.aboutAttributions)
                 .font(.ps(10))
                 .foregroundStyle(PrismTheme.textTertiary)
@@ -360,6 +364,47 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 24)
+    }
+
+    private var updateSection: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                if updates.isChecking {
+                    ProgressView()
+                        .controlSize(.small)
+                } else if updates.updateAvailable {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .foregroundStyle(PrismTheme.accent)
+                } else if updates.lastError != nil {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                } else {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(PrismTheme.signalAllow)
+                }
+                Text(updates.statusText)
+                    .font(.ps(11))
+                    .foregroundStyle(PrismTheme.textSecondary)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 10) {
+                Button(L10n.checkForUpdates) {
+                    Task { await updates.check(force: true) }
+                }
+                .buttonStyle(PrismHandButtonStyle())
+                .disabled(updates.isChecking)
+
+                if updates.updateAvailable {
+                    Button(L10n.downloadUpdate) {
+                        updates.openDownloadPage()
+                    }
+                    .buttonStyle(PrismHandButtonStyle())
+                }
+            }
+        }
+        .frame(maxWidth: 360)
     }
 
     private func settingsSection<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
